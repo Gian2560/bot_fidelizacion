@@ -13,7 +13,7 @@ export default async function Home() {
       <section className="relative bg-gradient-to-r from-[#007391] to-[#005c6b] text-white py-20 text-center">
         <div className="container mx-auto px-6 lg:px-20">
           <h1 className="text-4xl lg:text-5xl font-extrabold">
-            Plataforma de <span className="text-yellow-400">Reactivación de Clientes</span>
+            Plataforma de <span className="text-yellow-400">Fidelizacion de Clientes</span>
           </h1>
           <p className="mt-4 text-lg lg:text-xl opacity-90">
             Gestiona clientes con deudas y mejora las tasas de recuperación de pagos.

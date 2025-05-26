@@ -174,7 +174,7 @@ export default function Layout({ children }) {
         </ListItem>*/}
         <ListItem
           button="true"
-          onClick={() => router.push("/promesasPago")}
+          onClick={() => router.push("/payments")}
           sx={{
             "&:hover": { bgcolor: "#2D3748" },
             px: 3,
@@ -190,7 +190,7 @@ export default function Layout({ children }) {
         {session?.user?.role === "administrador" && (
           <ListItem
             button="true"
-            onClick={() => router.push("/campaigns")}
+            onClick={() => router.push("/reminders")}
             sx={{
               "&:hover": { bgcolor: "#2D3748" },
               px: 3,
@@ -285,7 +285,7 @@ export default function Layout({ children }) {
               style={{ height: 40, marginRight: 10 }}
             />
             <Typography variant="h6" noWrap component="div" sx={{ fontWeight: "bold" }}>
-              REACTIVACIONES
+              FIDELIZACION 
             </Typography>
           </Box>
           <Notificaciones></Notificaciones>
