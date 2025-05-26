@@ -127,6 +127,25 @@ export default function Layout({ children }) {
           </ListItemIcon>
           <ListItemText primary="Clientes" />
         </ListItem>
+        
+
+        <ListItem
+          button="true"
+          onClick={() => router.push("/task")}
+          sx={{
+            "&:hover": { bgcolor: "#2D3748" },
+            px: 3,
+            py: 1.5,
+          }}
+        >
+          <ListItemIcon sx={{ color: "#fff" }}>
+            <PeopleIcon />
+          </ListItemIcon>
+          <ListItemText primary="Tareas" />
+        </ListItem>
+
+
+
         <ListItem
           button="true"
           onClick={() => router.push("/dashboard")}
