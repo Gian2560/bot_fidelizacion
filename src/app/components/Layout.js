@@ -160,6 +160,21 @@ export default function Layout({ children }) {
           </ListItemIcon>
           <ListItemText primary="Dashboard" />
         </ListItem>
+
+        <ListItem
+          button="true"
+          onClick={() => router.push("/templates")}
+          sx={{
+            "&:hover": { bgcolor: "#2D3748" },
+            px: 3,
+            py: 1.5,
+          }}
+        >
+          <ListItemIcon sx={{ color: "#fff" }}>
+            <DashboardIcon />
+          </ListItemIcon>
+          <ListItemText primary="Plantillas" />
+        </ListItem>
         {/*
         <ListItem
           button="true"
