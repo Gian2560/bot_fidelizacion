@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Container,
   Typography,
@@ -12,16 +12,22 @@ import {
   Select,
   MenuItem,
   Card,
-  CardContent,
-  Stack,
   Button,
   Divider,
   Box,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Checkbox,
+  Pagination
 } from "@mui/material";
-import axiosInstance from "../../../../services/api";
-import { useEffect } from "react";
+import axiosInstance from "../../../../services/api"; // Tu instancia de axios configurada
 import { LocalizationProvider, DatePicker, TimePicker } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
+import { clients, databases, columnsOptions } from "../../../../dummyData"; // Datos simulados
 
 export default function CampaignPage() {
   const [campaignName, setCampaignName] = useState("");
@@ -36,65 +42,81 @@ export default function CampaignPage() {
   const [sendDate, setSendDate] = useState(null);
   const [sendTime, setSendTime] = useState(null);
   const [templates, setTemplates] = useState([]); // Para almacenar las plantillas obtenidas
-  // Datos simulados
-  const databases = ["Database1", "Database2", "Database3"];
-  const columnsOptions = {
-    Database1: ["Name", "Segment", "Cluster", "Strategy"],
-    Database2: ["ClientID", "Email", "DebtAmount", "PaymentHistory"],
-    Database3: ["CustomerName", "Region", "BalanceDue", "LastPaymentDate"],
-  };
+  const [selectedClients, setSelectedClients] = useState([]); // Clientes seleccionados
+  const [currentPage, setCurrentPage] = useState(1);
+  const [clientsPerPage] = useState(5); // Número de clientes por página
 
-  const segments = ["Segment 1", "Segment 2", "Segment 3", "Segment 4"];
-  const clusters = ["Cluster 1", "Cluster 2", "Cluster 3"];
-  const strategies = ["Strategy 1", "Strategy 2", "Strategy 3"];
-  const variables = ["Variable 1", "Variable 2", "Variable 3"];
+  // Datos de clientes por base de datos
+  const [filteredClients, setFilteredClients] = useState([]);
 
-
+  // Cargar plantillas desde el backend
   useEffect(() => {
     const fetchTemplates = async () => {
       try {
         const response = await axiosInstance.get("/plantillas"); // Solicitud GET al endpoint de plantillas
         setTemplates(response.data); // Guarda las plantillas en el estado
-        console.log("Plantillas obtenidas:", response.data);
       } catch (error) {
         console.error("Error al obtener plantillas:", error);
       }
     };
     fetchTemplates();
   }, []);
+  // Filtrar clientes de acuerdo a la base de datos seleccionada
+  useEffect(() => {
+    console.log("Base de datos seleccionada:", selectedDatabase);
+    const currentClients = clients[selectedDatabase] || [];
+    console.log("Clientes encontrados:", currentClients);
+    console.log("Todas las bases de datos disponibles:", Object.keys(clients));
+    setFilteredClients(currentClients);
+    // Resetear página a 1 cuando cambie la base de datos
+    setCurrentPage(1);
+    // Limpiar selección de clientes al cambiar de base de datos
+    setSelectedClients([]);
+  }, [selectedDatabase]);
 
+  // Función para manejar el cambio en la selección de la plantilla
   const handleTemplateChange = (event) => {
     const selectedTemplate = event.target.value;
     setTemplate(selectedTemplate);
   };
 
-
-
-
-  const handleSubmit = () => {
-    console.log({
-      campaignName,
-      selectedDatabase,
-      columns,
-      template,
-      clientSegment,
-      cluster,
-      strategy,
-      variable1,
-      variable2,
-      sendDate,
-      sendTime,
-    });
-    alert("Campaña creada con éxito");
+  // Función para manejar la selección de clientes
+  const handleClientSelection = (event, client) => {
+    if (event.target.checked) {
+      setSelectedClients([...selectedClients, client]);
+    } else {
+      setSelectedClients(selectedClients.filter((item) => item.id !== client.id));
+    }
   };
 
-  // Colores base para usar en estilos
-  const colors = {
-    primaryBlue: "#007391",
-    darkBlue: "#254e59",
-    yellowAccent: "#FFD54F", // amarillo suave
-    lightBlueBg: "#E3F2FD", // azul claro para fondo preview
-    white: "#fff",
+  // Cambiar de página en la paginación
+  const handleChangePage = (event, value) => {
+    setCurrentPage(value);
+  };
+
+  // Paginar los clientes para la vista
+  const indexOfLastClient = currentPage * clientsPerPage;
+  const indexOfFirstClient = indexOfLastClient - clientsPerPage;
+  const currentClients = filteredClients.slice(indexOfFirstClient, indexOfLastClient);
+
+  // Función para manejar el envío del formulario y crear la campaña
+  const handleSubmit = async () => {
+    const campaignData = {
+      nombre_campanha: campaignName,
+      descripcion: "Descripción de la campaña",
+      template_id: template,
+      fecha_fin: sendDate,
+      clients: selectedClients, // Clientes seleccionados
+    };
+
+    try {
+      const response = await axiosInstance.post("/campaing/add-clientes", campaignData);
+      console.log("Campaña y clientes creados con éxito:", response.data);
+      alert("Campaña creada con éxito");
+    } catch (error) {
+      console.error("Error al crear la campaña:", error);
+      alert("Hubo un error al crear la campaña");
+    }
   };
 
   return (
@@ -113,7 +135,7 @@ export default function CampaignPage() {
         <Typography
           variant="h3"
           sx={{
-            color: colors.primaryBlue,
+            color: "#007391",
             fontWeight: "700",
             mb: 4,
             textAlign: "center",
@@ -128,32 +150,25 @@ export default function CampaignPage() {
           sx={{
             p: { xs: 3, sm: 5 },
             borderRadius: 3,
-            bgcolor: colors.white,
+            bgcolor: "#fff",
           }}
         >
           {/* DATOS BASICOS */}
           <Typography
             variant="h6"
-            sx={{ color: colors.darkBlue, fontWeight: "700", mb: 3, borderBottom: `3px solid ${colors.primaryBlue}`, pb: 1 }}
+            sx={{ color: "#254e59", fontWeight: "700", mb: 3, borderBottom: `3px solid #007391`, pb: 1 }}
           >
             Datos Básicos
           </Typography>
 
           <Grid container spacing={4} mb={5}>
             <Grid item xs={12} sm={6}>
-              <TextField
-                label="Nombre de la campaña"
-                fullWidth
-                value={campaignName}
-                onChange={(e) => setCampaignName(e.target.value)}
-                sx={{ bgcolor: colors.white, borderRadius: 2 }}
-              />
+              <TextField label="Nombre de la campaña" fullWidth value={campaignName} onChange={(e) => setCampaignName(e.target.value)} sx={{ bgcolor: "#fff", borderRadius: 2 }} />
             </Grid>
 
             <Grid item xs={12} sm={6}>
               <FormControl fullWidth>
-                <InputLabel sx={{ color: colors.darkBlue, fontWeight: 600 }}>Base de Datos</InputLabel>
-                <Select
+                <InputLabel sx={{ color: "#254e59", fontWeight: 600 }}>Base de Datos</InputLabel>                <Select
                   value={selectedDatabase}
                   onChange={(e) => {
                     setSelectedDatabase(e.target.value);
@@ -161,217 +176,146 @@ export default function CampaignPage() {
                   }}
                   label="Base de Datos"
                   sx={{
-                    bgcolor: colors.white,
+                    bgcolor: "#fff",
                     borderRadius: 2,
                     "& .MuiSelect-select": { fontWeight: 600 },
                   }}
                 >
                   {databases.map((db) => (
-                    <MenuItem key={db} value={db}>
-                      {db}
+                    <MenuItem key={db.id} value={db.id}>
+                      {db.name}
                     </MenuItem>
                   ))}
                 </Select>
               </FormControl>
             </Grid>
-
-            <Grid item xs={12} sm={6}>
-              <FormControl fullWidth disabled={!selectedDatabase}>
-                <InputLabel sx={{ color: colors.darkBlue, fontWeight: 600 }}>Columnas</InputLabel>
-                <Select
-                  multiple
-                  value={columns}
-                  onChange={(e) => setColumns(e.target.value)}
-                  label="Columnas"
-                  sx={{
-                    bgcolor: colors.white,
-                    borderRadius: 2,
-                    "& .MuiSelect-select": { fontWeight: 600 },
-                  }}
-                >
-                  {(columnsOptions[selectedDatabase] || []).map((col) => (
-                    <MenuItem key={col} value={col}>
-                      {col}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-          </Grid>
-
-          <Divider sx={{ mb: 5 }} />
-
-          {/* SEGMENTACION */}
+          </Grid>          {/* Mostrar tabla de clientes seleccionados */}
           <Typography
             variant="h6"
-            sx={{ color: colors.darkBlue, fontWeight: "700", mb: 3, borderBottom: `3px solid ${colors.primaryBlue}`, pb: 1 }}
+            sx={{ color: "#254e59", fontWeight: "700", mb: 3, borderBottom: `3px solid #007391`, pb: 1 }}
           >
-            Segmentación
+            Selecciona los clientes
           </Typography>
 
-          <Grid container spacing={4} mb={5}>
-            <Grid item xs={12} sm={6} md={4}>
-              <FormControl fullWidth>
-                <InputLabel sx={{ color: colors.darkBlue, fontWeight: 600 }}>Segmento</InputLabel>
-                <Select
-                  value={clientSegment}
-                  onChange={(e) => setClientSegment(e.target.value)}
-                  label="Segmento"
-                  sx={{ bgcolor: colors.white, borderRadius: 2, "& .MuiSelect-select": { fontWeight: 600 } }}
-                >
-                  {segments.map((seg) => (
-                    <MenuItem key={seg} value={seg}>
-                      {seg}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
+          {/* Botones de selección */}
+          {filteredClients.length > 0 && (
+            <Box mb={2}>
+              <Button
+                variant="outlined"
+                size="small"
+                sx={{ mr: 2 }}
+                onClick={() => {
+                  setSelectedClients(filteredClients);
+                }}
+              >
+                Seleccionar todos
+              </Button>
+              <Button
+                variant="outlined"
+                size="small"
+                onClick={() => setSelectedClients([])}
+              >
+                Deseleccionar todos
+              </Button>
+            </Box>
+          )}
 
-            <Grid item xs={12} sm={6} md={4}>
-              <FormControl fullWidth>
-                <InputLabel sx={{ color: colors.darkBlue, fontWeight: 600 }}>Cluster</InputLabel>
-                <Select
-                  value={cluster}
-                  onChange={(e) => setCluster(e.target.value)}
-                  label="Cluster"
-                  sx={{ bgcolor: colors.white, borderRadius: 2, "& .MuiSelect-select": { fontWeight: 600 } }}
-                >
-                  {clusters.map((cl) => (
-                    <MenuItem key={cl} value={cl}>
-                      {cl}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
+          <TableContainer>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Seleccionar</TableCell>
+                  <TableCell>Nombre</TableCell>
+                  <TableCell>Teléfono</TableCell>
+                  <TableCell>Estado</TableCell>
+                  <TableCell>Motivo</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {currentClients.map((client) => (
+                  <TableRow key={client.id}>
+                    <TableCell>
+                      <Checkbox
+                        onChange={(e) => handleClientSelection(e, client)}
+                        checked={selectedClients.some((selectedClient) => selectedClient.id === client.id)}
+                      />
+                    </TableCell>
+                    <TableCell>{client.name}</TableCell>
+                    <TableCell>{client.phone}</TableCell>
+                    <TableCell>{client.state}</TableCell>
+                    <TableCell>{client.reason}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
 
-            <Grid item xs={12} sm={6} md={4}>
-              <FormControl fullWidth>
-                <InputLabel sx={{ color: colors.darkBlue, fontWeight: 600 }}>Estrategia</InputLabel>
-                <Select
-                  value={strategy}
-                  onChange={(e) => setStrategy(e.target.value)}
-                  label="Estrategia"
-                  sx={{ bgcolor: colors.white, borderRadius: 2, "& .MuiSelect-select": { fontWeight: 600 } }}
-                >
-                  {strategies.map((str) => (
-                    <MenuItem key={str} value={str}>
-                      {str}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-          </Grid>
-
-          <Divider sx={{ mb: 5 }} />
-
-          {/* VARIABLES */}
-          <Typography
-            variant="h6"
-            sx={{ color: colors.darkBlue, fontWeight: "700", mb: 3, borderBottom: `3px solid ${colors.primaryBlue}`, pb: 1 }}
-          >
-            Variables adicionales
-          </Typography>
-
-          <Grid container spacing={4} mb={5}>
-            <Grid item xs={12} sm={6}>
-              <FormControl fullWidth>
-                <InputLabel sx={{ color: colors.darkBlue, fontWeight: 600 }}>Variable 1</InputLabel>
-                <Select
-                  value={variable1}
-                  onChange={(e) => setVariable1(e.target.value)}
-                  label="Variable 1"
-                  sx={{ bgcolor: colors.white, borderRadius: 2, "& .MuiSelect-select": { fontWeight: 600 } }}
-                >
-                  {variables.map((v) => (
-                    <MenuItem key={v} value={v}>
-                      {v}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-
-            <Grid item xs={12} sm={6}>
-              <FormControl fullWidth>
-                <InputLabel sx={{ color: colors.darkBlue, fontWeight: 600 }}>Variable 2</InputLabel>
-                <Select
-                  value={variable2}
-                  onChange={(e) => setVariable2(e.target.value)}
-                  label="Variable 2"
-                  sx={{ bgcolor: colors.white, borderRadius: 2, "& .MuiSelect-select": { fontWeight: 600 } }}
-                >
-                  {variables.map((v) => (
-                    <MenuItem key={v} value={v}>
-                      {v}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-          </Grid>
+          {/* Paginación */}
+          <Pagination
+            count={Math.ceil(filteredClients.length / clientsPerPage)}
+            page={currentPage}
+            onChange={handleChangePage}
+            sx={{ mt: 2 }}
+          />
 
           <Divider sx={{ mb: 5 }} />
 
           {/* PLANTILLA Y VISTA PREVIA */}
           <Typography
             variant="h6"
-            sx={{ color: colors.darkBlue, fontWeight: "700", mb: 3, borderBottom: `3px solid ${colors.primaryBlue}`, pb: 1 }}
+            sx={{ color: "#254e59", fontWeight: "700", mb: 3, borderBottom: `3px solid #007391`, pb: 1 }}
           >
             Plantilla de Mensaje
           </Typography>
 
-         <Grid container spacing={4} mb={5}>
-  <Grid item xs={12} sm={6}>
-    <FormControl fullWidth>
-      <InputLabel sx={{ color: "#254e59", fontWeight: 600 }}>Seleccionar Plantilla</InputLabel>
-      <Select
-        value={template}  // Este es el id de la plantilla seleccionada
-        onChange={handleTemplateChange}
-        label="Seleccionar Plantilla"
-        sx={{ bgcolor: "#fff", borderRadius: 2, "& .MuiSelect-select": { fontWeight: 600 } }}
-      >
-        {templates.map((t) => (
-          <MenuItem key={t.id} value={t.id}>
-            {t.nombre_template} {/* Aquí se muestra el nombre de la plantilla */}
-          </MenuItem>
-        ))}
-      </Select>
-    </FormControl>
-  </Grid>
+          <Grid container spacing={4} mb={5}>
+            <Grid item xs={12} sm={6}>
+              <FormControl fullWidth>
+                <InputLabel sx={{ color: "#254e59", fontWeight: 600 }}>Seleccionar Plantilla</InputLabel>
+                <Select
+                  value={template}
+                  onChange={handleTemplateChange}
+                  label="Seleccionar Plantilla"
+                  sx={{ bgcolor: "#fff", borderRadius: 2, "& .MuiSelect-select": { fontWeight: 600 } }}
+                >
+                  {templates.map((t) => (
+                    <MenuItem key={t.id} value={t.id}>
+                      {t.nombre_template}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
 
-  <Grid item xs={12} sm={6}>
-    {template && (
-      <Card
-        sx={{
-          bgcolor: "#E3F2FD",  // Usando el color de fondo claro
-          p: 3,
-          minHeight: 140,
-          borderRadius: 3,
-          border: "1.5px solid #007391",  // Color de borde
-          boxShadow: "0 4px 12px rgba(0, 115, 145, 0.15)",  // Sombra para darle profundidad
-        }}
-      >
-        <Typography variant="subtitle1" fontWeight="bold" mb={1} color="#254e59">
-          Vista previa
-        </Typography>
-        <Typography variant="body1" color="#254e59">
-          {/* Aquí buscamos la plantilla seleccionada por id y mostramos su mensaje */}
-          {templates.find((t) => t.id === template)?.mensaje}
-        </Typography>
-      </Card>
-    )}
-  </Grid>
-</Grid>
+            <Grid item xs={12} sm={6}>
+              {template && (
+                <Card
+                  sx={{
+                    bgcolor: "#E3F2FD",
+                    p: 3,
+                    minHeight: 140,
+                    borderRadius: 3,
+                    border: "1.5px solid #007391",
+                    boxShadow: "0 4px 12px rgba(0, 115, 145, 0.15)",
+                  }}
+                >
+                  <Typography variant="subtitle1" fontWeight="bold" mb={1} color="#254e59">
+                    Vista previa
+                  </Typography>
+                  <Typography variant="body1" color="#254e59">
+                    {templates.find((t) => t.id === template)?.mensaje}
+                  </Typography>
+                </Card>
+              )}
+            </Grid>
+          </Grid>
 
           <Divider sx={{ mb: 5 }} />
 
           {/* FECHA Y HORA */}
           <Typography
             variant="h6"
-            sx={{ color: colors.darkBlue, fontWeight: "700", mb: 3, borderBottom: `3px solid ${colors.primaryBlue}`, pb: 1 }}
+            sx={{ color: "#254e59", fontWeight: "700", mb: 3, borderBottom: `3px solid #007391`, pb: 1 }}
           >
             Fecha y Hora de Envío
           </Typography>
@@ -387,7 +331,7 @@ export default function CampaignPage() {
                     {...params}
                     fullWidth
                     sx={{
-                      bgcolor: colors.white,
+                      bgcolor: "#fff",
                       borderRadius: 2,
                       "& .MuiInputBase-input": { fontWeight: 600 },
                     }}
@@ -406,7 +350,7 @@ export default function CampaignPage() {
                     {...params}
                     fullWidth
                     sx={{
-                      bgcolor: colors.white,
+                      bgcolor: "#fff",
                       borderRadius: 2,
                       "& .MuiInputBase-input": { fontWeight: 600 },
                     }}
@@ -421,8 +365,8 @@ export default function CampaignPage() {
               variant="contained"
               size="large"
               sx={{
-                bgcolor: colors.yellowAccent,
-                color: colors.darkBlue,
+                bgcolor: "#FFD54F",
+                color: "#254e59",
                 fontWeight: "700",
                 px: 6,
                 py: 1.5,
