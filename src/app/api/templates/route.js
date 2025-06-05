@@ -14,6 +14,12 @@ export async function GET() {
       orderBy: { created_at: "desc" }, // 🔹 Ordenar por fecha de creación descendente
     });
 
+    // Si no hay plantillas, devuelve un mensaje vacío o una lista vacía
+    if (templates.length === 0) {
+      return NextResponse.json({ message: "No se encontraron plantillas", data: [] });
+    }
+
+    // Si hay plantillas, devolverlas
     return NextResponse.json(templates);
   } catch (error) {
     console.error("❌ Error al obtener templates:", error);

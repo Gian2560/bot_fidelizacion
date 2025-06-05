@@ -1,125 +1,91 @@
-import prisma from "@/lib/prisma";
 import { NextResponse } from "next/server";
-import { MongoClient } from "mongodb";
-import pMap from "p-map";
-require("dotenv").config();
+import admin from "firebase-admin"; // Usar Firebase Admin para Firestore
+import prisma from "@/lib/prisma"; // Prisma para la base de datos relacional (PostgreSQL)
 
-const uri = process.env.DATABASE_URL_MONGODB;
-const clientPromise = new MongoClient(uri).connect();
+// Inicializar Firestore si no está inicializado
+if (!admin.apps.length) {
+  const serviceAccount = JSON.parse(process.env.FIREBASE_CREDENTIALS); // Credenciales de Firebase
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+  });
+}
+
+const db = admin.firestore();
 
 export async function POST(req, context) {
   try {
-    console.log("📌 Iniciando carga de clientes por selección directa...");
+    console.log("📌 Iniciando creación de campaña...");
 
-    const { params } = context;
-    if (!params || !params.id) {
-      console.error("❌ Error: ID de campaña no válido");
-      return NextResponse.json({ error: "ID de campaña no válido" }, { status: 400 });
-    }
+    const { nombre_campanha, descripcion, template_id, fecha_fin, clients } = await req.json();
+    
+    // Crear la campaña en Prisma (PostgreSQL)
+    const campanha = await prisma.campanha.create({
+      data: {
+        nombre_campanha,
+        descripcion,
+        template_id: template_id || null, // Se asigna el template_id si existe
+        fecha_fin: new Date(fecha_fin), // Convertir fecha a objeto Date
+      },
+    });
 
-    const campanhaId = Number(params.id);
-    if (isNaN(campanhaId)) {
-      console.error("❌ Error: El ID de la campaña no es un número válido");
-      return NextResponse.json({ error: "El ID de la campaña no es un número válido" }, { status: 400 });
-    }
+    // Verificar si se proporcionaron datos de clientes
+    if (clients && Array.isArray(clients) && clients.length > 0) {
+      const clientPromises = clients.map(async (clientData) => {
+        const { nombre, celular, estado, motivo, accion_comercial, gestor } = clientData;
 
-    const body = await req.json();
-    const { clientIds } = body;
+        // Verificar si el cliente ya existe en Prisma (PostgreSQL)
+        let cliente = await prisma.cliente.findUnique({
+          where: { celular: celular }, // Buscar por el celular
+        });
 
-    if (!Array.isArray(clientIds) || clientIds.length === 0) {
-      return NextResponse.json({ error: "No se proporcionaron clientes" }, { status: 400 });
-    }
-
-    const mongoClient = await clientPromise;
-    const db = mongoClient.db(process.env.MONGODB_DB);
-
-    const existingClientesMongo = await db.collection("clientes").find({
-      id_cliente: { $in: clientIds.map((id) => `cli_${id}`) },
-    }).toArray();
-
-    const clientesProcesados = [];
-    const omitidos = [];
-
-    const resultados = await Promise.allSettled(
-      clientIds.map(async (clienteId) => {
-        try {
-          const clienteExistente = await prisma.cliente.findUnique({
-            where: { cliente_id: clienteId },
-          });
-
-          if (!clienteExistente) {
-            console.warn(`⚠️ Cliente con ID ${clienteId} no encontrado en MySQL.`);
-            omitidos.push({ cliente_id: clienteId, razon: "No existe en MySQL" });
-            return;
-          }
-
-          const idMongo = `cli_${clienteId}`;
-          let clienteMongo = existingClientesMongo.find((client) => client.id_cliente === idMongo);
-
-          if (!clienteMongo) {
-            await db.collection("clientes").insertOne({
-              id_cliente: idMongo,
-              nombre: clienteExistente.nombre,
-              celular: clienteExistente.celular,
-              correo: "",
-              conversaciones: [],
-            });
-          }
-
-          const yaAsociado = await prisma.cliente_campanha.findFirst({
-            where: {
-              cliente_id: clienteId,
-              campanha_id: campanhaId,
-            },
-          });
-
-          if (yaAsociado) {
-            console.log(`🔁 Cliente ${clienteId} ya está en la campaña ${campanhaId}.`);
-            omitidos.push({ cliente_id: clienteId, razon: "Ya asociado a la campaña" });
-            return;
-          }
-
-          await prisma.cliente_campanha.create({
+        // Si el cliente no existe, crearlo
+        if (!cliente) {
+          console.log(`⚠️ Cliente con celular ${celular} no encontrado, creando nuevo cliente.`);
+          cliente = await prisma.cliente.create({
             data: {
-              cliente_id: clienteId,
-              campanha_id: campanhaId,
+              nombre,
+              celular,
+              estado,
+              motivo,
+              accion_comercial,
+              gestor,
             },
           });
-
-          clientesProcesados.push({
-            cliente_id: clienteId,
-            nombre: clienteExistente.nombre,
-            celular: clienteExistente.celular,
-            gestor: clienteExistente.gestor,
-          });
-
-          console.log(`✅ Cliente ${clienteId} agregado a campaña ${campanhaId}`);
-        } catch (innerError) {
-          console.error(`❌ Error interno al procesar cliente ${clienteId}:`, innerError?.message || innerError);
-          omitidos.push({ cliente_id: clienteId, razon: "Error inesperado" });
         }
-      })
-    );
 
-    const resumen = {
-      intentados: clientIds.length,
-      exitosos: clientesProcesados.length,
-      omitidos: omitidos.length,
-      fallidos: resultados.filter(r => r.status === 'rejected').length,
-    };
+        // Ahora que el cliente existe (o se ha creado), asociarlo a la campaña
+        await prisma.cliente_campanha.create({
+          data: {
+            cliente_id: cliente.cliente_id,
+            campanha_id: campanha.id,
+          },
+        });
 
-    console.log("📊 Resumen final de procesamiento:");
-    console.log(JSON.stringify(resumen, null, 2));
-    console.log("📋 Detalles de clientes omitidos:", JSON.stringify(omitidos, null, 2));
+        // Agregar el cliente a Firestore bajo la campaña recién creada
+        // Insertar los datos de cliente en la colección 'fidelizacion'
+        const fecha = new Date();
+        await db.collection("fidelizacion").doc(celular).set({
+          celular: celular,
+          fecha: admin.firestore.Timestamp.fromDate(fecha),
+          id_bot: "fidelizacionbot",  // Bot de fidelización
+          id_cliente: cliente.cliente_id,
+          mensaje: "Mensaje inicial de la campaña",  // Mensaje de ejemplo o vacío
+          sender: "false", // El primer mensaje lo manda el bot (false)
+        });
+
+        console.log(`✅ Cliente ${cliente.cliente_id} agregado a la campaña ${campanha.id} en Firestore`);
+      });
+
+      // Esperamos que todos los clientes sean procesados
+      await Promise.all(clientPromises);
+    }
 
     return NextResponse.json({
-      message: `Clientes procesados para la campaña ${campanhaId}`,
-      clientes: clientesProcesados,
-      resumen,
-      detalles_omitidos: omitidos
+      message: "Campaña y clientes creados con éxito",
+      campanha,
     });
   } catch (error) {
-    console.error("❌ Error al agregar clientes por gestor a campaña:", error?.message || error);
-    return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });
+    console.error("❌ Error al crear la campaña o agregar clientes:", error);
+    return NextResponse.json({ error: "Error al crear la campaña o agregar clientes" }, { status: 500 });
   }
 }

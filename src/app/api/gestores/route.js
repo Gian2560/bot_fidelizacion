@@ -9,7 +9,7 @@ export async function GET() {
         persona: true, // 🔹 Incluir los datos de la persona asociada
       },
       where: {
-        activo: 1, // Opcional: Solo traer usuarios activos
+        activo: true, // Opcional: Solo traer usuarios activos
       },
     });
 

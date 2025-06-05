@@ -392,7 +392,7 @@ export default function CampaignScheduler() {
         </Dialog>
       </LocalizationProvider>
           {/* BOTÓN AGREGAR NUEVA CAMPAÑA */}
-      <Box textAlign="center" mt={4}>
+      <Box textAlign="center" mt={4} onClick={() => router.push('reminders/new')} >
         <Button variant="contained" color="primary" size="large">
           + Nueva Campaña
         </Button>

@@ -18,7 +18,8 @@ import {
   Divider,
   Box,
 } from "@mui/material";
-
+import axiosInstance from "../../../../services/api";
+import { useEffect } from "react";
 import { LocalizationProvider, DatePicker, TimePicker } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 
@@ -34,7 +35,7 @@ export default function CampaignPage() {
   const [variable2, setVariable2] = useState("");
   const [sendDate, setSendDate] = useState(null);
   const [sendTime, setSendTime] = useState(null);
-
+  const [templates, setTemplates] = useState([]); // Para almacenar las plantillas obtenidas
   // Datos simulados
   const databases = ["Database1", "Database2", "Database3"];
   const columnsOptions = {
@@ -42,14 +43,33 @@ export default function CampaignPage() {
     Database2: ["ClientID", "Email", "DebtAmount", "PaymentHistory"],
     Database3: ["CustomerName", "Region", "BalanceDue", "LastPaymentDate"],
   };
-  const templates = [
-    { name: "Template 1", message: "Hola {{1}}, tu deuda es {{2}}. Por favor, paga antes del {{3}}." },
-    { name: "Template 2", message: "Estimado {{1}}, tu pago está pendiente de {{2}}. Recuerda que el plazo es hasta {{3}}." },
-  ];
+
   const segments = ["Segment 1", "Segment 2", "Segment 3", "Segment 4"];
   const clusters = ["Cluster 1", "Cluster 2", "Cluster 3"];
   const strategies = ["Strategy 1", "Strategy 2", "Strategy 3"];
   const variables = ["Variable 1", "Variable 2", "Variable 3"];
+
+
+  useEffect(() => {
+    const fetchTemplates = async () => {
+      try {
+        const response = await axiosInstance.get("/plantillas"); // Solicitud GET al endpoint de plantillas
+        setTemplates(response.data); // Guarda las plantillas en el estado
+        console.log("Plantillas obtenidas:", response.data);
+      } catch (error) {
+        console.error("Error al obtener plantillas:", error);
+      }
+    };
+    fetchTemplates();
+  }, []);
+
+  const handleTemplateChange = (event) => {
+    const selectedTemplate = event.target.value;
+    setTemplate(selectedTemplate);
+  };
+
+
+
 
   const handleSubmit = () => {
     console.log({
@@ -303,47 +323,48 @@ export default function CampaignPage() {
             Plantilla de Mensaje
           </Typography>
 
-          <Grid container spacing={4} mb={5}>
-            <Grid item xs={12} sm={6}>
-              <FormControl fullWidth>
-                <InputLabel sx={{ color: colors.darkBlue, fontWeight: 600 }}>Seleccionar Plantilla</InputLabel>
-                <Select
-                  value={template}
-                  onChange={(e) => setTemplate(e.target.value)}
-                  label="Seleccionar Plantilla"
-                  sx={{ bgcolor: colors.white, borderRadius: 2, "& .MuiSelect-select": { fontWeight: 600 } }}
-                >
-                  {templates.map((t) => (
-                    <MenuItem key={t.name} value={t.name}>
-                      {t.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
+         <Grid container spacing={4} mb={5}>
+  <Grid item xs={12} sm={6}>
+    <FormControl fullWidth>
+      <InputLabel sx={{ color: "#254e59", fontWeight: 600 }}>Seleccionar Plantilla</InputLabel>
+      <Select
+        value={template}  // Este es el id de la plantilla seleccionada
+        onChange={handleTemplateChange}
+        label="Seleccionar Plantilla"
+        sx={{ bgcolor: "#fff", borderRadius: 2, "& .MuiSelect-select": { fontWeight: 600 } }}
+      >
+        {templates.map((t) => (
+          <MenuItem key={t.id} value={t.id}>
+            {t.nombre_template} {/* Aquí se muestra el nombre de la plantilla */}
+          </MenuItem>
+        ))}
+      </Select>
+    </FormControl>
+  </Grid>
 
-            <Grid item xs={12} sm={6}>
-              {template && (
-                <Card
-                  sx={{
-                    bgcolor: colors.lightBlueBg,
-                    p: 3,
-                    minHeight: 140,
-                    borderRadius: 3,
-                    border: `1.5px solid ${colors.primaryBlue}`,
-                    boxShadow: "0 4px 12px rgba(0, 115, 145, 0.15)",
-                  }}
-                >
-                  <Typography variant="subtitle1" fontWeight="bold" mb={1} color={colors.darkBlue}>
-                    Vista previa
-                  </Typography>
-                  <Typography variant="body1" color={colors.darkBlue}>
-                    {templates.find((t) => t.name === template)?.message}
-                  </Typography>
-                </Card>
-              )}
-            </Grid>
-          </Grid>
+  <Grid item xs={12} sm={6}>
+    {template && (
+      <Card
+        sx={{
+          bgcolor: "#E3F2FD",  // Usando el color de fondo claro
+          p: 3,
+          minHeight: 140,
+          borderRadius: 3,
+          border: "1.5px solid #007391",  // Color de borde
+          boxShadow: "0 4px 12px rgba(0, 115, 145, 0.15)",  // Sombra para darle profundidad
+        }}
+      >
+        <Typography variant="subtitle1" fontWeight="bold" mb={1} color="#254e59">
+          Vista previa
+        </Typography>
+        <Typography variant="body1" color="#254e59">
+          {/* Aquí buscamos la plantilla seleccionada por id y mostramos su mensaje */}
+          {templates.find((t) => t.id === template)?.mensaje}
+        </Typography>
+      </Card>
+    )}
+  </Grid>
+</Grid>
 
           <Divider sx={{ mb: 5 }} />
 
