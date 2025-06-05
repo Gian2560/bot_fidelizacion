@@ -16,8 +16,8 @@ export const clients = {
   Database1: [
     {
       id: 1,
-      name: "Cliente 1",
-      phone: "+51 912345678", // Número con prefijo +51 y 9 dígitos
+      name: "Yomira",
+      phone: "+51941729891", // Número con prefijo +51 y 9 dígitos
       state: "Activo",
       reason: "Deuda pendiente",
       commercialAction: "Enviar recordatorio",
@@ -29,8 +29,8 @@ export const clients = {
     },
     {
       id: 2,
-      name: "Cliente 2",
-      phone: "+51 998765432", // Número con prefijo +51 y 9 dígitos
+      name: "Daniel",
+      phone: "+51993538942", // Número con prefijo +51 y 9 dígitos
       state: "Inactivo",
       reason: "No respondió",
       commercialAction: "Llamar nuevamente",

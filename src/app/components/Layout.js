@@ -224,7 +224,7 @@ export default function Layout({ children }) {
         {session?.user?.role === "administrador" && (
           <ListItem
             button="true"
-            onClick={() => router.push("/reminders")}
+            onClick={() => router.push("/campaigns")}
             sx={{
               "&:hover": { bgcolor: "#2D3748" },
               px: 3,

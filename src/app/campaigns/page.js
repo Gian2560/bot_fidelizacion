@@ -5,6 +5,7 @@ import CustomDataGrid from "../components/CustomDataGrid";
 import CampaignModal from "../components/CampaignModal";
 import useCampaigns from "../../hooks/useCampaigns";
 import { CAMPAIGN_COLUMNS } from "@/constants/columnsCampaigns";
+import { useRouter } from "next/navigation";
 
 const CampaignsPage = () => {
   const {
@@ -25,6 +26,7 @@ const CampaignsPage = () => {
     loading,
     error,
   } = useCampaigns();
+  const router = useRouter(); // Crear la instancia del router
 
   return (
     <Box p={3} width="100%" maxWidth="1200px" margin="auto" height="100%">
@@ -41,7 +43,7 @@ const CampaignsPage = () => {
         <Button
           variant="contained"
           color="primary"
-          onClick={handleCreate}
+          onClick={() => router.push('/reminders/new')}
           sx={{
             backgroundColor: "#007391", // Azul suave
             "&:hover": {

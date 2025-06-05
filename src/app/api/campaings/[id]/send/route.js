@@ -1,8 +1,21 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import clientPromise from "@/lib/mongodb"; // Importa la conexión persistente
+import admin from "firebase-admin";
 import twilio from "twilio";
 
+// Inicializar Firebase Admin si no está inicializado
+if (!admin.apps.length) {
+  try {
+    const serviceAccount = JSON.parse(process.env.FIREBASE_CREDENTIALS);
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount),
+    });
+  } catch (error) {
+    console.warn("⚠️ Firebase initialization failed:", error.message);
+  }
+}
+
+const db = admin.firestore();
 const client = twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH_TOKEN);
 
 export async function POST(req, { params }) {
@@ -24,152 +37,122 @@ export async function POST(req, { params }) {
 
     if (!campaign.template || !campaign.template.template_content_sid) {
       return NextResponse.json({ error: "La campaña no tiene un template válido" }, { status: 400 });
-    }
-
-    const twilioWhatsAppNumber = `whatsapp:${process.env.TWILIO_PHONE_NUMBER}`;
+    }    const twilioWhatsAppNumber = `whatsapp:${process.env.TWILIO_PHONE_NUMBER}`;
     const sentMessages = [];
 
-    // Obtener la conexión a MongoDB de clientPromise
-    const mongoClient = await clientPromise;
-    const db = mongoClient.db(process.env.MONGODB_DB);
-    const collection = db.collection("clientes");
-
-    // Obtener todos los clientes de MongoDB con los números correspondientes en un solo paso
-    const phoneNumbers = campaign.cliente_campanha.map(({ cliente }) => cliente.celular);
-    const existingClientesMongo = await collection.find({
-      celular: { $in: phoneNumbers },
-    }).toArray();
-
-    const mongoClientesMap = new Map(
-      existingClientesMongo.map(cliente => [cliente.celular, cliente])
-    );
-
+    // Procesar cada cliente de la campaña
     const promises = campaign.cliente_campanha.map(async ({ cliente, cliente_campanha_id }) => {
       if (!cliente || !cliente.celular) {
         console.warn(`⚠ Cliente ${cliente?.nombre || "Desconocido"} no tiene un número válido.`);
         return;
       }
 
-      let celularFormatted = `whatsapp:${cliente.celular.trim()}`;
+      // Formatear el número de teléfono para Twilio
+      let celularFormatted = cliente.celular.trim();
+      if (!celularFormatted.startsWith("+51")) {
+        celularFormatted = `+51${celularFormatted}`;
+      }
+      const twilioNumber = `whatsapp:${celularFormatted}`;
+      
       const contentSid = campaign.template.template_content_sid;
 
       let messagePayload = {
         from: twilioWhatsAppNumber,
-        to: celularFormatted,
+        to: twilioNumber,
         contentSid,
       };
 
       // Si la plantilla tiene parámetros dinámicos, los agregamos al payload
       if (campaign.template.parametro) {
-        // Aquí puedes agregar múltiples parámetros según el template
-        // Ejemplo: Si el template tiene varios parámetros, los puedes agregar de esta manera.
-        // Supón que el template tiene 3 parámetros, como nombre, apellido y una fecha
         messagePayload.contentVariables = JSON.stringify({
           1: cliente.nombre,        // Primer parámetro, nombre del cliente
         });
-      }
-
-      try {
-        // 📌 Enviar el mensaje con Twilio en paralelo
+      }      try {
+        // 📌 Enviar el mensaje con Twilio
         const message = await client.messages.create(messagePayload);
-        console.log(`📨 Mensaje enviado a ${cliente.celular}: ${message.sid}`);
-        // dentro de tu loop, tras recibir el `message` de Twilio:
-        await prisma.cliente_campanha.update({
-          where: { cliente_campanha_id },   // asume que ya lo has extraído antes
-          data: {
-            message_sid: message.sid,
-            message_status: message.status,  // sin "as Prisma.InputJsonValue"
-            last_update: new Date(),
-          },
+        console.log(`📨 Mensaje enviado a ${celularFormatted}: ${message.sid}`);
+        
+        // No actualizar campos que no existen en el esquema - solo registrar en Firebase
+
+        // 🔥 Agregar el mensaje a Firebase Firestore en la colección "fidelizacion"
+        const firebaseDoc = {
+          celular: celularFormatted,
+          fecha: admin.firestore.Timestamp.fromDate(new Date()),
+          id_bot: "fidelizacionbot",
+          id_cliente: cliente.cliente_id,
+          mensaje: campaign.template.mensaje || "Mensaje de campaña",
+          sender: "false", // El bot envía el mensaje
+          message_sid: message.sid,
+          campanha_id: campaignId,
+          estado: "enviado"
+        };
+
+        // Usar el celular como ID del documento para facilitar consultas
+        await db.collection("fidelizacion").doc(celularFormatted).set(firebaseDoc, { merge: true });
+        
+        console.log(`✅ Mensaje registrado en Firestore para ${celularFormatted}`);
+
+        sentMessages.push({ 
+          to: celularFormatted, 
+          status: "sent", 
+          sid: message.sid,
+          cliente_id: cliente.cliente_id
         });
-        // Buscar si el cliente ya tiene una conversación en MongoDB
-        let clienteMongo = mongoClientesMap.get(cliente.celular);
 
-        if (!clienteMongo) {
-          // Si el cliente no existe en MongoDB, crearlo
-          const nuevoClienteMongo = {
-            id_cliente: `cli_${Date.now()}`,
-            nombre: cliente.nombre,
-            celular: cliente.celular,
-            correo: "",
-            conversaciones: [],
-          };
-          await collection.insertOne(nuevoClienteMongo);
-          clienteMongo = nuevoClienteMongo;
-          console.log(`✅ Cliente creado en MongoDB con ID: cli_${cliente.id_cliente}`);
-        }
-
-        // Realizar actualizaciones en MongoDB de forma eficiente con bulkWrite
-        const conversacionId = `conv_${Date.now()}`;
-        const nuevaInteraccion = {
-          fecha: new Date(),
-          mensaje_chatbot: campaign.template.mensaje,
-          mensaje_id: message.sid,
-        };
-
-        const tieneConversacionActiva = clienteMongo.conversaciones.some(conv => conv.estado === "activa");
-
-        if (tieneConversacionActiva) {
-          await collection.updateOne(
-            { celular: cliente.celular, "conversaciones.estado": "activa" },
-            {
-              $push: {
-                "conversaciones.$.interacciones": nuevaInteraccion,
-              },
-              $set: { "conversaciones.$.ultima_interaccion": new Date() },
-            }
-          );
-        } else {
-          await collection.updateOne(
-            { celular: cliente.celular },
-            {
-              $push: {
-                conversaciones: {
-                  conversacion_id: conversacionId,
-                  estado: "activa",
-                  ultima_interaccion: new Date(),
-                  interacciones: [nuevaInteraccion],
-                },
-              },
-            }
-          );
-        }
-
-        sentMessages.push({ to: cliente.celular, status: "sent", sid: message.sid });
       } catch (error) {
-        console.error(`❌ Error al enviar mensaje a ${cliente.celular}:`, error);
-        sentMessages.push({ to: cliente.celular, status: "failed", error: error.message });
-
-        // Registra el intento fallido en MongoDB
-        const conversacionId = `conv_${Date.now()}`;
-        const nuevaInteraccion = {
-          fecha: new Date(),
-          mensaje_chatbot: campaign.template.mensaje,
-          mensaje_id: null,
+        console.error(`❌ Error al enviar mensaje a ${celularFormatted}:`, error);
+        
+        // Registrar el error en Firestore
+        const errorDoc = {
+          celular: celularFormatted,
+          fecha: admin.firestore.Timestamp.fromDate(new Date()),
+          id_bot: "fidelizacionbot",
+          id_cliente: cliente.cliente_id,
+          mensaje: campaign.template.mensaje || "Mensaje de campaña",
+          sender: "false",
+          campanha_id: campaignId,
           estado: "fallido",
-          error: error.message,
+          error: error.message
         };
 
-        await collection.updateOne(
-          { celular: cliente.celular },
-          {
-            $push: {
-              conversaciones: {
-                conversacion_id: conversacionId,
-                estado: "fallido",
-                ultima_interaccion: new Date(),
-                interacciones: [nuevaInteraccion],
-              },
-            },
-          }
-        );
-      }
-    });
+        try {
+          await db.collection("fidelizacion").doc(`${celularFormatted}_error_${Date.now()}`).set(errorDoc);
+        } catch (firebaseError) {
+          console.error("Error al registrar fallo en Firestore:", firebaseError);
+        }
 
-    // Esperar todas las promesas
+        sentMessages.push({ 
+          to: celularFormatted, 
+          status: "failed", 
+          error: error.message,
+          cliente_id: cliente.cliente_id
+        });
+      }
+    });    // Esperar todas las promesas
     await Promise.all(promises);
 
-    return NextResponse.json({ success: true, sentMessages });
+    // Actualizar el estado de la campaña
+    await prisma.campanha.update({
+      where: { campanha_id: campaignId },
+      data: { 
+        estado_campanha: "enviada",
+        fecha_fin: new Date()
+      },
+    });
+
+    const successCount = sentMessages.filter(msg => msg.status === "sent").length;
+    const failedCount = sentMessages.filter(msg => msg.status === "failed").length;
+
+    return NextResponse.json({ 
+      success: true, 
+      sentMessages,
+      summary: {
+        total: sentMessages.length,
+        sent: successCount,
+        failed: failedCount,
+        campaignId: campaignId
+      }
+    });
   } catch (error) {
     console.error("❌ Error en el envío de mensajes con Twilio:", error);
     return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });

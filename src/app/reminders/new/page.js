@@ -28,7 +28,7 @@ import axiosInstance from "../../../../services/api"; // Tu instancia de axios c
 import { LocalizationProvider, DatePicker, TimePicker } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { clients, databases, columnsOptions } from "../../../../dummyData"; // Datos simulados
-
+import { useRouter } from "next/navigation"; // Hook para navegación
 export default function CampaignPage() {
   const [campaignName, setCampaignName] = useState("");
   const [selectedDatabase, setSelectedDatabase] = useState("");
@@ -48,7 +48,7 @@ export default function CampaignPage() {
 
   // Datos de clientes por base de datos
   const [filteredClients, setFilteredClients] = useState([]);
-
+  const router = useRouter(); // Hook para navegación
   // Cargar plantillas desde el backend
   useEffect(() => {
     const fetchTemplates = async () => {
@@ -100,24 +100,33 @@ export default function CampaignPage() {
   const currentClients = filteredClients.slice(indexOfFirstClient, indexOfLastClient);
 
   // Función para manejar el envío del formulario y crear la campaña
-  const handleSubmit = async () => {
-    const campaignData = {
-      nombre_campanha: campaignName,
-      descripcion: "Descripción de la campaña",
-      template_id: template,
-      fecha_fin: sendDate,
-      clients: selectedClients, // Clientes seleccionados
-    };
+const handleSubmit = async () => {
+  // Convertir sendDate a un formato adecuado para el backend
+  const formattedDate = sendDate ? sendDate.toISOString() : null;
 
-    try {
-      const response = await axiosInstance.post("/campaing/add-clientes", campaignData);
-      console.log("Campaña y clientes creados con éxito:", response.data);
-      alert("Campaña creada con éxito");
-    } catch (error) {
-      console.error("Error al crear la campaña:", error);
-      alert("Hubo un error al crear la campaña");
-    }
+  const campaignData = {
+    nombre_campanha: campaignName,
+    descripcion: "Descripción de la campaña",
+    template_id: template,
+    fecha_fin: formattedDate, // Enviar la fecha formateada
+    clients: selectedClients, // Clientes seleccionados
   };
+
+  // Verifica el payload antes de enviarlo
+  console.log("Datos a enviar:", campaignData);
+
+  try {
+    const response = await axiosInstance.post("/campaings/add-clients", campaignData);
+    console.log("Campaña y clientes creados con éxito:", response.data);
+    alert("Campaña creada con éxito");
+    router.push("/campaigns"); // Redirigir a la lista de campañas
+  } catch (error) {
+    console.error("Error al crear la campaña:", error);
+    alert("Hubo un error al crear la campaña");
+  }
+};
+
+
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
