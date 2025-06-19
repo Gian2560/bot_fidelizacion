@@ -9,7 +9,7 @@ import { es } from "date-fns/locale"; // 📌 Asegura el idioma correcto para es
 import { startOfDay, endOfDay, subDays } from "date-fns";
 
 const presets = [
-  { label: "Todos", value: "all" }, 
+  { label: "Todos", value: "all" },
   { label: "Hoy", value: "today" },
   { label: "Últimos 7 días", value: "7" },
   { label: "Últimos 30 días", value: "30" },
@@ -49,7 +49,7 @@ export default function ClientesFilters({ filters, setFilters }) {
     setEndDate(newEnd);
     setFilters((prev) => ({
       ...prev,
-      fechaInicio: newStart ? newStart.toISOString() : "", 
+      fechaInicio: newStart ? newStart.toISOString() : "",
       fechaFin: newEnd ? newEnd.toISOString() : "",
     }));
   };
@@ -113,8 +113,8 @@ export default function ClientesFilters({ filters, setFilters }) {
             </Select>
           </FormControl>
         </Grid>
-         {/* Filtro de Acción Comercial */}
-         <Grid item xs={12} sm={4}>
+        {/* Filtro de Acción Comercial */}
+        <Grid item xs={12} sm={4}>
           <TextField
             select
             label="Acción Comercial"
@@ -133,28 +133,28 @@ export default function ClientesFilters({ filters, setFilters }) {
             <MenuItem value="Promesa de Pago">Promesa de Pago</MenuItem>
             <MenuItem value="Volver a contactar">Volver a contactar</MenuItem>
             <MenuItem value="Pago">Pago</MenuItem>
-            <MenuItem value="Sin accion comercial">Sin acción comercial</MenuItem> 
+            <MenuItem value="Sin accion comercial">Sin acción comercial</MenuItem>
           </TextField>
         </Grid>
         <Grid item xs={12} sm={4}>
-  <TextField
-    select
-    label="Interacción con Bot"
-    size="small"
-    value={filters.interaccionBot || "Todos"} // Valor por defecto "Todos"
-    onChange={(e) => setFilters({ ...filters, interaccionBot: e.target.value })}
-    fullWidth
-    variant="outlined"
-    sx={{
-      borderRadius: "8px",
-      backgroundColor: "#f9f9f9",
-    }}
-  >
-    <MenuItem value="Todos">Todos</MenuItem>
-    <MenuItem value="Con interacción">Con interacción</MenuItem>
-    <MenuItem value="Sin interacción">Sin interacción</MenuItem>
-  </TextField>
-</Grid>
+          <TextField
+            select
+            label="Interacción con Bot"
+            size="small"
+            value={filters.interaccionBot || "Todos"} // Valor por defecto "Todos"
+            onChange={(e) => setFilters({ ...filters, interaccionBot: e.target.value })}
+            fullWidth
+            variant="outlined"
+            sx={{
+              borderRadius: "8px",
+              backgroundColor: "#f9f9f9",
+            }}
+          >
+            <MenuItem value="Todos">Todos</MenuItem>
+            <MenuItem value="Con interacción">Con interacción</MenuItem>
+            <MenuItem value="Sin interacción">Sin interacción</MenuItem>
+          </TextField>
+        </Grid>
 
         {preset === "custom" && (
           <>
@@ -190,31 +190,31 @@ export default function ClientesFilters({ filters, setFilters }) {
             </Grid>
           </>
         )}
-<Grid item xs={12} sm={4}>
-  <DatePicker
-    label="Fecha de Registro"
-    views={['year', 'month']}
-    value={filters.fechaRegistro || null}
-    onChange={(newValue) => {
-      setFilters((prev) => ({
-        ...prev,
-        fechaRegistro: newValue || null,
-      }));
-    }}    
-    format="MMMM yyyy"
-    slotProps={{
-      textField: {
-        fullWidth: true,
-        size: "small",
-        variant: "outlined",
-        sx: {
-          borderRadius: "8px",
-          backgroundColor: "#f9f9f9",
-        },
-      },
-    }}
-  />
-</Grid>
+        <Grid item xs={12} sm={4}>
+          <DatePicker
+            label="Fecha de Registro"
+            views={['year', 'month']}
+            value={filters.fechaRegistro || null}
+            onChange={(newValue) => {
+              setFilters((prev) => ({
+                ...prev,
+                fechaRegistro: newValue || null,
+              }));
+            }}
+            format="MMMM yyyy"
+            slotProps={{
+              textField: {
+                fullWidth: true,
+                size: "small",
+                variant: "outlined",
+                sx: {
+                  borderRadius: "8px",
+                  backgroundColor: "#f9f9f9",
+                },
+              },
+            }}
+          />
+        </Grid>
 
 
         <Grid item xs={12}>
