@@ -31,6 +31,7 @@ export function useClientes() {
       setLoading(true);
       const data = await fetchClientes({ page: pagination.page, pageSize: pagination.pageSize, filters, sortModel, name: session?.user?.name,role: session?.user?.role});
       setClientes(data.clientes);
+      console.log("clientes", data.clientes);
       setTotalClientes(data.total);
       setLoading(false);
     };

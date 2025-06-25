@@ -90,13 +90,32 @@ export async function GET(req) {
       orderBy: { [orderBy]: order },
       take: pageSize,
       skip: (page - 1) * pageSize,
-      
+      include: {
+        contrato: {
+          take: 1,                                 // solo el más reciente
+          orderBy: { fecha_pago: 'desc' },         // orden por fecha de pago descendente
+          select: {
+            estado: true,
+            motivo: true
+          }
+        }
+      }
     });
 
     console.log("✅ Clientes obtenidos:", clientes.length);
 
     // 🛠️ Obtener total de clientes
     const totalClientes = await prisma.cliente.count({ where: filtros });
+    // 🗺️ Mapear la respuesta incluyendo estado/motivo desde contrato[0]
+    const payload = clientes.map(cliente => {
+      const ultimoContrato = cliente.contrato[0] || {};
+      return {
+        ...cliente,
+        id: cliente.cliente_id,
+        estado: ultimoContrato.estado ?? null,
+        motivo: ultimoContrato.motivo ?? null
+      };
+    });
 
     // 🚨 Verificar valores antes de responder
     if (!clientes || !Array.isArray(clientes)) {
@@ -104,14 +123,9 @@ export async function GET(req) {
       return NextResponse.json({ clientes: [], total: 0 });
     }
 
-    return NextResponse.json({
-        clientes: clientes.map(cliente => ({
-          ...cliente,
-          id: cliente.cliente_id, // ✅ Cambiamos `cliente_id` a `id`
-        })), total: totalClientes });
+    return NextResponse.json({ clientes: payload, total: totalClientes });
   } catch (error) {
     console.error("❌ Error en el try-catch:", error);
-
     return NextResponse.json(
       { error: "Error al obtener clientes", message: error.message || "Error desconocido" },
       { status: 500 }
