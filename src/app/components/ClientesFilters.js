@@ -87,12 +87,11 @@ export default function ClientesFilters({ filters, setFilters }) {
             }}
           >
             <MenuItem value="Todos">Todos</MenuItem>
-            <MenuItem value="Interesado">Interesado</MenuItem>
-            <MenuItem value="Promesa de Pago">Promesa de Pago</MenuItem>
+            <MenuItem value="">Seleccionar acción</MenuItem>
+            <MenuItem value="Seguimiento - Duda no resuelta">Seguimiento - Duda no resuelta</MenuItem>
             <MenuItem value="No interesado">No interesado</MenuItem>
-            <MenuItem value="Finalizado">Finalizado</MenuItem>
-            <MenuItem value="En seguimiento">En seguimiento</MenuItem>
-            <MenuItem value="No contactado">No contactado</MenuItem>
+            <MenuItem value="Promesa de Pago">Promesa de Pago</MenuItem>
+            <MenuItem value="Seguimiento - Duda resuelta">Seguimiento - Duda resuelta</MenuItem>
           </TextField>
         </Grid>
 
@@ -117,7 +116,7 @@ export default function ClientesFilters({ filters, setFilters }) {
         <Grid item xs={12} sm={4}>
           <TextField
             select
-            label="Acción Comercial"
+            label="Estado Asesor"
             size="small"
             value={filters.accionComercial || "Todos"}
             onChange={(e) => setFilters({ ...filters, accionComercial: e.target.value })}
@@ -129,11 +128,11 @@ export default function ClientesFilters({ filters, setFilters }) {
             }}
           >
             <MenuItem value="Todos">Todos</MenuItem>
+            <MenuItem value="">Seleccionar acción</MenuItem>
+            <MenuItem value="Seguimiento - Duda no resuelta">Seguimiento - Duda no resuelta</MenuItem>
             <MenuItem value="No interesado">No interesado</MenuItem>
             <MenuItem value="Promesa de Pago">Promesa de Pago</MenuItem>
-            <MenuItem value="Volver a contactar">Volver a contactar</MenuItem>
-            <MenuItem value="Pago">Pago</MenuItem>
-            <MenuItem value="Sin accion comercial">Sin acción comercial</MenuItem>
+            <MenuItem value="Seguimiento - Duda resuelta">Seguimiento - Duda resuelta</MenuItem>
           </TextField>
         </Grid>
         <Grid item xs={12} sm={4}>

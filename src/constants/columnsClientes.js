@@ -4,18 +4,17 @@ import ActionButton from "@/app/components/ActionButton";
 
 // 🔹 Mapas de estilos
 const ESTADO_STYLES = {
-  "EN SEGUIMIENTO":   { color: "#1565C0", backgroundColor: "#BBDEFB"},
-  "NO QUIERE PAGAR":  { color: "#8C6E11", backgroundColor: "#FFECB3"},
-  "NO INTERESADO":    { color: "#B71C1C", backgroundColor: "#FFCDD2"},
-  "PROMESA DE PAGO":  { color: "#2E7D32", backgroundColor: "#C8E6C9"},
-  "FINALIZADO":       { color: "#5E35B1", backgroundColor: "#D1C4E9" },
+  "NO INTERESADO": { color: "#B71C1C", backgroundColor: "#FFCDD2" },
+  "SEGUIMIENTO - DUDA NO RESUELTA": { color: "#1565C0", backgroundColor: "#BBDEFB" },
+  "PROMESA DE PAGO": { color: "#2E7D32", backgroundColor: "#C8E6C9" },
+  "SEGUIMIENTO - DUDA RESUELTA": { color: "#5E35B1", backgroundColor: "#D1C4E9" },
 };
 
 const MOTIVO_STYLES = {
-  "ECONOMICO":        { color: "#D84315", backgroundColor: "#FFCCBC", fontWeight: "bold" },
-  "MALA INFORMACION": { color: "#6A1B9A", backgroundColor: "#E1BEE7", fontWeight: "bold" },
-  "SE COMPROMETE A PAGAR EL {FECHA_LEGIBLE}":   { color: "#795548", backgroundColor: "#D7CCC8", fontWeight: "bold" },
-  "OTROS MOTIVOS":   { color: "#8D6E63", backgroundColor: "#FFECB3", fontWeight: "bold" },
+  "NO INTERESADO": { color: "#B71C1C", backgroundColor: "#FFCDD2" },
+  "SEGUIMIENTO - DUDA NO RESUELTA": { color: "#1565C0", backgroundColor: "#BBDEFB" },
+  "PROMESA DE PAGO": { color: "#2E7D32", backgroundColor: "#C8E6C9" },
+  "SEGUIMIENTO - DUDA RESUELTA": { color: "#5E35B1", backgroundColor: "#D1C4E9" },
 };
 
 // 🔹 Funciones de estilo (devuelven el estilo o un gris suave)
@@ -59,8 +58,8 @@ export const columnsClientes = (edit, conversacion) => [
   },
 
   {
-    field: "motivo",
-    headerName: "Motivo",
+    field: "estado_asesor",
+    headerName: "Estado Asesor",
     flex: 1,
     minWidth: 120,
     renderCell: params => {
@@ -82,7 +81,7 @@ export const columnsClientes = (edit, conversacion) => [
     },
   },
 
-  { field: "accion",  headerName: "Acción Comercial", flex: 1, minWidth: 120 },
+  //{ field: "estado_asesor",  headerName: "Estado Asesor", flex: 1, minWidth: 120 },
   { field: "gestor",  headerName: "Gestor",            flex: 1, minWidth: 120 },
 
   {
@@ -94,7 +93,7 @@ export const columnsClientes = (edit, conversacion) => [
       return (
         <ActionButton
           options={[
-            { label: "Acción Comercial", action: () => edit(params.row) },
+            { label: "Cambiar estado", action: () => edit(params.row) },
             { label: "Ver Conversación", action: () => conversacion(params.row.id) },
             { label: "Ver Detalle",      action: () => router.push(`/clientes/${params.row.id}`) },
           ]}

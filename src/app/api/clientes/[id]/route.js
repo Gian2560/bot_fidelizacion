@@ -39,13 +39,13 @@ export async function PUT(req, context) {
     const params = await context.params;  
     const { id } = params;
     const { estado, accion, gestor, observaciones, fechaPromesaPago } = await req.json();
-
+    console.log("🔄 Actualizando cliente con ID:", id);
     // ✅ Actualizar el cliente en MySQL
     const updatedCliente = await prisma.cliente.update({
       where: { cliente_id: parseInt(id) },
       data: {
         estado,
-        accion,
+        estado_asesor: accion, // Asignar el mismo estado al campo `estado_asesor`
         gestor,
         observacion: observaciones,
       },
@@ -63,7 +63,7 @@ export async function PUT(req, context) {
     }
 
     // 📌 Si hay una acción comercial, registrar en `accion_comercial`
-    if (accion) {
+    /*if (accion) {
       await prisma.accion_comercial.create({
         data: {
           cliente_id: parseInt(id),
@@ -73,7 +73,7 @@ export async function PUT(req, context) {
           nota: `Cambio de acción a: ${accion}`,
         },
       });
-    }
+    }*/
 
     // 📌 Si el estado es "Promesa de Pago", registrar la fecha en `cita`
     if (fechaPromesaPago) {

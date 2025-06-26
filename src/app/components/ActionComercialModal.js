@@ -96,13 +96,13 @@ const ActionComercialModal = ({ open, onClose, cliente, gestores, onSave }) => {
         <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
             <DialogTitle>Acción Comercial (Cliente)</DialogTitle>
             <DialogContent>
-                <Typography variant="subtitle1" fontWeight="bold">
-                    Usuario actual: {cliente?.nombre || "N/A"}
-                </Typography>
+                {/*<Typography variant="subtitle1" fontWeight="bold">
+                   {cliente?.nombre || "N/A"}
+                </Typography>*/}
 
                 <TextField label="Nombre" fullWidth margin="dense" name="nombre" value={clienteData.nombre} onChange={handleChange} />
-                <TextField label="Email" fullWidth margin="dense" name="email" value={clienteData.email} onChange={handleChange} />
-                <TextField label="Teléfono" fullWidth margin="dense" name="telefono" value={clienteData.telefono} onChange={handleChange} />
+                {/*<TextField label="Email" fullWidth margin="dense" name="email" value={clienteData.email} onChange={handleChange} />}
+                {<TextField label="Teléfono" fullWidth margin="dense" name="telefono" value={clienteData.telefono} onChange={handleChange} />*/}
 
                 <FormControl fullWidth margin="dense">
                     <InputLabel>Gestor</InputLabel>
@@ -119,13 +119,13 @@ const ActionComercialModal = ({ open, onClose, cliente, gestores, onSave }) => {
                 <TextField label="Observaciones" fullWidth margin="dense" name="observaciones" multiline rows={3} value={clienteData.observaciones} onChange={handleChange} />
 
                 <FormControl fullWidth margin="dense">
-                    <InputLabel>Acción Comercial</InputLabel>
+                    <InputLabel>Acción Comerciall</InputLabel>
                     <Select name="accion" value={clienteData.accion} onChange={handleChange}>
                         <MenuItem value="">Seleccionar acción</MenuItem>
-                        <MenuItem value="Volver a contactar">Volver a contactar</MenuItem>
+                        <MenuItem value="Seguimiento - Duda no resuelta">Seguimiento - Duda no resuelta</MenuItem>
                         <MenuItem value="No interesado">No interesado</MenuItem>
                         <MenuItem value="Promesa de Pago">Promesa de Pago</MenuItem>
-                        <MenuItem value="Pago">Pago</MenuItem>
+                        <MenuItem value="Seguimiento - Duda resuelta">Seguimiento - Duda resuelta</MenuItem>
                     </Select>
                 </FormControl>
 

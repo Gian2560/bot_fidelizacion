@@ -72,11 +72,14 @@ model cliente {
   accion                       String?            @db.VarChar(50)
   in_out                       Boolean?           @default(false)
   score                        String             @default("no_score") @db.VarChar(20)
+  estado                       String?            @db.VarChar(50)
+  detalle                      String?
+  estado_asesor                String?            @db.VarChar(50)
   accion_comercial             accion_comercial[]
   cita                         cita[]
   cliente_campanha             cliente_campanha[]
   codigo_pago                  codigo_pago[]
-  contrato                     contrato[]
+  contrato                     contrato?
   conversacion                 conversacion[]
   historico_score              historico_score[]
   leadh                        leadh[]
@@ -109,7 +112,7 @@ model codigo_pago {
 
 model contrato {
   contrato_id      Int                @id @default(autoincrement())
-  cliente_id       Int
+  cliente_id       Int                @unique(map: "unq_contrato_cliente")
   estado           String?            @default("en seguimiento") @db.VarChar(25)
   motivo           String?            @default("desconocido")
   fecha_pago       DateTime?          @default(now()) @db.Timestamp(6)

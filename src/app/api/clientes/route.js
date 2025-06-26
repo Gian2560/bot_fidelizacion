@@ -70,7 +70,7 @@ export async function GET(req) {
       // filtros.gestor_id = parseInt(gestor, 10);
     }
     if (accionComercial && accionComercial !== "Todos") {
-      filtros.accion = accionComercial; // Filtrar por "Acción Comercial"
+      filtros.estado_asesor = accionComercial; // Filtrar por "Acción Comercial"
     }
     if (interaccionBot === "Con interacción") {
       filtros.fecha_ultima_interaccion_bot = { not: null }; // Clientes con fecha de interacción
@@ -90,17 +90,7 @@ export async function GET(req) {
       orderBy: { [orderBy]: order },
       take: pageSize,
       skip: (page - 1) * pageSize,
-      include: {
-        contrato: {
-          take: 1,                                 // solo el más reciente
-          orderBy: { fecha_pago: 'desc' },         // orden por fecha de pago descendente
-          select: {
-            estado: true,
-            motivo: true
-          }
-        }
-      }
-    });
+    }); 
 
     console.log("✅ Clientes obtenidos:", clientes.length);
 
@@ -108,14 +98,18 @@ export async function GET(req) {
     const totalClientes = await prisma.cliente.count({ where: filtros });
     // 🗺️ Mapear la respuesta incluyendo estado/motivo desde contrato[0]
     const payload = clientes.map(cliente => {
-      const ultimoContrato = cliente.contrato[0] || {};
-      return {
-        ...cliente,
-        id: cliente.cliente_id,
-        estado: ultimoContrato.estado ?? null,
-        motivo: ultimoContrato.motivo ?? null
-      };
-    });
+  // Aquí puedes agregar otros campos que necesites
+  return {
+    ...cliente,                     // Conserva todos los campos originales de `cliente`
+    id: cliente.cliente_id,         // Agrega el `cliente_id` como `id`
+    estado: cliente.estado ?? null,  // Agrega `estado` (con valor por defecto si no existe)
+    estado_asesor: cliente.estado_asesor ?? null,  // Agrega `motivo` (con valor por defecto si no existe)
+    // Otros campos que necesites agregar, por ejemplo:
+    nombre_completo: `${cliente.nombre} ${cliente.apellido}`, // Concatenar nombre y apellido
+    fecha_creacion: cliente.fecha_creacion?.toISOString(),  // Formatear la fecha de creación
+    // Agrega cualquier otro campo que sea relevante para tu respuesta
+  };
+});
 
     // 🚨 Verificar valores antes de responder
     if (!clientes || !Array.isArray(clientes)) {

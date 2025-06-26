@@ -35,6 +35,7 @@ export default function ClienteDetallePage() {
       </Box>
     );
   }
+  console.log("🔍 Detalles del cliente:", cliente);
 
   return (
     <Box p={4} sx={{ maxWidth: "900px", margin: "auto", bgcolor: "#F7FAFC", borderRadius: 3, boxShadow: 3 }}>
@@ -88,6 +89,10 @@ export default function ClienteDetallePage() {
               <Typography>{cliente.fecha_ultima_interaccion_bot || "No disponible"}</Typography>
 
               <Divider sx={{ my: 1 }} />
+
+              <Typography sx={{ color: "#007391", fontWeight: "bold" }}>📝 Detalle:</Typography>
+              <Typography>{cliente.detalle || "Sin Detalles"}</Typography>
+               <Divider sx={{ my: 1 }} />
 
               <Typography sx={{ color: "#007391", fontWeight: "bold" }}>📝 Observaciones:</Typography>
               <Typography>{cliente.observaciones || "Sin observaciones"}</Typography>
