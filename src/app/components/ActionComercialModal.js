@@ -119,7 +119,7 @@ const ActionComercialModal = ({ open, onClose, cliente, gestores, onSave }) => {
                 <TextField label="Observaciones" fullWidth margin="dense" name="observaciones" multiline rows={3} value={clienteData.observaciones} onChange={handleChange} />
 
                 <FormControl fullWidth margin="dense">
-                    <InputLabel>Acción Comerciall</InputLabel>
+                    <InputLabel>Nuevo estado</InputLabel>
                     <Select name="accion" value={clienteData.accion} onChange={handleChange}>
                         <MenuItem value="">Seleccionar acción</MenuItem>
                         <MenuItem value="Seguimiento - Duda no resuelta">Seguimiento - Duda no resuelta</MenuItem>
