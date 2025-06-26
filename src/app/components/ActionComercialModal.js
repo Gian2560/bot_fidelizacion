@@ -96,11 +96,11 @@ const ActionComercialModal = ({ open, onClose, cliente, gestores, onSave }) => {
         <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
             <DialogTitle>Acción Comercial (Cliente)</DialogTitle>
             <DialogContent>
-                {/*<Typography variant="subtitle1" fontWeight="bold">
-                   {cliente?.nombre || "N/A"}
-                </Typography>*/}
+                <Typography variant="subtitle1" fontWeight="bold">
+                    Usuario actual: {cliente?.nombre || "N/A"}
+                </Typography>
 
-                <TextField label="Nombre" fullWidth margin="dense" name="nombre" value={clienteData.nombre} onChange={handleChange} />
+                {/*<TextField label="Nombre" fullWidth margin="dense" name="nombre" value={clienteData.nombre} onChange={handleChange} />*/}
                 {/*<TextField label="Email" fullWidth margin="dense" name="email" value={clienteData.email} onChange={handleChange} />}
                 {<TextField label="Teléfono" fullWidth margin="dense" name="telefono" value={clienteData.telefono} onChange={handleChange} />*/}
 
