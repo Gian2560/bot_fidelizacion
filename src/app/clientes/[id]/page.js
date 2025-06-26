@@ -95,7 +95,7 @@ export default function ClienteDetallePage() {
                <Divider sx={{ my: 1 }} />
 
               <Typography sx={{ color: "#007391", fontWeight: "bold" }}>📝 Observaciones:</Typography>
-              <Typography>{cliente.observaciones || "Sin observaciones"}</Typography>
+              <Typography>{cliente.observacion || "Sin observaciones"}</Typography>
             </CardContent>
           </Card>
         </Box>
