@@ -33,23 +33,26 @@ export const columnsClientes = (edit, conversacion) => [
   { field: "nombre",   headerName: "Nombre",           flex: 1, minWidth: 150 },
   { field: "celular",  headerName: "Teléfono",         flex: 1, minWidth: 120 },
 
-  {
+   {
     field: "estado",
     headerName: "Estado",
-    flex: 1,
-    minWidth: 120,
+    flex: 2,         // Ajusta al contenido y lo hace más grande si es necesario
+    minWidth: 180,   // Establece un tamaño mínimo
     renderCell: params => {
       const raw = params.value;
       const key = raw ? raw.toUpperCase() : "";
       const label = ESTADO_STYLES[key] ? raw : "NINGUNO";
-      const style = {...getEstadoStyle(raw),fontWeight: "bold"};
+      const style = {...getEstadoStyle(raw), fontWeight: "bold"};
 
       return (
         <Chip
           label={label}
           sx={{
             ...style,
-            width: "120px",
+            width: "100%", // Establecer a 100% para que ocupe todo el ancho disponible
+            whiteSpace: 'normal',  // Permite que el texto se ajuste en varias líneas
+            wordWrap: 'break-word',  // Rompe palabras largas si es necesario
+            overflow: 'visible', // Asegura que no se corte el texto
             justifyContent: "center",
           }}
         />

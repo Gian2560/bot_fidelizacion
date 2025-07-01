@@ -23,6 +23,7 @@ import { useEffect } from "react";
 import { LocalizationProvider, DatePicker, TimePicker } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import CircularProgress from '@mui/material/CircularProgress';
+import { DataGrid } from "@mui/x-data-grid";
 
 export default function CampaignPage() {
   const [campaignName, setCampaignName] = useState("");
@@ -227,7 +228,7 @@ const applyFilters = async () => {
     console.log('Enviando payload de filtros:', payload);
     const { data } = await axiosInstance.post('/bigquery/filtrar', payload);
     console.log('Datos filtrados →', data);
-    setClients(data); // Guarda los datos filtrados en el estado
+    setClients(data.rows); // Guarda los datos filtrados en el estado
     console.log('Datos filtrados:', data);
     // TODO: guarda "data" en estado o muéstralo en pantalla
   } catch (error) {
@@ -236,7 +237,15 @@ const applyFilters = async () => {
   }
 };
 // ─────────────────────────────────────────────────────────────────
-
+ const columnsgrid = [
+    { field: 'Codigo_Asociado', headerName: 'Código Asociado', width: 180 },
+    { field: 'nombre', headerName: 'Nombre', width: 180 },
+    { field: 'telefono', headerName: 'Teléfono', width: 180 },
+    { field: 'segmentacion', headerName: 'Segmento', width: 180 },
+    { field: 'monto', headerName: 'Monto', width: 150 },
+    { field: 'fecCuota', headerName: 'Fecha Cuota', width: 180 },
+    { field: 'mail', headerName: 'Correo', width: 220 },
+  ];
 // ---------------------------------------------------------------------------
 
 
@@ -328,12 +337,7 @@ const applyFilters = async () => {
           )}
             
 
-            {/* Botón para aplicar los filtros */}
-            <Grid item xs={12}>
-              <Button variant="contained" color="primary" onClick={applyFilters} sx={{ mt: 2 }}>
-                Aplicar Filtros
-              </Button>
-            </Grid>
+            
           </Grid>
 
           <Divider sx={{ mb: 5 }} />
@@ -400,12 +404,39 @@ const applyFilters = async () => {
                 </Select>
               </FormControl>
             </Grid>
+
+            {/* Botón para aplicar los filtros */}
+            <Grid item xs={12}>
+              <Button variant="contained" color="primary" onClick={applyFilters} sx={{ mt: 2 }}>
+                Aplicar Filtros
+              </Button>
+            </Grid>
           </Grid>
 
           <Divider sx={{ mb: 5 }} />
+                  <Box sx={{ height: 400, width: '100%' }}>
+        {loadingColumns ? (
+          <CircularProgress sx={{ display: "block", margin: "0 auto" }} /> // Mostrar cargando
+        ) : (
+          <DataGrid
+    rows={clients.map((client, index) => ({
+      ...client,
+      id: client.telefono || index,  // Asegúrate de que 'rows' tenga un 'id' único
+    }))} 
+    columns={columnsgrid}  // Utilizando el arreglo columnsgrid para definir las columnas
+    pageSize={5}
+    rowsPerPageOptions={[5, 10, 20]}
+    pagination
+    checkboxSelection
+    disableSelectionOnClick
+    loading={loadingColumns}
+  />
+        )}
+      </Box>
+                <Divider sx={{ mb: 5 }} />
 
           {/* VARIABLES */}
-          <Typography
+          {/*<Typography
             variant="h6"
             sx={{ color: colors.darkBlue, fontWeight: "700", mb: 3, borderBottom: `3px solid ${colors.primaryBlue}`, pb: 1 }}
           >
@@ -448,7 +479,7 @@ const applyFilters = async () => {
                 </Select>
               </FormControl>
             </Grid>
-          </Grid>
+          </Grid>*/}
 
           <Divider sx={{ mb: 5 }} />
 

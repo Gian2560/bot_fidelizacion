@@ -37,7 +37,7 @@ export async function POST(req, context) {
   const finalTemplateId = template_id || null;
   const finalEstadoCampanha = "activa";
   const finalMensajeCliente = "Mensaje predeterminado";
-  console.log("Datos de la campaña:", {clients});
+  console.log("Datos de la campaña:", { clients });
   try {
     // Inicia la transacción
     const result = await prisma.$transaction(async (prisma) => {
@@ -53,7 +53,7 @@ export async function POST(req, context) {
           mensaje_cliente: finalMensajeCliente,
         },
       });
-      
+
       // Verificar si se proporcionaron datos de clientes
       if (clients) {
         console.log(`Procesando ${clients} clientes...`);
@@ -61,16 +61,21 @@ export async function POST(req, context) {
         // Crear los clientes
         const clientPromises = clients.map(async (clientData) => {
           const {
-            nombre, telefono, mail, segmentacion, codpago, fecCuota, monto
+            Codigo_Asociado, codpago, fecCuota, mail, modelo, monto, nombre, segmentacion, telefono
           } = clientData;
-          console.log("Datos del cliente:", clientData);
-          const finalNombre = nombre || "Nombre desconocido";
-          const finalCelular = telefono ? telefono.toString().replace(/\s+/g, "") : "No proporcionado";
-          const finalEmail = mail || "noemail@example.com";
-          const finalSegmento = segmentacion || "Segmento no especificado";
-          const finalCodigoAsociado = codpago || "Código no proporcionado";
-          const finalFechaCuota = fecCuota || "Fecha no proporcionada";
-          const finalMonto = monto || 0;
+          const finalNombre = nombre || "Nombre desconocido";  // Obligatorio
+const finalCelular = telefono ? "+51" + telefono.toString().replace(/\s+/g, "") : "No proporcionado"; // Obligatorio, agregar +51 si no está
+const finalEmail = mail || "noemail@example.com"; // Opcional
+const finalSegmento = segmentacion || "Segmento no especificado"; // Opcional
+const finalCodigoAsociado = codpago || "Código no proporcionado"; // Opcional
+const finalFechaCuota = fecCuota || "Fecha no proporcionada"; // Opcional
+const finalMonto = monto || 0; // Opcional
+
+// Campos obligatorios según el esquema de cliente
+const finalCategoriaNoInteres = "No interés"; // Definido en tu esquema, no nulo
+const finalObservacion = "Observación no proporcionada"; // Valor predeterminado
+const finalEstado = "activo"; // Campo obligatorio, si no se pasa, asignamos el valor por defecto
+const finalScore = "no_score"; // Valor predeterminado de score
 
           // Verificar si el cliente ya existe en Prisma
           let cliente = await prisma.cliente.findUnique({
@@ -80,23 +85,24 @@ export async function POST(req, context) {
           if (!cliente) {
             console.log(`⚠️ Cliente con celular ${finalCelular} no encontrado, creando nuevo cliente.`);
             try {
-              cliente = await prisma.cliente.create({
-                data: {
-                  nombre: finalNombre,
-                  celular: finalCelular,
-                  email: finalEmail === "noemail@example.com" ? null : finalEmail,
-                  categoria_no_interes: "No interés",
-                  bound: false,
-                  estado: "activo",
-                  observacion: "Observación no proporcionada",
-                  score: "no_score",
-                },
-              });
-              console.log("✅ Cliente creado exitosamente:", cliente);
-            } catch (createError) {
-              console.error("❌ Error al crear cliente:", createError);
-              throw new Error(`Error al crear cliente ${finalNombre}: ${createError.message}`);
-            }
+  console.log("📌 Creando cliente...");
+  cliente = await prisma.cliente.create({
+    data: {
+      nombre: finalNombre,
+      celular: finalCelular,
+      email: finalEmail === "noemail@example.com" ? null : finalEmail,
+      categoria_no_interes: "No interés",
+      bound: false,
+      estado: "activo",
+      observacion: "Observación no proporcionada",
+      score: "no_score",
+    },
+  });
+  console.log("✅ Cliente creado exitosamente:", cliente);
+} catch (createError) {
+  console.error("❌ Error al crear cliente:", createError);
+  throw new Error(`Error al crear cliente ${finalNombre}: ${createError.message}`);
+}
           }
 
           // Asociar el cliente con la campaña
