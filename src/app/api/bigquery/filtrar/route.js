@@ -53,11 +53,17 @@ export async function POST(req) {
 
     filters.forEach((f, idx) => {
       const p       = `val${idx}`;
-      const colName = f.column.name;
+      const colName = f.column;
       const colType = schema[colName] || 'STRING';
 
-      // convierte a número si la columna es numérica
+      // Si el valor es null o vacío, se pone `TRUE` en el WHERE (no afecta el filtro)
       let val = f.value;
+      if (val == null || val === '') {
+        whereParts.push(`1=1`);  // Siempre verdadero, se omite este filtro
+        return; // No agregamos más lógica para este filtro
+      }
+
+      // convierte a número si la columna es numérica
       if (colType === 'INT64')   val = Number.parseInt(val, 10);
       if (colType === 'FLOAT64') val = Number.parseFloat(val);
       console.log(`Columna: ${colName}, Tipo: ${colType}, Valor: ${val}`);
@@ -70,23 +76,53 @@ export async function POST(req) {
     /* 3.2 columnas extra con alias legibles */
     const ALIAS = { segmentacion: 'segmento', cluster: 'cluster', estrategia: 'estrategia' };
     const selectExtra = filters
-      .map(f => `\`${f.column.name}\` AS ${ALIAS[f.type] || f.column.name}`)
+      .map(f => `\`${f.column}\` AS ${ALIAS[f.type] || f.column}`)
       .join(', ');
 
     /* 3.3 consulta final con JOIN */
     const QUERY = `
-  WITH base AS (
-    SELECT N_Doc, ${selectExtra}
-    FROM   \`${project}.${dataset}.${table}\`
-    WHERE  ${whereSQL}
+   WITH cte_M1 AS (
+    SELECT 
+      base.Codigo_Asociado,
+      base.segmentacion,
+      base.Cluster,
+      base.gestion,
+      fondos.Telf_SMS,
+      fondos.E_mail
+    FROM   \`${project}.${dataset}.${table}\` AS base
+    LEFT JOIN peak-emitter-350713.FR_general.bd_fondos AS fondos
+      ON base.Codigo_Asociado = fondos.Codigo_Asociado
+  ),
+  ranked AS (
+    SELECT 
+      M1.Codigo_Asociado,
+      M1.segmentacion,
+      envios.Email AS mail,
+      envios.TelfSMS AS telefono,
+      envios.Primer_Nombre AS nombre,
+      envios.Cod_Banco AS codpago,
+      envios.Fec_Venc_Cuota AS fecCuota,
+      envios.Modelo AS modelo,
+      envios.Monto AS monto,
+      ROW_NUMBER() OVER (PARTITION BY envios.TelfSMS ORDER BY envios.N_Doc) AS row_num  -- Asigna un número a cada fila por TelfSMS
+    FROM cte_M1 AS M1
+    INNER JOIN peak-emitter-350713.FR_general.envios_cobranzas_m0 AS envios
+      ON M1.Telf_SMS = envios.TelfSMS
+    WHERE 
+      ${whereSQL}
   )
-  SELECT  b.*,
-          d.Primer_Nombre,
-          d.TelfSMS,
-          d.email
-  FROM    base b
-  INNER JOIN \`${project}.FR_general.envios_cobranzas_m0\` d
-         ON CONCAT(CAST(b.N_Doc AS STRING), ',') = d.N_Doc
+  SELECT 
+    Codigo_Asociado,
+    segmentacion,
+    mail,
+    telefono,
+    nombre,
+    codpago,
+    fecCuota,
+    modelo,
+    monto
+  FROM ranked
+  WHERE row_num = 1;  -- Selecciona solo la primera fila de cada grupo de TelfSMS
 `;
     console.log('Consulta SQL:', QUERY);
 

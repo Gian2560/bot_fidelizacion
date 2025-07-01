@@ -23,7 +23,6 @@ import { useEffect } from "react";
 import { LocalizationProvider, DatePicker, TimePicker } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import CircularProgress from '@mui/material/CircularProgress';
-import { set } from "date-fns";
 
 export default function CampaignPage() {
   const [campaignName, setCampaignName] = useState("");
@@ -39,11 +38,11 @@ export default function CampaignPage() {
   const [sendTime, setSendTime] = useState(null);
   const [templates, setTemplates] = useState([]); // Para almacenar las plantillas obtenidas
   const [loadingColumns, setLoadingColumns] = useState(false);  // Estado para saber si estamos cargando las columnas
-
+  const [clients, setClients] = useState([]); 
   const [selectedColumns, setSelectedColumns] = useState({
-    segmento: '',
-    cluster: '',
-    estrategia: ''
+  segmento: 'segmentacion',  // Fijo con valor 'segmentacion'
+  cluster: 'Cluster',        // Fijo con valor 'cluster'
+  estrategia: 'gestion',     // Fijo con valor 'gestion'
   });
   // Datos simulados
   const [databases, useDatabases] = useState([]);
@@ -86,31 +85,42 @@ export default function CampaignPage() {
 
 
 
-  const handleSubmit = () => {
-    console.log({
-      campaignName,
-      selectedDatabase,
-      columns,
-      template,
-      clientSegment,
-      cluster,
-      strategy,
-      variable1,
-      variable2,
-      sendDate,
-      sendTime,
-    });
-    alert("Campaña creada con éxito");
+const handleSubmit = async () => {
+  if (clients.length === 0) {
+    alert("No hay clientes para agregar a la campaña.");
+    return;
+  }
+
+  const campaignData = {
+    nombre_campanha: campaignName,
+    descripcion: "Descripción de campaña",
+    template_id: template,
+    fecha_inicio: sendDate,
+    fecha_fin: sendTime,
+    clients: clients,  // Aquí envías toda la información de los clientes
   };
 
+  try {
+    // Enviar solicitud para crear la campaña
+    const response = await axiosInstance.post("/campaings/add-clients", campaignData);
+
+    const campanhaId = response.data.campanha_id;  // Obtener el ID de la campaña creada
+
+    console.log("Campaña creada con ID:", campanhaId);
+
+    // Ahora los clientes serán automáticamente asociados con la campaña
+    alert("Campaña creada y clientes asociados exitosamente.");
+  } catch (error) {
+    console.error("Error al crear campaña o agregar clientes:", error);
+    alert("Hubo un problema al crear la campaña o agregar los clientes.");
+  }
+};
+
+
   const handleDatabaseChange = async (event, value) => {
-    setSelectedDatabase(value);
+     setSelectedDatabase(value);
      setLoadingColumns(true); 
-      setSelectedColumns({
-      segmento: '',
-      cluster: '',
-      estrategia: ''
-    }); // Comienza a cargar las columnas
+    
     try {
       const response = await axiosInstance.get("/bigquery/columns", {
         params: { database: value } // Enviamos el nombre de la base de datos seleccionada);
@@ -120,26 +130,26 @@ export default function CampaignPage() {
       console.log("Columnas disponibles:", columns);
             setLoadingColumns(false);  // Detener el indicador de carga
 
-
+       handleColumnChange(value);
     }catch (error) {
       console.error('Error al obtener las columnas:', error);
             setLoadingColumns(false);  // Detener el indicador de carga
 
     }
   };
-  const handleColumnChange = async (filterType, value) => {
-    setSelectedColumns({
+  const handleColumnChange = async (value) => {
+    /*setSelectedColumns({
       ...selectedColumns,
       [filterType]: value
-    });
+    });*/
     setLoadingColumns(true);  
      try {
       const response = await axiosInstance.get("/bigquery/columns/filtros", {
         params: {
-          database: selectedDatabase,
-          segmentColumn: selectedColumns.segmento.name,
-          clusterColumn: selectedColumns.cluster.name,
-          estrategiaColumn: selectedColumns.estrategia.name
+          database: value,
+          segmentColumn: "segmentacion",
+          clusterColumn: "Cluster",
+          estrategiaColumn: "gestion"
         }  // Enviamos los nombres de las columnas seleccionadas
       });
       console.log("Valores únicos obtenidos:", response.data);
@@ -175,11 +185,11 @@ const applyFilters = async () => {
     alert('Selecciona una base de datos antes de filtrar');
     return;
   }
-
+ 
   // Array que contendrá 0-3 filtros, según lo que elija el usuario
   const filters = [];
 
-  if (selectedColumns.segmento && clientSegment) {
+  if (selectedColumns.segmento) {
     filters.push({
       type: 'segmentacion',
       column: selectedColumns.segmento, // nombre de la columna
@@ -187,7 +197,7 @@ const applyFilters = async () => {
     });
   }
 
-  if (selectedColumns.cluster && cluster) {
+  if (selectedColumns.cluster) {
     filters.push({
       type: 'cluster',
       column: selectedColumns.cluster,
@@ -195,14 +205,14 @@ const applyFilters = async () => {
     });
   }
 
-  if (selectedColumns.estrategia && strategy) {
+  if (selectedColumns.estrategia) {
     filters.push({
       type: 'estrategia',
       column: selectedColumns.estrategia,
       value : strategy
     });
   }
-
+  
   if (filters.length === 0) {
     alert('Elige al menos un filtro antes de continuar');
     return;
@@ -217,6 +227,8 @@ const applyFilters = async () => {
     console.log('Enviando payload de filtros:', payload);
     const { data } = await axiosInstance.post('/bigquery/filtrar', payload);
     console.log('Datos filtrados →', data);
+    setClients(data); // Guarda los datos filtrados en el estado
+    console.log('Datos filtrados:', data);
     // TODO: guarda "data" en estado o muéstralo en pantalla
   } catch (error) {
     console.error('Error al aplicar filtros:', error);
@@ -306,44 +318,11 @@ const applyFilters = async () => {
           ) : (
             columns.length > 0 && (
               <Grid container spacing={4} sm={24} paddingInlineStart={4} paddingTop={4}>
-                {/* Selección de columna para Segmento */}
-                <Grid item xs={12} sm={2}>
-                  <FormControl fullWidth>
-                    <Autocomplete
-                      value={selectedColumns.segmento}
-                      onChange={(event, newValue) => handleColumnChange('segmento', newValue)}
-                      options={columns}
-                      getOptionLabel={(option) => option.name || ''}
-                      renderInput={(params) => <TextField {...params} label="Segmento" />}
-                    />
-                  </FormControl>
-                </Grid>
+                
 
-                {/* Selección de columna para Cluster */}
-                <Grid item xs={12} sm={2}>
-                  <FormControl fullWidth>
-                    <Autocomplete
-                      value={selectedColumns.cluster}
-                      onChange={(event, newValue) => handleColumnChange('cluster', newValue)}
-                      options={columns}
-                      getOptionLabel={(option) => option.name || ''}
-                      renderInput={(params) => <TextField {...params} label="Cluster" />}
-                    />
-                  </FormControl>
-                </Grid>
+                
 
-                {/* Selección de columna para Estrategia */}
-                <Grid item xs={12} sm={2}>
-                  <FormControl fullWidth>
-                    <Autocomplete
-                      value={selectedColumns.estrategia}
-                      onChange={(event, newValue) => handleColumnChange('estrategia', newValue)}
-                      options={columns}
-                      getOptionLabel={(option) => option.name || ''}
-                      renderInput={(params) => <TextField {...params} label="Estrategia" />}
-                    />
-                  </FormControl>
-                </Grid>
+                
               </Grid>
             )
           )}
