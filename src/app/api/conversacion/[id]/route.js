@@ -166,7 +166,7 @@ export async function GET(request, context) {
       // Consultar Firestore: Obtener mensajes del cliente con id_bot = codigopago
     
   const mensajesRef = db.collection("fidelizacion")
-  .where("celular", "==", celularFormatted)
+  .where("celular", "==", celularFormatted).where("id_bot", "==", "fidelizacion");  
   
 
 
@@ -192,19 +192,22 @@ export async function GET(request, context) {
   //console.log("✅ Mensajes ordenados:", mensajesOrdenados);
 
   // Mapear a formato final
-  const mensajesFormateados = mensajes.map(msg => ({
-  ...msg,
-  fecha: msg.fecha
-    ? msg.fecha.toLocaleString("es-ES", {
-        weekday: "long",
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      })
-    : "Fecha no disponible",
-  }));
+    const mensajesFormateados = mensajes
+      .sort((a, b) => (a.fecha < b.fecha ? 1 : -1)) // Ordenar los mensajes aquí
+      .map(msg => ({
+        ...msg,
+        fecha: msg.fecha
+          ? msg.fecha.toLocaleString("es-ES", {
+              weekday: "long",
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+            })
+          : "Fecha no disponible",
+      }));
+      
       console.log(mensajesFormateados); // Verifica el cambio
       const clientePayload = esTelefono
       ? {
