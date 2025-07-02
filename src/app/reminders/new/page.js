@@ -245,6 +245,9 @@ const applyFilters = async () => {
     { field: 'monto', headerName: 'Monto', width: 150 },
     { field: 'fecCuota', headerName: 'Fecha Cuota', width: 180 },
     { field: 'mail', headerName: 'Correo', width: 220 },
+    { field: 'modelo', headerName: 'Modelo', width: 180 },
+    { field: 'codpago', headerName: 'Código Pago', width: 180 },
+    { field: 'Cta_Act_Pag', headerName: 'Cuotas', width: 120 },
   ];
 // ---------------------------------------------------------------------------
 
@@ -360,6 +363,7 @@ const applyFilters = async () => {
                   label="Segmento"
                   sx={{ bgcolor: colors.white, borderRadius: 2, "& .MuiSelect-select": { fontWeight: 600 } }}
                 >
+                  <MenuItem value="Todos">Todos</MenuItem>
                   {segments.map((seg) => (
                     <MenuItem key={seg} value={seg}>
                       {seg}
@@ -378,6 +382,8 @@ const applyFilters = async () => {
                   label="Cluster"
                   sx={{ bgcolor: colors.white, borderRadius: 2, "& .MuiSelect-select": { fontWeight: 600 } }}
                 >
+                  <MenuItem value="Todos">Todos</MenuItem>
+
                   {clusters.map((cl) => (
                     <MenuItem key={cl} value={cl}>
                       {cl}
@@ -396,6 +402,8 @@ const applyFilters = async () => {
                   label="Estrategia"
                   sx={{ bgcolor: colors.white, borderRadius: 2, "& .MuiSelect-select": { fontWeight: 600 } }}
                 >
+                                    <MenuItem value="Todos">Todos</MenuItem>
+
                   {strategies.map((str) => (
                     <MenuItem key={str} value={str}>
                       {str}

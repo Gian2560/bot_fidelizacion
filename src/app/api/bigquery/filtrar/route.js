@@ -87,6 +87,7 @@ export async function POST(req) {
       base.segmentacion,
       base.Cluster,
       base.gestion,
+      fondos.Cta_Act_Pag,
       fondos.Telf_SMS,
       fondos.E_mail
     FROM   \`${project}.${dataset}.${table}\` AS base
@@ -98,12 +99,13 @@ export async function POST(req) {
       M1.Codigo_Asociado,
       M1.segmentacion,
       envios.Email AS mail,
+      M1.Cta_Act_Pag,
       envios.TelfSMS AS telefono,
       envios.Primer_Nombre AS nombre,
       envios.Cod_Banco AS codpago,
       envios.Fec_Venc_Cuota AS fecCuota,
       envios.Modelo AS modelo,
-      envios.Monto AS monto,
+      FORMAT('%.2f', envios.Monto) AS monto,
       ROW_NUMBER() OVER (PARTITION BY envios.TelfSMS ORDER BY envios.N_Doc) AS row_num  -- Asigna un número a cada fila por TelfSMS
     FROM cte_M1 AS M1
     INNER JOIN peak-emitter-350713.FR_general.envios_cobranzas_m0 AS envios
@@ -112,6 +114,7 @@ export async function POST(req) {
       ${whereSQL}
   )
   SELECT 
+    Cta_Act_Pag,
     Codigo_Asociado,
     segmentacion,
     mail,
