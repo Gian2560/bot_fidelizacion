@@ -58,11 +58,11 @@ export async function POST(req) {
 
       // Si el valor es null o vacío, se pone `TRUE` en el WHERE (no afecta el filtro)
       let val = f.value;
-      if (val == null || val === '') {
+      if (val == null || val === '' || val === 'Todos') {
         whereParts.push(`1=1`);  // Siempre verdadero, se omite este filtro
         return; // No agregamos más lógica para este filtro
       }
-
+      
       // convierte a número si la columna es numérica
       if (colType === 'INT64')   val = Number.parseInt(val, 10);
       if (colType === 'FLOAT64') val = Number.parseFloat(val);
@@ -72,7 +72,7 @@ export async function POST(req) {
     });
 
     const whereSQL = whereParts.join(' AND ') || '1=1';
-    
+    console.log('WHERE SQL:', whereSQL);
     /* 3.2 columnas extra con alias legibles */
     const ALIAS = { segmentacion: 'segmento', cluster: 'cluster', estrategia: 'estrategia' };
     const selectExtra = filters
@@ -110,7 +110,7 @@ export async function POST(req) {
     FROM cte_M1 AS M1
     INNER JOIN peak-emitter-350713.FR_general.envios_cobranzas_m0 AS envios
       ON M1.Telf_SMS = envios.TelfSMS
-    WHERE 
+    WHERE   
       ${whereSQL}
   )
   SELECT 

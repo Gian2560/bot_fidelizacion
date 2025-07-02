@@ -60,22 +60,10 @@ export async function POST(req, context) {
 
         // Crear los clientes
         const clientPromises = clients.map(async (clientData) => {
-          const {
-            Codigo_Asociado, codpago, fecCuota, mail, modelo, monto, nombre, segmentacion, telefono
-          } = clientData;
+          const { nombre, telefono, mail } = clientData;
           const finalNombre = nombre || "Nombre desconocido";  // Obligatorio
-const finalCelular = telefono ? "+51" + telefono.toString().replace(/\s+/g, "") : "No proporcionado"; // Obligatorio, agregar +51 si no está
-const finalEmail = mail || "noemail@example.com"; // Opcional
-const finalSegmento = segmentacion || "Segmento no especificado"; // Opcional
-const finalCodigoAsociado = codpago || "Código no proporcionado"; // Opcional
-const finalFechaCuota = fecCuota || "Fecha no proporcionada"; // Opcional
-const finalMonto = monto || 0; // Opcional
-
-// Campos obligatorios según el esquema de cliente
-const finalCategoriaNoInteres = "No interés"; // Definido en tu esquema, no nulo
-const finalObservacion = "Observación no proporcionada"; // Valor predeterminado
-const finalEstado = "activo"; // Campo obligatorio, si no se pasa, asignamos el valor por defecto
-const finalScore = "no_score"; // Valor predeterminado de score
+          const finalCelular = telefono ? "+51" + telefono.toString().replace(/\s+/g, "") : "No proporcionado"; // Obligatorio, agregar +51 si no está
+          const finalEmail = mail || "noemail@example.com"; // Opcional
 
           // Verificar si el cliente ya existe en Prisma
           let cliente = await prisma.cliente.findUnique({
@@ -85,24 +73,24 @@ const finalScore = "no_score"; // Valor predeterminado de score
           if (!cliente) {
             console.log(`⚠️ Cliente con celular ${finalCelular} no encontrado, creando nuevo cliente.`);
             try {
-  console.log("📌 Creando cliente...");
-  cliente = await prisma.cliente.create({
-    data: {
-      nombre: finalNombre,
-      celular: finalCelular,
-      email: finalEmail === "noemail@example.com" ? null : finalEmail,
-      categoria_no_interes: "No interés",
-      bound: false,
-      estado: "activo",
-      observacion: "Observación no proporcionada",
-      score: "no_score",
-    },
-  });
-  console.log("✅ Cliente creado exitosamente:", cliente);
-} catch (createError) {
-  console.error("❌ Error al crear cliente:", createError);
-  throw new Error(`Error al crear cliente ${finalNombre}: ${createError.message}`);
-}
+              console.log("📌 Creando cliente...");
+              cliente = await prisma.cliente.create({
+                data: {
+                  nombre: finalNombre,
+                  celular: finalCelular,
+                  email: finalEmail === "noemail@example.com" ? null : finalEmail,
+                  categoria_no_interes: "No interés",
+                  bound: false,
+                  estado: "activo",
+                  observacion: "Observación no proporcionada",
+                  score: "no_score",
+                },
+              });
+              console.log("✅ Cliente creado exitosamente:", cliente);
+            } catch (createError) {
+              console.error("❌ Error al crear cliente:", createError);
+              throw new Error(`Error al crear cliente ${finalNombre}: ${createError.message}`);
+            }
           }
 
           // Asociar el cliente con la campaña
