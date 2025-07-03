@@ -37,16 +37,7 @@ export async function POST(req, context) {
     })
     tplMensaje = tpl?.mensaje || ""
   }
-  //yomi
-  let mensajePersonalizado = tplMensaje
-  for (const [idx, campo] of Object.entries(variableMappings)) {
-    const valor = clientData[campo] || ""
-    mensajePersonalizado = mensajePersonalizado.replace(
-      new RegExp(`{{\\s*${idx}\\s*}}`, "g"),
-      valor
-    )
-  }
-  //yomi termina
+  
   // Validación de datos y asignación de valores por defecto
   const finalFechaInicio = fecha_inicio ? new Date(fecha_inicio) : new Date();
   const finalFechaFin = fecha_fin ? new Date(fecha_fin) : null;
@@ -118,7 +109,16 @@ export async function POST(req, context) {
               campanha_id: campanha.campanha_id,
             },
           });
-          
+          //yomi
+          let mensajePersonalizado = tplMensaje
+          for (const [idx, campo] of Object.entries(variableMappings)) {
+            const valor = clientData[campo] || ""
+            mensajePersonalizado = mensajePersonalizado.replace(
+              new RegExp(`{{\\s*${idx}\\s*}}`, "g"),
+              valor
+            )
+          }
+          //yomi termina
           // Agregar el cliente a Firestore
           if (db) {
             const fecha = new Date();
