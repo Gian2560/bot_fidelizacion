@@ -52,6 +52,9 @@ export default function CampaignPage() {
   const [clusters, setClusterValues] = useState([]);
   const [strategies, setStrategyValues] = useState([]);
   const variables = ["Variable 1", "Variable 2", "Variable 3"];
+  // al inicio: yomi
+  const [placeholders, setPlaceholders] = useState([])            // e.g. [ "1", "2", ... ]
+  const [variableMappings, setVariableMappings] = useState({})    // { "1": "nombre", "2": "telefono", … }
 
 
   useEffect(() => {
@@ -78,10 +81,29 @@ export default function CampaignPage() {
     fetchTemplates();
   }, []);
 
-  const handleTemplateChange = (event) => {
-    const selectedTemplate = event.target.value;
-    setTemplate(selectedTemplate);
-  };
+  //GIAN
+  // const handleTemplateChange = (event) => {
+  //   const selectedTemplate = event.target.value;
+  //   setTemplate(selectedTemplate);
+  // };
+  //YOMI
+  const handleTemplateChange = event => {
+    const tplId = event.target.value
+    setTemplate(tplId)
+
+    // Buscamos la plantilla en nuestro array
+    const tpl = templates.find(t => t.id === tplId)
+    if (tpl) {
+      // extraemos todos los {{n}}
+      const matches = [...tpl.mensaje.matchAll(/{{\s*(\d+)\s*}}/g)]
+                        .map(m => m[1])
+      const uniq = Array.from(new Set(matches))
+      setPlaceholders(uniq)             // e.g. ["1"]
+      setVariableMappings({})           // resetea anteriores selecciones
+    } else {
+      setPlaceholders([])
+    }
+}
 
 
 
@@ -99,6 +121,7 @@ const handleSubmit = async () => {
     fecha_inicio: sendDate,
     fecha_fin: sendTime,
     clients: clients,  // Aquí envías toda la información de los clientes
+    variableMappings,
   };
 
   try {
@@ -517,7 +540,29 @@ const applyFilters = async () => {
                 </Select>
               </FormControl>
             </Grid>
-
+            {/* yomi */}
+            {placeholders.map(idx => (
+              <Grid item xs={12} sm={4} key={idx}>
+                <FormControl fullWidth>
+                  <InputLabel>Variable {idx}</InputLabel>
+                  <Select
+                    value={variableMappings[idx] || ""}
+                    onChange={e =>
+                      setVariableMappings(vm => ({ ...vm, [idx]: e.target.value }))
+                    }
+                    label={`Variable ${idx}`}
+                  >
+                    {/* usamos columnsgrid para poblar los campos de la tabla */}
+                    {columnsgrid.map(col => (
+                      <MenuItem key={col.field} value={col.field}>
+                        {col.headerName}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+            ))}
+            {/* yomi termina*/}
             <Grid item xs={12} sm={6}>
               {template && (
                 <Card

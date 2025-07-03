@@ -28,15 +28,32 @@ export async function OPTIONS(req) {
 }
 
 export async function POST(req, context) {
-  const { nombre_campanha, descripcion, template_id, fecha_inicio, fecha_fin, clients } = await req.json();
-
+  const { nombre_campanha, descripcion, template_id, fecha_inicio, fecha_fin, clients, variableMappings     } = await req.json();//yomi agrega variableMappings
+  // Cargamos el mensaje base de la plantilla
+  let tplMensaje = ""
+  if (template_id) {
+    const tpl = await prisma.template.findUnique({
+      where: { id: template_id }
+    })
+    tplMensaje = tpl?.mensaje || ""
+  }
+  //yomi
+  let mensajePersonalizado = tplMensaje
+  for (const [idx, campo] of Object.entries(variableMappings)) {
+    const valor = clientData[campo] || ""
+    mensajePersonalizado = mensajePersonalizado.replace(
+      new RegExp(`{{\\s*${idx}\\s*}}`, "g"),
+      valor
+    )
+  }
+  //yomi termina
   // Validación de datos y asignación de valores por defecto
   const finalFechaInicio = fecha_inicio ? new Date(fecha_inicio) : new Date();
   const finalFechaFin = fecha_fin ? new Date(fecha_fin) : null;
   const finalDescripcion = descripcion || "Descripción no proporcionada";
   const finalTemplateId = template_id || null;
   const finalEstadoCampanha = "activa";
-  const finalMensajeCliente = "Mensaje predeterminado";
+  const finalMensajeCliente = mensajePersonalizado;//yomi cambia por "Mensaje predeterminado" por mensajePersonalizado
   console.log("Datos de la campaña:", { clients });
   try {
     // Inicia la transacción
@@ -60,6 +77,7 @@ export async function POST(req, context) {
 
         // Crear los clientes
         const clientPromises = clients.map(async (clientData) => {
+          
           const { nombre, telefono, mail } = clientData;
           const finalNombre = nombre || "Nombre desconocido";  // Obligatorio
           const finalCelular = telefono ? "+51" + telefono.toString().replace(/\s+/g, "") : "No proporcionado"; // Obligatorio, agregar +51 si no está
@@ -100,7 +118,7 @@ export async function POST(req, context) {
               campanha_id: campanha.campanha_id,
             },
           });
-
+          
           // Agregar el cliente a Firestore
           if (db) {
             const fecha = new Date();
@@ -109,7 +127,7 @@ export async function POST(req, context) {
               fecha: admin.firestore.Timestamp.fromDate(fecha),
               id_bot: "fidelizacionbot",
               id_cliente: cliente.cliente_id,
-              mensaje: "Mensaje inicial de la campaña",
+              mensaje: mensajePersonalizado,//yomi cambia "Mensaje inicial de la campaña" por mensajePersonalizado
               sender: "false",
             });
             console.log(`✅ Cliente ${cliente.cliente_id} agregado a Firestore`);

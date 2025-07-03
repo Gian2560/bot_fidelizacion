@@ -67,7 +67,8 @@ export async function POST(req, { params }) {
         messagePayload.contentVariables = JSON.stringify({
           1: cliente.nombre,        // Primer parámetro, nombre del cliente
         });
-      }      try {
+      }      
+      try {
         // 📌 Enviar el mensaje con Twilio
         const message = await client.messages.create(messagePayload);
         console.log(`📨 Mensaje enviado a ${celularFormatted}: ${message.sid}`);
