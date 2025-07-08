@@ -113,7 +113,7 @@ model codigo_pago {
 model contrato {
   contrato_id      Int                @id @default(autoincrement())
   cliente_id       Int                @unique(map: "unq_contrato_cliente")
-  estado           String?            @default("en seguimiento") @db.VarChar(25)
+  estado           String?            @default("en seguimiento") @db.VarChar(50)
   motivo           String?            @default("desconocido")
   fecha_pago       DateTime?          @default(now()) @db.Timestamp(6)
   cliente          cliente            @relation(fields: [cliente_id], references: [cliente_id], onDelete: Cascade, onUpdate: NoAction, map: "cita_ibfk_1")

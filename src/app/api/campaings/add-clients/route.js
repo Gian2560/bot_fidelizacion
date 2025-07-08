@@ -28,25 +28,45 @@ export async function OPTIONS(req) {
 }
 
 export async function POST(req, context) {
-  const { nombre_campanha, descripcion, template_id, fecha_inicio, fecha_fin, clients, variableMappings     } = await req.json();//yomi agrega variableMappings
-  // Cargamos el mensaje base de la plantilla
-  let tplMensaje = ""
-  if (template_id) {
-    const tpl = await prisma.template.findUnique({
-      where: { id: template_id }
-    })
-    tplMensaje = tpl?.mensaje || ""
-  }
-  
-  // Validación de datos y asignación de valores por defecto
-  const finalFechaInicio = fecha_inicio ? new Date(fecha_inicio) : new Date();
-  const finalFechaFin = fecha_fin ? new Date(fecha_fin) : null;
-  const finalDescripcion = descripcion || "Descripción no proporcionada";
-  const finalTemplateId = template_id || null;
-  const finalEstadoCampanha = "activa";
-  const finalMensajeCliente = mensajePersonalizado;//yomi cambia por "Mensaje predeterminado" por mensajePersonalizado
-  console.log("Datos de la campaña:", { clients });
   try {
+    console.log("📥 Iniciando POST request...");
+    
+    const body = await req.json();
+    console.log("📋 Request body:", body);
+    
+    const { nombre_campanha, descripcion, template_id, fecha_inicio, fecha_fin, clients, variableMappings } = body;
+    
+    // Validaciones básicas
+    if (!nombre_campanha) {
+      return NextResponse.json({ error: "nombre_campanha es requerido" }, { status: 400 });
+    }
+    
+    if (!clients || !Array.isArray(clients)) {
+      return NextResponse.json({ error: "clients debe ser un array" }, { status: 400 });
+    }
+    
+    console.log("🔍 Validaciones básicas completadas");
+    
+    // Cargamos el mensaje base de la plantilla
+    let tplMensaje = ""
+    if (template_id) {
+      console.log("🔍 Buscando template con ID:", template_id);
+      const tpl = await prisma.template.findUnique({
+        where: { id: parseInt(template_id) }
+      })
+      tplMensaje = tpl?.mensaje || ""
+      console.log("📝 Template encontrado:", tpl ? "Sí" : "No");
+    }
+    
+    // Validación de datos y asignación de valores por defecto
+    const finalFechaInicio = fecha_inicio ? new Date(fecha_inicio) : new Date();
+    const finalFechaFin = fecha_fin ? new Date(fecha_fin) : null;
+    const finalDescripcion = descripcion || "Descripción no proporcionada";
+    const finalTemplateId = template_id ? parseInt(template_id) : null;
+    const finalEstadoCampanha = "activa";
+    const finalMensajeCliente = "Mensaje predeterminado";
+    console.log("Datos de la campaña:", { clientsCount: clients.length });
+    
     // Inicia la transacción
     const result = await prisma.$transaction(async (prisma) => {
       // Crear la campaña en Prisma (PostgreSQL)
@@ -63,8 +83,9 @@ export async function POST(req, context) {
       });
 
       // Verificar si se proporcionaron datos de clientes
-      if (clients) {
-        console.log(`Procesando ${clients} clientes...`);
+      console.log("Clientes:", clients.length);
+      if (clients.length > 0) {
+        console.log(`Procesando ${clients.length} clientes...`);
 
         // Crear los clientes
         const clientPromises = clients.map(async (clientData) => {
@@ -75,10 +96,11 @@ export async function POST(req, context) {
           const finalEmail = mail || "noemail@example.com"; // Opcional
 
           // Verificar si el cliente ya existe en Prisma
-          let cliente = await prisma.cliente.findUnique({
+          let cliente = await prisma.cliente.findFirst({
             where: { celular: finalCelular },
           });
-
+          
+          console.log("Verificando cliente:", finalCelular);
           if (!cliente) {
             console.log(`⚠️ Cliente con celular ${finalCelular} no encontrado, creando nuevo cliente.`);
             try {
@@ -109,16 +131,17 @@ export async function POST(req, context) {
               campanha_id: campanha.campanha_id,
             },
           });
-          //yomi
+          
+          // Generar mensaje personalizado
           let mensajePersonalizado = tplMensaje
-          for (const [idx, campo] of Object.entries(variableMappings)) {
+          for (const [idx, campo] of Object.entries(variableMappings || {})) {
             const valor = clientData[campo] || ""
             mensajePersonalizado = mensajePersonalizado.replace(
               new RegExp(`{{\\s*${idx}\\s*}}`, "g"),
               valor
             )
           }
-          //yomi termina
+          
           // Agregar el cliente a Firestore
           if (db) {
             const fecha = new Date();
@@ -127,7 +150,7 @@ export async function POST(req, context) {
               fecha: admin.firestore.Timestamp.fromDate(fecha),
               id_bot: "fidelizacionbot",
               id_cliente: cliente.cliente_id,
-              mensaje: mensajePersonalizado,//yomi cambia "Mensaje inicial de la campaña" por mensajePersonalizado
+              mensaje: mensajePersonalizado || "Mensaje inicial de la campaña",
               sender: "false",
             });
             console.log(`✅ Cliente ${cliente.cliente_id} agregado a Firestore`);
@@ -155,6 +178,7 @@ export async function POST(req, context) {
     });
 
     return addCorsHeaders(response);
+    
   } catch (error) {
     console.error("❌ Error al crear la campaña o agregar clientes:", error);
     const errorResponse = NextResponse.json({
