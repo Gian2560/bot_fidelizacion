@@ -104,7 +104,7 @@ export async function POST(req, context) {
           const { nombre, telefono, mail } = clientData;
           const finalNombre = nombre || "Nombre desconocido";
           const finalCelular = telefono ? "+51" + telefono.toString().replace(/\s+/g, "") : null;
-          const finalEmail = mail && mail !== "noemail@example.com" ? mail : null;
+          const finalEmail = mail && mail.trim() !== "" ? mail : null; // Solo usar email válido o null
 
           if (!finalCelular) continue;
 
@@ -115,7 +115,7 @@ export async function POST(req, context) {
             clientesParaCrear.push({
               nombre: finalNombre,
               celular: finalCelular,
-              email: finalEmail,
+              email: finalEmail, // Será null si no hay email válido
               categoria_no_interes: "No interés",
               bound: false,
               estado: "activo",
