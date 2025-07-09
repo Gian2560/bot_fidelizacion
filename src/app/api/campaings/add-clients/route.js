@@ -28,28 +28,44 @@ export async function OPTIONS(req) {
 }
 
 export async function POST(req, context) {
-  const { nombre_campanha, descripcion, template_id, fecha_inicio, fecha_fin, clients, variableMappings     } = await req.json();//yomi agrega variableMappings
-  // Cargamos el mensaje base de la plantilla
-  let tplMensaje = ""
-  if (template_id) {
-    const tpl = await prisma.template.findUnique({
-      where: { id: template_id }
-    })
-    tplMensaje = tpl?.mensaje || ""
-  }
-  
-  // Validación de datos y asignación de valores por defecto
-  const finalFechaInicio = fecha_inicio ? new Date(fecha_inicio) : new Date();
-  const finalFechaFin = fecha_fin ? new Date(fecha_fin) : null;
-  const finalDescripcion = descripcion || "Descripción no proporcionada";
-  const finalTemplateId = template_id || null;
-  const finalEstadoCampanha = "activa";
-  const finalMensajeCliente = mensajePersonalizado;//yomi cambia por "Mensaje predeterminado" por mensajePersonalizado
-  console.log("Datos de la campaña:", { clients });
   try {
-    // Inicia la transacción
+    const body = await req.json();
+    const { nombre_campanha, descripcion, template_id, fecha_inicio, fecha_fin, clients, variableMappings } = body;
+    
+    // Validaciones básicas
+    if (!nombre_campanha) {
+      return NextResponse.json({ error: "nombre_campanha es requerido" }, { status: 400 });
+    }
+    
+    if (!clients || !Array.isArray(clients)) {
+      return NextResponse.json({ error: "clients debe ser un array" }, { status: 400 });
+    }
+    
+    // Cargamos el mensaje base de la plantilla (una sola vez)
+    let tplMensaje = ""
+    if (template_id) {
+      const tpl = await prisma.template.findUnique({
+        where: { id: parseInt(template_id) }
+      })
+      tplMensaje = tpl?.mensaje || ""
+    }
+    
+    // Preparar datos
+    const finalFechaInicio = fecha_inicio ? new Date(fecha_inicio) : new Date();
+    const finalFechaFin = fecha_fin ? new Date(fecha_fin) : null;
+    const finalDescripcion = descripcion || "Descripción no proporcionada";
+    const finalTemplateId = template_id ? parseInt(template_id) : null;
+    const finalEstadoCampanha = "activa";
+    const finalMensajeCliente = "Mensaje predeterminado";
+    
+    // OPTIMIZACIÓN 1: Preparar todos los números de teléfono de una vez
+    const telefonos = clients.map(client => {
+      const telefono = client.telefono;
+      return telefono ? "+51" + telefono.toString().replace(/\s+/g, "") : null;
+    }).filter(Boolean);
+    
     const result = await prisma.$transaction(async (prisma) => {
-      // Crear la campaña en Prisma (PostgreSQL)
+      // Crear la campaña
       const campanha = await prisma.campanha.create({
         data: {
           nombre_campanha,
@@ -62,92 +78,128 @@ export async function POST(req, context) {
         },
       });
 
-      // Verificar si se proporcionaron datos de clientes
-      if (clients) {
-        console.log(`Procesando ${clients} clientes...`);
-
-        // Crear los clientes
-        const clientPromises = clients.map(async (clientData) => {
-          
-          const { nombre, telefono, mail } = clientData;
-          const finalNombre = nombre || "Nombre desconocido";  // Obligatorio
-          const finalCelular = telefono ? "+51" + telefono.toString().replace(/\s+/g, "") : "No proporcionado"; // Obligatorio, agregar +51 si no está
-          const finalEmail = mail || "noemail@example.com"; // Opcional
-
-          // Verificar si el cliente ya existe en Prisma
-          let cliente = await prisma.cliente.findUnique({
-            where: { celular: finalCelular },
-          });
-
-          if (!cliente) {
-            console.log(`⚠️ Cliente con celular ${finalCelular} no encontrado, creando nuevo cliente.`);
-            try {
-              console.log("📌 Creando cliente...");
-              cliente = await prisma.cliente.create({
-                data: {
-                  nombre: finalNombre,
-                  celular: finalCelular,
-                  email: finalEmail === "noemail@example.com" ? null : finalEmail,
-                  categoria_no_interes: "No interés",
-                  bound: false,
-                  estado: "activo",
-                  observacion: "Observación no proporcionada",
-                  score: "no_score",
-                },
-              });
-              console.log("✅ Cliente creado exitosamente:", cliente);
-            } catch (createError) {
-              console.error("❌ Error al crear cliente:", createError);
-              throw new Error(`Error al crear cliente ${finalNombre}: ${createError.message}`);
-            }
+      if (clients.length > 0) {
+        // OPTIMIZACIÓN 2: Obtener todos los clientes existentes de una vez
+        const clientesExistentes = await prisma.cliente.findMany({
+          where: {
+            celular: { in: telefonos }
+          },
+          select: {
+            cliente_id: true,
+            celular: true
           }
+        });
 
-          // Asociar el cliente con la campaña
-          await prisma.cliente_campanha.create({
-            data: {
-              cliente_id: cliente.cliente_id,
-              campanha_id: campanha.campanha_id,
-            },
+        // Crear mapa para búsqueda rápida
+        const clientesMap = new Map(
+          clientesExistentes.map(c => [c.celular, c])
+        );
+
+        // OPTIMIZACIÓN 3: Preparar datos para inserción masiva
+        const clientesParaCrear = [];
+        const asociacionesParaCrear = [];
+        const firestoreOps = [];
+
+        for (const clientData of clients) {
+          const { nombre, telefono, mail } = clientData;
+          const finalNombre = nombre || "Nombre desconocido";
+          const finalCelular = telefono ? "+51" + telefono.toString().replace(/\s+/g, "") : null;
+          const finalEmail = mail && mail.trim() !== "" ? mail : null; // Solo usar email válido o null
+
+          if (!finalCelular) continue;
+
+          let cliente = clientesMap.get(finalCelular);
+          
+          if (!cliente) {
+            // Preparar para creación masiva
+            clientesParaCrear.push({
+              nombre: finalNombre,
+              celular: finalCelular,
+              email: finalEmail, // Será null si no hay email válido
+              categoria_no_interes: "No interés",
+              bound: false,
+              estado: "activo",
+              observacion: "Observación no proporcionada",
+              score: "no_score",
+            });
+          }
+        }
+
+        // OPTIMIZACIÓN 4: Inserción masiva de clientes nuevos
+        let clientesCreados = [];
+        if (clientesParaCrear.length > 0) {
+          clientesCreados = await prisma.cliente.createManyAndReturn({
+            data: clientesParaCrear
           });
-          //yomi
-          let mensajePersonalizado = tplMensaje
-          for (const [idx, campo] of Object.entries(variableMappings)) {
-            const valor = clientData[campo] || ""
+        }
+
+        // Crear mapa completo con clientes nuevos y existentes
+        const todosClientes = new Map(clientesMap);
+        clientesCreados.forEach(c => todosClientes.set(c.celular, c));
+
+        // OPTIMIZACIÓN 5: Preparar asociaciones y operaciones Firestore
+        const fecha = new Date();
+        const firestoreBatch = db ? db.batch() : null;
+
+        for (const clientData of clients) {
+          const { telefono } = clientData;
+          const finalCelular = telefono ? "+51" + telefono.toString().replace(/\s+/g, "") : null;
+          
+          if (!finalCelular) continue;
+
+          const cliente = todosClientes.get(finalCelular);
+          if (!cliente) continue;
+
+          // Preparar asociación
+          asociacionesParaCrear.push({
+            cliente_id: cliente.cliente_id,
+            campanha_id: campanha.campanha_id,
+          });
+
+          // Preparar mensaje personalizado
+          let mensajePersonalizado = tplMensaje;
+          for (const [idx, campo] of Object.entries(variableMappings || {})) {
+            const valor = clientData[campo] || "";
             mensajePersonalizado = mensajePersonalizado.replace(
               new RegExp(`{{\\s*${idx}\\s*}}`, "g"),
               valor
-            )
+            );
           }
-          //yomi termina
-          // Agregar el cliente a Firestore
-          if (db) {
-            const fecha = new Date();
-            await db.collection("fidelizacion").doc(finalCelular).set({
+
+          // Preparar operación Firestore en batch
+          if (firestoreBatch) {
+            const docRef = db.collection("fidelizacion").doc(finalCelular);
+            firestoreBatch.set(docRef, {
               celular: finalCelular,
               fecha: admin.firestore.Timestamp.fromDate(fecha),
               id_bot: "fidelizacionbot",
               id_cliente: cliente.cliente_id,
-              mensaje: mensajePersonalizado,//yomi cambia "Mensaje inicial de la campaña" por mensajePersonalizado
+              mensaje: mensajePersonalizado || "Mensaje inicial de la campaña",
               sender: "false",
             });
-            console.log(`✅ Cliente ${cliente.cliente_id} agregado a Firestore`);
           }
+        }
 
-          console.log(`✅ Cliente ${cliente.cliente_id} agregado a la campaña ${campanha.campanha_id}`);
-        });
+        // OPTIMIZACIÓN 6: Inserción masiva de asociaciones
+        if (asociacionesParaCrear.length > 0) {
+          await prisma.cliente_campanha.createMany({
+            data: asociacionesParaCrear,
+            skipDuplicates: true
+          });
+        }
 
-        // Esperamos a que todos los clientes sean procesados
-        await Promise.all(clientPromises);
+        // OPTIMIZACIÓN 7: Ejecutar todas las operaciones Firestore en batch
+        if (firestoreBatch) {
+          await firestoreBatch.commit();
+        }
       }
 
-      // Devuelvo el resultado de la campaña y la cantidad de clientes procesados
       return {
         campanha,
-        clientsProcessed: clients?.length || 0,
+        clientsProcessed: clients.length,
       };
     });
 
-    // Si todo ha ido bien, retornamos el resultado
     const response = NextResponse.json({
       message: "Campaña y clientes creados con éxito",
       campanha: result.campanha,
@@ -155,12 +207,12 @@ export async function POST(req, context) {
     });
 
     return addCorsHeaders(response);
+    
   } catch (error) {
-    console.error("❌ Error al crear la campaña o agregar clientes:", error);
+    console.error("❌ Error:", error);
     const errorResponse = NextResponse.json({
       error: "Error al crear la campaña o agregar clientes",
       details: error.message,
-      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
     }, { status: 500 });
 
     return addCorsHeaders(errorResponse);
