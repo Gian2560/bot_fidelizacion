@@ -1,15 +1,18 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
-export async function GET(req, { params }) {
+export async function GET(req, context) {
+
   try {
-    const { searchParams } = new URL(req.url);
-    const page = parseInt(searchParams.get("page") || "1", 10);
-    const pageSize = parseInt(searchParams.get("pageSize") || "10", 10);
+    const { id: idParam } = await context.params;
+    const campanhaId = Number(idParam);
+    const url = new URL(req.url);
+    const page = parseInt(url.searchParams.get("page") || "1", 10);
+    const pageSize = parseInt(url.searchParams.get("pageSize") || "10", 10);
 
     // Obtener la campaña con detalles
     const campanha = await prisma.campanha.findUnique({
-      where: { campanha_id: Number(params.id) },
+      where: { campanha_id: campanhaId },
       include: {
         template: { select: { nombre_template: true, mensaje: true } }, // Template
       },
@@ -24,12 +27,12 @@ export async function GET(req, { params }) {
 
     // Contar total de clientes en la campaña
     const totalClientes = await prisma.cliente_campanha.count({
-      where: { campanha_id: parseInt(params.id) },
+      where: { campanha_id: campanhaId },
     });
 
     // Obtener clientes paginados
     const clientes = await prisma.cliente_campanha.findMany({
-      where: { campanha_id: parseInt(params.id) },
+      where: { campanha_id: campanhaId },
       include: { cliente: true },
       skip: (page - 1) * pageSize,
       take: pageSize,
@@ -82,11 +85,13 @@ export async function GET(req, { params }) {
 }
 
 // 🔹 Agregar cliente a campaña
-export async function POST(req, { params }) {
+export async function POST(req,context) {
   try {
+    const { id: idParam }       = await context.params;
+    const campanhaId            = parseInt(idParam, 10);
     const { cliente_id } = await req.json();
     await prisma.cliente_campanha.create({
-      data: { campanha_id: parseInt(params.id), cliente_id },
+      data: { campanha_id: campanhaId, cliente_id },
     });
 
     return NextResponse.json({ message: "Cliente agregado" });
@@ -96,11 +101,13 @@ export async function POST(req, { params }) {
 }
 
 // 🔹 Eliminar cliente de campaña
-export async function DELETE(req, { params }) {
+export async function DELETE(req, context) {
   try {
+    const { id: idParam }       = await context.params;
+    const campanhaId            = parseInt(idParam, 10);
     const { cliente_id } = await req.json();
     await prisma.cliente_campanha.deleteMany({
-      where: { campanha_id: parseInt(params.id), cliente_id },
+      where: { campanha_id: campanhaId, cliente_id },
     });
 
     return NextResponse.json({ message: "Cliente eliminado" });

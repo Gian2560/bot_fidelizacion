@@ -18,9 +18,10 @@ if (!admin.apps.length) {
 const db = admin.firestore();
 const client = twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH_TOKEN);
 
-export async function POST(req, { params }) {
+export async function POST(req, context) {
   try {
-    const campaignId = parseInt(params.id, 10);
+    const { id: idParam } = await context.params;
+    const campaignId      = parseInt(idParam, 10);
     if (isNaN(campaignId)) {
       return NextResponse.json({ error: "ID de campaña no válido" }, { status: 400 });
     }
@@ -28,7 +29,10 @@ export async function POST(req, { params }) {
     // Obtener la campaña con su template y clientes asociados
     const campaign = await prisma.campanha.findUnique({
       where: { campanha_id: campaignId },
-      include: { template: true, cliente_campanha: { include: { cliente: true } } },
+      include: {
+        template: true,
+       cliente_campanha: { include: { cliente: true } },
+      },
     });
 
     if (!campaign) {
@@ -61,15 +65,49 @@ export async function POST(req, { params }) {
         to: twilioNumber,
         contentSid,
       };
-
+      
       // Si la plantilla tiene parámetros dinámicos, los agregamos al payload
+      // if (campaign.template.parametro) {
+      //   messagePayload.contentVariables = JSON.stringify({
+      //     1: cliente.nombre,        // Primer parámetro, nombre del cliente
+      //   });
+      // }      
       if (campaign.template.parametro) {
-        messagePayload.contentVariables = JSON.stringify({
-          1: cliente.nombre,        // Primer parámetro, nombre del cliente
-        });
-      }      
+        const mappings   = campaign.variable_mappings || {};
+        const contentVars = {};
+        for (const [idx, field] of Object.entries(mappings)) {
+          // 1) Agarro el valor bruto (puede venir number o string)
+          let raw = cliente[field] ?? "";
+
+          // 2) Lo convierto a string
+          let val = String(raw).trim().replace(/,+$/, "");
+
+          contentVars[idx] = val;
+        }
+        messagePayload.contentVariables = contentVars;
+        // ——— Generar y loguear el texto final ———
+        let textoFinal = campaign.template.mensaje;
+        for (const [idx, field] of Object.entries(mappings)) {
+          const valor = cliente[field] ?? "";
+          textoFinal = textoFinal.replace(
+            new RegExp(`{{\\s*${idx}\\s*}}`, "g"),
+            valor
+          );
+        }
+        console.log(`📝 Mensaje final para ${cliente.celular}:`, textoFinal);
+        console.log("→ contentVars object:", contentVars);
+        console.log("→ contentVariables JSON:", messagePayload.contentVariables);
+        console.log("→ placeholders en plantilla:", 
+          campaign.template.mensaje.match(/{{\s*(\d+)\s*}}/g)
+        );
+        console.log("→ número de placeholders:", 
+          (campaign.template.mensaje.match(/{{\s*(\d+)\s*}}/g) || []).length
+        );
+      }
       try {
         // 📌 Enviar el mensaje con Twilio
+         console.log("message payload: ",messagePayload);
+
         const message = await client.messages.create(messagePayload);
         console.log(`📨 Mensaje enviado a ${celularFormatted}: ${message.sid}`);
         
