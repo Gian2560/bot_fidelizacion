@@ -84,7 +84,7 @@ export async function POST(req, context) {
 
           contentVars[idx] = val;
         }
-        messagePayload.contentVariables = contentVars;
+        messagePayload.contentVariables = JSON.stringify(contentVars);
         // ——— Generar y loguear el texto final ———
         let textoFinal = campaign.template.mensaje;
         for (const [idx, field] of Object.entries(mappings)) {
@@ -169,7 +169,8 @@ export async function POST(req, context) {
       }
     });    // Esperar todas las promesas
     await Promise.all(promises);
-
+    // 1) Asegura la conexión abierta
+    await prisma.$connect();
     // Actualizar el estado de la campaña
     await prisma.campanha.update({
       where: { campanha_id: campaignId },
