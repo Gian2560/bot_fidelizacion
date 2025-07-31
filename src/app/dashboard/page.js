@@ -8,6 +8,7 @@ import Grid from "@mui/material/Grid";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 
 import { useState } from "react";
+import CircularProgress from "@mui/material/CircularProgress";
 import { useDashboardData } from "../../hooks/useDashboardData";
 
 
@@ -118,7 +119,9 @@ export default function Dashboard() {
           </Typography>
           <Box display="flex" flexWrap="wrap" gap={10}>
             {loading ? (
-              <Typography>Cargando KPIs...</Typography>
+              <Box display="flex" alignItems="center" justifyContent="center" height={60}>
+                <CircularProgress size={32} thickness={4} color="primary" />
+              </Box>
             ) : (
               kpisConvencional.map(([label, value], index) => (
                 <Paper
@@ -156,7 +159,9 @@ export default function Dashboard() {
           </Typography>
           <Box display="flex" flexWrap="wrap" gap={10}>
             {loading ? (
-              <Typography>Cargando KPIs...</Typography>
+              <Box display="flex" alignItems="center" justifyContent="center" height={60}>
+                <CircularProgress size={32} thickness={4} color="info" />
+              </Box>
             ) : (
               kpisRetadora.map(([label, value], index) => (
                 <Paper
@@ -189,7 +194,7 @@ export default function Dashboard() {
         <ResponsiveContainer width="100%" height="100%">
           {loading ? (
             <Box display="flex" alignItems="center" justifyContent="center" height="100%">
-              <Typography>Cargando gráfico...</Typography>
+              <CircularProgress size={48} thickness={4.5} color="secondary" />
             </Box>
           ) : (
             <LineChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
