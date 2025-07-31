@@ -208,7 +208,7 @@ export default function Layout({ children }) {
         </ListItem>*/}
         <ListItem
           button="true"
-          onClick={() => router.push("/payments")}
+          onClick={() => router.push("/promesasPago")}
           sx={{
             "&:hover": { bgcolor: "#2D3748" },
             px: 3,

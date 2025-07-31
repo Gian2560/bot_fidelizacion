@@ -4,15 +4,15 @@ import ActionButton from "@/app/components/ActionButton";
 
 // 🔹 Mapas de estilos
 const ESTADO_STYLES = {
-  "NO INTERESADO": { color: "#B71C1C", backgroundColor: "#FFCDD2" },
-  "SEGUIMIENTO - DUDA NO RESUELTA": { color: "#1565C0", backgroundColor: "#BBDEFB" },
+  "NO INTERESADO": { color: "#fff", backgroundColor: "#e53935", fontWeight: "bold", border: "2px solid #b71c1c" }, // rojo alerta
+  "SEGUIMIENTO - DUDA NO RESUELTA": { color: "#fff", backgroundColor: "#1565c0", fontWeight: "bold", border: "2px solid #0d47a1" }, // azul alerta
   "PROMESA DE PAGO": { color: "#2E7D32", backgroundColor: "#C8E6C9" },
   "SEGUIMIENTO - DUDA RESUELTA": { color: "#5E35B1", backgroundColor: "#D1C4E9" },
 };
 
 const MOTIVO_STYLES = {
-  "NO INTERESADO": { color: "#B71C1C", backgroundColor: "#FFCDD2" },
-  "SEGUIMIENTO - DUDA NO RESUELTA": { color: "#1565C0", backgroundColor: "#BBDEFB" },
+  "NO INTERESADO": { color: "#fff", backgroundColor: "#e53935", fontWeight: "bold", border: "2px solid #b71c1c" },
+  "SEGUIMIENTO - DUDA NO RESUELTA": { color: "#fff", backgroundColor: "#1565c0", fontWeight: "bold", border: "2px solid #0d47a1" },
   "PROMESA DE PAGO": { color: "#2E7D32", backgroundColor: "#C8E6C9" },
   "SEGUIMIENTO - DUDA RESUELTA": { color: "#5E35B1", backgroundColor: "#D1C4E9" },
 };
@@ -33,26 +33,26 @@ export const columnsClientes = (edit, conversacion) => [
   { field: "nombre",   headerName: "Nombre",           flex: 1, minWidth: 150 },
   { field: "celular",  headerName: "Teléfono",         flex: 1, minWidth: 120 },
 
-   {
+  {
     field: "estado",
     headerName: "Estado",
-    flex: 2,         // Ajusta al contenido y lo hace más grande si es necesario
-    minWidth: 180,   // Establece un tamaño mínimo
+    flex: 2,
+    minWidth: 180,
     renderCell: params => {
-      const raw = params.value;
+      // Si estado está vacío, usa estado_asesor
+      const raw = params.value && params.value.trim() !== "" ? params.value : params.row.estado_asesor;
       const key = raw ? raw.toUpperCase() : "";
       const label = ESTADO_STYLES[key] ? raw : "NINGUNO";
-      const style = {...getEstadoStyle(raw), fontWeight: "bold"};
-
+      const style = { ...getEstadoStyle(raw), fontWeight: "bold" };
       return (
         <Chip
           label={label}
           sx={{
             ...style,
-            width: "100%", // Establecer a 100% para que ocupe todo el ancho disponible
-            whiteSpace: 'normal',  // Permite que el texto se ajuste en varias líneas
-            wordWrap: 'break-word',  // Rompe palabras largas si es necesario
-            overflow: 'visible', // Asegura que no se corte el texto
+            width: "100%",
+            whiteSpace: 'normal',
+            wordWrap: 'break-word',
+            overflow: 'visible',
             justifyContent: "center",
           }}
         />

@@ -51,7 +51,10 @@ export async function GET(req) {
     }
 
     if (estado && estado !== "Todos") {
-      filtros.estado = estado;
+      filtros.OR = [
+    { estado: estado },
+    { estado_asesor: estado }
+  ];
     }
 
     if (bound && bound !== "Todos") {
@@ -84,13 +87,33 @@ export async function GET(req) {
     
     console.log("📌 Filtros aplicados:", filtros);
 
-    // 🛠️ Obtener clientes con Prisma
-    const clientes = await prisma.cliente.findMany({
+
+    // 🛠️ Obtener clientes sin orden especial desde la base de datos
+    let clientes = await prisma.cliente.findMany({
       where: filtros,
       orderBy: { [orderBy]: order },
-      take: pageSize,
-      skip: (page - 1) * pageSize,
-    }); 
+      take: pageSize * 10, // Trae más para asegurar paginación tras ordenar
+      skip: 0,
+    });
+
+    // Ordenar en JS según prioridad de estados
+    const prioridad = [
+      "No interesado",
+      "Seguimiento - Duda no resuelta",
+      "Promesa de Pago",
+      "Seguimiento - Duda resuelta"
+    ];
+    clientes = clientes.sort((a, b) => {
+      const idxA = prioridad.indexOf(a.estado_asesor || a.categoria_no_interes || "");
+      const idxB = prioridad.indexOf(b.estado_asesor || b.categoria_no_interes || "");
+      if (idxA === -1 && idxB === -1) return 0;
+      if (idxA === -1) return 1;
+      if (idxB === -1) return -1;
+      return idxA - idxB;
+    });
+
+    // Paginación manual después de ordenar
+    clientes = clientes.slice((page - 1) * pageSize, page * pageSize);
 
     console.log("✅ Clientes obtenidos:", clientes.length);
 
