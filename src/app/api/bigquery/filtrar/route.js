@@ -62,7 +62,18 @@ export async function POST(req) {
         whereParts.push(`1=1`);  // Siempre verdadero, se omite este filtro
         return; // No agregamos más lógica para este filtro
       }
-      
+
+      // Si es fecha, castea y filtra solo por la parte de la fecha
+      if (colName === 'DATETIME' || colType === 'DATE') {
+
+        console.log('Es fecha:', colName, 'Valor:', val);
+        // Extrae solo la fecha (YYYY-MM-DD)
+        const fechaSolo = val.split('T')[0];
+        params[p] = fechaSolo;
+        whereParts.push(`DATE(\`${colName}\`) = @${p}`);
+        return;
+      }
+
       // convierte a número si la columna es numérica
       if (colType === 'INT64')   val = Number.parseInt(val, 10);
       if (colType === 'FLOAT64') val = Number.parseFloat(val);
@@ -70,7 +81,7 @@ export async function POST(req) {
       params[p] = val;                          // se guarda como PRIMITIVO
       whereParts.push(`\`${colName}\` = @${p}`);
     });
-
+    
     const whereSQL = whereParts.join(' AND ') || '1=1';
     console.log('WHERE SQL:', whereSQL);
     /* 3.2 columnas extra con alias legibles */

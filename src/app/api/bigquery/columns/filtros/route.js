@@ -11,8 +11,9 @@ export async function GET(req) {
     const segmentColumn = url.searchParams.get('segmentColumn'); // Columna Segmento
     const clusterColumn = url.searchParams.get('clusterColumn'); // Columna Cluster
     const estrategiaColumn = url.searchParams.get('estrategiaColumn'); // Columna Estrategia
+    const fechaCuotaColumn = url.searchParams.get('fechaCuotaColumn'); // Columna Fecha Cuota
 
-    if (!tableName || !segmentColumn || !clusterColumn || !estrategiaColumn) {
+    if (!tableName || !segmentColumn || !clusterColumn || !estrategiaColumn || !fechaCuotaColumn) {
       return new Response(
         JSON.stringify({
           message: '❌ Faltaron parámetros de tabla o columnas',
@@ -40,15 +41,22 @@ export async function GET(req) {
       FROM \`${projectId}.${datasetId}.${tableName}\`
     `;
 
+    const queryFechaCuota = `
+      SELECT DISTINCT \`${fechaCuotaColumn}\`
+      FROM \`peak-emitter-350713.FR_general.envios_cobranzas_m0\`
+    `;
+
     // Ejecutar las tres consultas SQL
     const [rowsSegmento] = await bigquery.query({ query: querySegmento });
     const [rowsCluster] = await bigquery.query({ query: queryCluster });
     const [rowsEstrategia] = await bigquery.query({ query: queryEstrategia });
+    const [rowsFechaCuota] = await bigquery.query({ query: queryFechaCuota });
 
     // Obtener los valores únicos de cada columna
     const uniqueSegmentos = rowsSegmento.map((row) => row[segmentColumn]);
     const uniqueClusters = rowsCluster.map((row) => row[clusterColumn]);
     const uniqueEstrategias = rowsEstrategia.map((row) => row[estrategiaColumn]);
+    const uniqueFechasCuota = rowsFechaCuota.map((row) => row[fechaCuotaColumn]);
 
     return new Response(
       JSON.stringify({
@@ -56,6 +64,7 @@ export async function GET(req) {
         segmentos: uniqueSegmentos,
         clusters: uniqueClusters,
         estrategias: uniqueEstrategias,
+        fechaCuotaColumn: uniqueFechasCuota
       }),
       {
         status: 200,

@@ -33,6 +33,7 @@ export default function CampaignPage() {
   const [clientSegment, setClientSegment] = useState("");
   const [cluster, setCluster] = useState("");
   const [strategy, setStrategy] = useState("");
+  const [fecha, setFecha] = useState("");
   const [variable1, setVariable1] = useState("");
   const [variable2, setVariable2] = useState("");
   const [sendDate, setSendDate] = useState(null);
@@ -44,6 +45,7 @@ export default function CampaignPage() {
   segmento: 'segmentacion',  // Fijo con valor 'segmentacion'
   cluster: 'Cluster',        // Fijo con valor 'cluster'
   estrategia: 'gestion',     // Fijo con valor 'gestion'
+  fechaCuota: 'Fec_Venc_Cuota' // Fijo con valor 'Fec_Venc_Cuota'
   });
   // Datos simulados
   const [databases, useDatabases] = useState([]);
@@ -51,6 +53,7 @@ export default function CampaignPage() {
   const [segments,setSegments] = useState([]);
   const [clusters, setClusterValues] = useState([]);
   const [strategies, setStrategyValues] = useState([]);
+  const [fechaCuotaColumn, setFechaCuotaColumnValues] = useState([]);
   const variables = ["Variable 1", "Variable 2", "Variable 3"];
   // al inicio: yomi
   const [placeholders, setPlaceholders] = useState([])            // e.g. [ "1", "2", ... ]
@@ -173,7 +176,8 @@ const handleSubmit = async () => {
           database: value,
           segmentColumn: "segmentacion",
           clusterColumn: "Cluster",
-          estrategiaColumn: "gestion"
+          estrategiaColumn: "gestion",
+          fechaCuotaColumn: "Fec_Venc_Cuota"
         }  // Enviamos los nombres de las columnas seleccionadas
       });
       console.log("Valores únicos obtenidos:", response.data);
@@ -181,6 +185,7 @@ const handleSubmit = async () => {
       setSegments(response.data.segmentos);
       setClusterValues(response.data.clusters);
       setStrategyValues(response.data.estrategias);
+      setFechaCuotaColumnValues(response.data.fechaCuotaColumn);
       /*setColumnValues({
         segmento: response.data.segmentos,
         cluster: response.data.clusters,
@@ -236,7 +241,14 @@ const applyFilters = async () => {
       value : strategy
     });
   }
-  
+  if (selectedColumns.fechaCuota) {
+    filters.push({
+      type: 'fechaCuota',
+      column: selectedColumns.fechaCuota,
+      value : fecha
+    });
+  }
+
   if (filters.length === 0) {
     alert('Elige al menos un filtro antes de continuar');
     return;
@@ -347,20 +359,7 @@ const applyFilters = async () => {
                 />
               </FormControl>
             </Grid>
-             {/* Mostrar las columnas de la base de datos seleccionada */}
-          {loadingColumns ? (
-            <CircularProgress sx={{ display: "block", margin: "0 auto" }} />  // Indicador de carga
-          ) : (
-            columns.length > 0 && (
-              <Grid container spacing={4} sm={24} paddingInlineStart={4} paddingTop={4}>
-                
-
-                
-
-                
-              </Grid>
-            )
-          )}
+            
             
 
             
@@ -428,6 +427,26 @@ const applyFilters = async () => {
                                     <MenuItem value="Todos">Todos</MenuItem>
 
                   {strategies.map((str) => (
+                    <MenuItem key={str} value={str}>
+                      {str}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+
+            <Grid item xs={12} sm={6} md={4}>
+              <FormControl fullWidth>
+                <InputLabel sx={{ color: colors.darkBlue, fontWeight: 600 }}>Fecha Cuota</InputLabel>
+                <Select
+                  value={fecha}
+                  onChange={(e) => setFecha(e.target.value)}
+                  label="Fecha Cuota"
+                  sx={{ bgcolor: colors.white, borderRadius: 2, "& .MuiSelect-select": { fontWeight: 600 } }}
+                >
+                                    <MenuItem value="Todos">Todos</MenuItem>
+
+                  {fechaCuotaColumn.map((str) => (
                     <MenuItem key={str} value={str}>
                       {str}
                     </MenuItem>
@@ -590,14 +609,14 @@ const applyFilters = async () => {
           <Divider sx={{ mb: 5 }} />
 
           {/* FECHA Y HORA */}
-          <Typography
+          {/*<Typography
             variant="h6"
             sx={{ color: colors.darkBlue, fontWeight: "700", mb: 3, borderBottom: `3px solid ${colors.primaryBlue}`, pb: 1 }}
           >
             Fecha y Hora de Envío
-          </Typography>
+          </Typography>*/}
 
-          <Grid container spacing={4} mb={4}>
+          {/*<Grid container spacing={4} mb={4}>
             <Grid item xs={12} sm={6}>
               <DatePicker
                 label="Fecha de Envío"
@@ -635,7 +654,7 @@ const applyFilters = async () => {
                 )}
               />
             </Grid>
-          </Grid>
+          </Grid>*/}
 
           <Box textAlign="center" mt={6}>
             <Button
