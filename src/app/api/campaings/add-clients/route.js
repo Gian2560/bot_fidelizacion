@@ -121,7 +121,7 @@ export async function POST(req, context) {
             await prisma.cliente.update({
               where: { cliente_id: cliente.cliente_id },
               data: {
-                fecCuota: finalFechaCuota,
+                feccuota: finalFechaCuota,
                 modelo:      finalModelo,
                 codpago: finalCodPago,
                 Cta_Act_Pag:      finalCuotas,
@@ -140,7 +140,7 @@ export async function POST(req, context) {
               estado:           "activo",
               observacion:      "Observación no proporcionada",
               score:            "no_score",
-              fecCuota:      finalFechaCuota,
+              feccuota:      finalFechaCuota,
               modelo:           finalModelo,
               codpago:      finalCodPago,
               Cta_Act_Pag:           finalCuotas,
