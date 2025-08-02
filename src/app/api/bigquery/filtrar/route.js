@@ -109,7 +109,7 @@ export async function POST(req) {
     SELECT 
       M1.Codigo_Asociado,
       M1.segmentacion,
-      envios.Email AS mail,
+      envios.Email AS email,
       M1.Cta_Act_Pag,
       envios.TelfSMS AS telefono,
       envios.Primer_Nombre AS nombre,
@@ -128,7 +128,7 @@ export async function POST(req) {
     Cta_Act_Pag,
     Codigo_Asociado,
     segmentacion,
-    mail,
+    email,
     telefono,
     nombre,
     codpago,

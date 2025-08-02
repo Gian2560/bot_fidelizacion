@@ -102,10 +102,11 @@ export async function POST(req, context) {
         const firestoreOps = [];
 
         for (const clientData of clients) {
-          const { nombre, telefono, mail, monto,  fecCuota, modelo, codpago, Cta_Act_Pag, Codigo_Asociado} = clientData;
+          const { nombre, telefono, email, monto,  fecCuota, modelo, codpago, Cta_Act_Pag, Codigo_Asociado} = clientData;
           const finalNombre = nombre || "Nombre desconocido";
           const finalCelular = telefono ? "+51" + telefono.toString().replace(/\s+/g, "") : null;
-          const finalEmail = mail && mail.trim() !== "" ? mail : null; // Solo usar email válido o null
+          console.log("Procesando cliente:", email, finalCelular);
+          const finalEmail = email && email.trim() !== "" ? email : null; // Solo usar email válido o null
           const finalMonto= monto || 0;
           const finalFechaCuota=fecCuota||"";
           const finalModelo= modelo||"";
