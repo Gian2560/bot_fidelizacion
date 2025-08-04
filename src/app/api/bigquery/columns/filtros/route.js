@@ -12,7 +12,7 @@ export async function GET(req) {
     const clusterColumn = url.searchParams.get('clusterColumn'); // Columna Cluster
     const estrategiaColumn = url.searchParams.get('estrategiaColumn'); // Columna Estrategia
     const fechaCuotaColumn = url.searchParams.get('fechaCuotaColumn'); // Columna Fecha Cuota
-
+    const lineaColumn =   url.searchParams.get('lineaColumn');
     if (!tableName || !segmentColumn || !clusterColumn || !estrategiaColumn || !fechaCuotaColumn) {
       return new Response(
         JSON.stringify({
@@ -46,17 +46,23 @@ export async function GET(req) {
       FROM \`peak-emitter-350713.FR_general.envios_cobranzas_m0\`
     `;
 
+    const queryTipo = `
+      SELECT DISTINCT \`${lineaColumn}\`
+      FROM \`peak-emitter-350713.FR_general.bd_fondos\`
+    `;
+
     // Ejecutar las tres consultas SQL
     const [rowsSegmento] = await bigquery.query({ query: querySegmento });
     const [rowsCluster] = await bigquery.query({ query: queryCluster });
     const [rowsEstrategia] = await bigquery.query({ query: queryEstrategia });
     const [rowsFechaCuota] = await bigquery.query({ query: queryFechaCuota });
-
+    const [rowLinea] = await bigquery.query({ query: queryTipo });
     // Obtener los valores únicos de cada columna
     const uniqueSegmentos = rowsSegmento.map((row) => row[segmentColumn]);
     const uniqueClusters = rowsCluster.map((row) => row[clusterColumn]);
     const uniqueEstrategias = rowsEstrategia.map((row) => row[estrategiaColumn]);
     const uniqueFechasCuota = rowsFechaCuota.map((row) => row[fechaCuotaColumn]);
+    const uniqueLinea = rowLinea.map((row)=> row[lineaColumn]);
 
     return new Response(
       JSON.stringify({
@@ -64,7 +70,8 @@ export async function GET(req) {
         segmentos: uniqueSegmentos,
         clusters: uniqueClusters,
         estrategias: uniqueEstrategias,
-        fechaCuotaColumn: uniqueFechasCuota
+        fechaCuotaColumn: uniqueFechasCuota,
+        lineas: uniqueLinea
       }),
       {
         status: 200,

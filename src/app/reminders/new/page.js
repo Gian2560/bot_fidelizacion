@@ -34,6 +34,7 @@ export default function CampaignPage() {
   const [cluster, setCluster] = useState("");
   const [strategy, setStrategy] = useState("");
   const [fecha, setFecha] = useState("");
+  const [linea,setLinea]= useState("");
   const [variable1, setVariable1] = useState("");
   const [variable2, setVariable2] = useState("");
   const [sendDate, setSendDate] = useState(null);
@@ -45,7 +46,8 @@ export default function CampaignPage() {
   segmento: 'segmentacion',  // Fijo con valor 'segmentacion'
   cluster: 'Cluster',        // Fijo con valor 'cluster'
   estrategia: 'gestion',     // Fijo con valor 'gestion'
-  fechaCuota: 'Fec_Venc_Cuota' // Fijo con valor 'Fec_Venc_Cuota'
+  fechaCuota: 'Fec_Venc_Cuota', // Fijo con valor 'Fec_Venc_Cuota'
+  linea: 'Linea'
   });
   // Datos simulados
   const [databases, useDatabases] = useState([]);
@@ -54,6 +56,7 @@ export default function CampaignPage() {
   const [clusters, setClusterValues] = useState([]);
   const [strategies, setStrategyValues] = useState([]);
   const [fechaCuotaColumn, setFechaCuotaColumnValues] = useState([]);
+  const [lineaValue, setLineaValues] = useState([]);
   const variables = ["Variable 1", "Variable 2", "Variable 3"];
   // al inicio: yomi
   const [placeholders, setPlaceholders] = useState([])            // e.g. [ "1", "2", ... ]
@@ -177,7 +180,8 @@ const handleSubmit = async () => {
           segmentColumn: "segmentacion",
           clusterColumn: "Cluster",
           estrategiaColumn: "gestion",
-          fechaCuotaColumn: "Fec_Venc_Cuota"
+          fechaCuotaColumn: "Fec_Venc_Cuota",
+          lineaColumn: "Linea"
         }  // Enviamos los nombres de las columnas seleccionadas
       });
       console.log("Valores únicos obtenidos:", response.data);
@@ -186,6 +190,7 @@ const handleSubmit = async () => {
       setClusterValues(response.data.clusters);
       setStrategyValues(response.data.estrategias);
       setFechaCuotaColumnValues(response.data.fechaCuotaColumn);
+      setLineaValues(response.data.lineas);
       /*setColumnValues({
         segmento: response.data.segmentos,
         cluster: response.data.clusters,
@@ -246,6 +251,14 @@ const applyFilters = async () => {
       type: 'fechaCuota',
       column: selectedColumns.fechaCuota,
       value : fecha
+    });
+  }
+
+  if (selectedColumns.linea) {
+    filters.push({
+      type: 'Linea',
+      column: selectedColumns.linea,
+      value : linea
     });
   }
 
@@ -447,6 +460,26 @@ const applyFilters = async () => {
                                     <MenuItem value="Todos">Todos</MenuItem>
 
                   {fechaCuotaColumn.map((str) => (
+                    <MenuItem key={str} value={str}>
+                      {str}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+
+            <Grid item xs={12} sm={6} md={4}>
+              <FormControl fullWidth>
+                <InputLabel sx={{ color: colors.darkBlue, fontWeight: 600 }}>Linea</InputLabel>
+                <Select
+                  value={linea}
+                  onChange={(e) => setLinea(e.target.value)}
+                  label="Fecha Cuota"
+                  sx={{ bgcolor: colors.white, borderRadius: 2, "& .MuiSelect-select": { fontWeight: 600 } }}
+                >
+                                    <MenuItem value="Todos">Todos</MenuItem>
+
+                  {lineaValue.map((str) => (
                     <MenuItem key={str} value={str}>
                       {str}
                     </MenuItem>

@@ -100,7 +100,8 @@ export async function POST(req) {
       base.gestion,
       fondos.Cta_Act_Pag,
       fondos.Telf_SMS,
-      fondos.E_mail
+      fondos.E_mail,
+      fondos.Linea
     FROM   \`${project}.${dataset}.${table}\` AS base
     LEFT JOIN peak-emitter-350713.FR_general.bd_fondos AS fondos
       ON base.Codigo_Asociado = fondos.Codigo_Asociado
@@ -109,6 +110,7 @@ export async function POST(req) {
     SELECT 
       M1.Codigo_Asociado,
       M1.segmentacion,
+      M1.Linea,
       envios.Email AS email,
       M1.Cta_Act_Pag,
       envios.TelfSMS AS telefono,
@@ -134,7 +136,8 @@ export async function POST(req) {
     codpago,
     fecCuota,
     modelo,
-    monto
+    monto,
+    Linea
   FROM ranked
   WHERE row_num = 1;  -- Selecciona solo la primera fila de cada grupo de TelfSMS
 `;
