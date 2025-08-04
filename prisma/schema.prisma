@@ -235,3 +235,10 @@ model usuario {
   persona    persona?
   rol        rol?     @relation(fields: [rol_id], references: [rol_id], onUpdate: NoAction, map: "usuario_fk_rol")
 }
+
+model notificaciones {
+  id_notificacion Int       @id @default(autoincrement())
+  cliente_id      Int?
+  mensaje         String?
+  fecha           DateTime? @default(now()) @db.Timestamp(6)
+}

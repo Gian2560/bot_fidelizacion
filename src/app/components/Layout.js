@@ -322,7 +322,7 @@ export default function Layout({ children }) {
               FIDELIZACION 
             </Typography>
           </Box>
-          {/*<Notificaciones></Notificaciones>*/}
+          {<Notificaciones></Notificaciones>}
           <Avatar
             alt="Usuario"
             src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAMAAABF0y+mAAAAJFBMVEVHcEztNyLsNyLnNiHuOCPtNyLtNyPuNyLuOCPrNiLuOCPuOCOxF7LxAAAAC3RSTlMASTUO7Gmkic4hukCMuxcAAAB2SURBVCiRzZLZDoAgDARLqVz9//9VTjXZkvjmvJGhkN2U6IaLSMgEObTByHkdIBmndECGKY+vk3n35xxFgzWLqCaYxL6PELd6QTAZc5VCttO0l9tngy2vkpPlQg3KrrEy9aN7rQRP6UFTv5P7NRltRCh7k093At7KD2uUo+ERAAAAAElFTkSuQmCC"
