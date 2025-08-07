@@ -125,7 +125,7 @@ export async function GET(req) {
   return {
     ...cliente,                     // Conserva todos los campos originales de `cliente`
     id: cliente.cliente_id,         // Agrega el `cliente_id` como `id`
-    estado: cliente.estado ?? null,  // Agrega `estado` (con valor por defecto si no existe)
+    estado: cliente.estado ?? "no contactado",  // Agrega `estado` (con valor por defecto si no existe)
     estado_asesor: cliente.estado_asesor ?? null,  // Agrega `motivo` (con valor por defecto si no existe)
     // Otros campos que necesites agregar, por ejemplo:
     nombre_completo: `${cliente.nombre} ${cliente.apellido}`, // Concatenar nombre y apellido
