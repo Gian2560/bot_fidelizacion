@@ -59,6 +59,9 @@ const initialTasks = [
   // Gestión de Contrato
   { id: 5, cliente: 'Elena Díaz', telefono: '333-555-7777', estado: 'gestion_contrato', prioridad: 'media', fechaCreacion: '2025-08-04', fechaLlamada: null, llamado: false },
   { id: 6, cliente: 'José Ruiz', telefono: '222-888-9999', estado: 'gestion_contrato', prioridad: 'baja', fechaCreacion: '2025-08-03', fechaLlamada: null, llamado: false },
+  { id: 10, cliente: 'Elena Díaz', telefono: '333-555-7777', estado: 'gestion_contrato', prioridad: 'media', fechaCreacion: '2025-08-04', fechaLlamada: null, llamado: false },
+  { id: 11, cliente: 'José Ruiz', telefono: '222-888-9999', estado: 'gestion_contrato', prioridad: 'baja', fechaCreacion: '2025-08-03', fechaLlamada: null, llamado: false },
+  
   
   // Reclamos
   { id: 7, cliente: 'Patricia Vega', telefono: '111-222-3333', estado: 'reclamos', prioridad: 'urgente', fechaCreacion: '2025-08-02', fechaLlamada: null, llamado: false },
@@ -225,7 +228,7 @@ function EstadoAccordion({ estado, tasks, onMarcarLlamada }) {
                     />
                   </Box>
                   
-                  <Box display="flex" justify="space-between" alignItems="center">
+                  <Box display="flex" justify="space-between" alignItems="center" gap={31}>
                     <Box>
                       <Typography variant="caption" color="text.secondary">
                         Creado: {task.fechaCreacion}
