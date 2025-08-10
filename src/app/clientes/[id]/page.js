@@ -5,6 +5,7 @@ import { useClienteDetalle } from "@/hooks/useClienteDetalle";
 import { Typography, Box, Tabs, Tab, Divider, Card, CardContent, CircularProgress } from "@mui/material";
 import ConversationModal from "@/app/components/ConversationModal";
 import { useState } from "react";
+import Historico from "@/app/components/Historico";
 
 export default function ClienteDetallePage() {
   const { id } = useParams();
@@ -100,7 +101,7 @@ export default function ClienteDetallePage() {
           </Card>
         </Box>
       )}
-
+      <Historico clienteId={id} ></Historico>
       {/* 🔹 MODAL DE CONVERSACIONES */}
       {tab === 1 && (
         <ConversationModal

@@ -79,3 +79,15 @@ export const fetchClienteById = async (id) => {
     }
 };
 
+// Obtener historial de estados de un cliente
+export const fetchHistoricoEstados = async (clienteId) => {
+  try {
+    const response = await axiosInstance.get(`clientes/historico-estado/${clienteId}`);
+    // Se espera que el backend devuelva un array de historico_estado
+    return response.data.historico || [];
+  } catch (error) {
+    console.error("Error al obtener historial de estados:", error);
+    return [];
+  }
+};
+
