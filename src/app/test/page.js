@@ -25,8 +25,8 @@ export default function EnviosPage() {
 
     try {
       const res = await fetch(
-  "https://envio-meta-763512810578.us-east4.run.app",
-  { method: "POST" }
+  "https://envio-meta-763512810578.us-east4.run.app/test-8min",
+  { method: "GET" }
 );
 
       const data = await res.json();
