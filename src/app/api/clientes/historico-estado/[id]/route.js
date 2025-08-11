@@ -4,18 +4,24 @@ import prisma from "@/lib/prisma";
 // GET /api/clientes/historico-estado/[id]
 export async function GET(req, { params }) {
   try {
-    // Espera opcional para pruebas (puedes quitar si no lo necesitas)
-    // await new Promise(res => setTimeout(res, 300));
-
-    const clienteId = parseInt(params.id, 10); // <-- usa params.id
-    console.log("🚀 GET /api/clientes/historico-estado/[id] - clienteId:", clienteId);
+    const clienteId = parseInt(params.id, 10);
     if (isNaN(clienteId)) {
       return NextResponse.json({ error: "ID de cliente no válido" }, { status: 400 });
     }
 
-    // Buscar historial de estados del cliente
-    const historico = await prisma.historico_estado.findMany({
+    // 1. Buscar el contrato del cliente
+    const contrato = await prisma.contrato.findUnique({
       where: { cliente_id: clienteId },
+      select: { contrato_id: true }
+    });
+
+    if (!contrato) {
+      return NextResponse.json({ historico: [] }); // Sin contrato, sin histórico
+    }
+
+    // 2. Buscar el histórico de estados de ese contrato
+    const historico = await prisma.historico_estado.findMany({
+      where: { contrato_id: contrato.contrato_id },
       orderBy: { fecha_estado: "asc" },
       select: {
         fecha_estado: true,

@@ -101,7 +101,7 @@ export default function ContactoStats({ campaignId }) {
   const funnelData = [
     { name: 'Enviados', value: statsData.totalEnviados },
     { name: 'Entregados', value: statsData.entregados },
-   // { name: 'Leídos', value: statsData.leidos },
+    { name: 'Leídos', value: statsData.leidos },
     { name: 'Respondidos', value: statsData.respondidos },
   ];
 

@@ -337,7 +337,7 @@ const CampaignDetailPage = () => {
           )}
         </>
       )}
-      <ContactoStats campaignId={campaignId} />
+      {campaignId && <ContactoStats campaignId={campaignId} />}
 
     </Box>
   );

@@ -3,11 +3,12 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-export async function GET(request, { params }) {
+export async function GET(request, context) {
+  const params = await context.params;
+  const { id } = params;
   try {
-    const { id } = params;
     const campaignId = parseInt(id);
-
+    console.log('🔍 Obteniendo estadísticas para campaña ID:', campaignId);
     if (!campaignId || isNaN(campaignId)) {
       return NextResponse.json({ error: 'ID de campaña inválido' }, { status: 400 });
     }
@@ -36,23 +37,21 @@ export async function GET(request, { params }) {
       },
     });
 
-    // Calcular estadísticas basadas en message_status
-    const totalEnviados = clienteCampanhas.length;
-    const entregados = clienteCampanhas.filter(cc => 
-      cc.message_status === 'delivered' || cc.message_status === 'sent'
+    // Filtra solo los que tienen mensaje enviado
+    const enviadosCampanhas = clienteCampanhas.filter(cc => cc.whatsapp_message_id && cc.whatsapp_message_id.trim() !== '');
+
+    const totalEnviados = enviadosCampanhas.length;
+    const entregados = enviadosCampanhas.filter(cc => 
+      cc.estado_mensaje === 'delivered' || cc.estado_mensaje === 'sent'
     ).length;
-    const fallidos = clienteCampanhas.filter(cc => 
-      cc.message_status === 'failed' || cc.message_status === 'undelivered'
+    const fallidos = enviadosCampanhas.filter(cc => 
+      cc.estado_mensaje === 'failed' || cc.estado_mensaje === 'undelivered'
     ).length;
-    const respondidos = clienteCampanhas.filter(cc => 
-      cc.message_status === 'responded'
+    const respondidos = enviadosCampanhas.filter(cc => 
+      cc.respuesta && cc.respuesta.trim() !== ''
     ).length;
-    
-    // Para "leídos" usaremos una aproximación basada en entregados - fallidos
     const leidos = entregados;
-    
-    // Clientes únicos contactados
-    const clientesContactados = new Set(clienteCampanhas.map(cc => cc.cliente_id)).size;
+    const clientesContactados = new Set(enviadosCampanhas.map(cc => cc.cliente_id)).size;
 
     // Calcular tasas
     const tasaEntrega = totalEnviados > 0 ? entregados / totalEnviados : 0;
@@ -64,15 +63,15 @@ export async function GET(request, { params }) {
     fechaInicio.setDate(fechaInicio.getDate() - 7);
     
     const actividadPorDia = await prisma.cliente_campanha.groupBy({
-      by: ['last_update'],
+      by: ['fecha_ultimo_estado'],
       where: {
         campanha_id: campaignId,
-        last_update: {
+        fecha_ultimo_estado: {
           gte: fechaInicio,
         },
       },
       _count: {
-        message_status: true,
+        estado_mensaje: true,
       },
     });
 
@@ -87,27 +86,26 @@ export async function GET(request, { params }) {
           },
         },
       },
-      orderBy: { last_update: 'desc' },
+      orderBy: { fecha_ultimo_estado: 'desc' },
       take: 10,
     });
 
-    // Mapear estados para el frontend
     const estadoMapping = {
-      'sent': 'Enviado',
-      'delivered': 'Entregado', 
-      'failed': 'Fallido',
-      'undelivered': 'Fallido',
-      'responded': 'Respondido',
-      'queued': 'En cola',
-      'sending': 'Enviando',
+      sent: 'Enviado',
+      delivered: 'Entregado',
+      read: 'Leído',
+      failed: 'Fallido',
+      undelivered: 'No entregado',
+      deleted: 'Eliminado',
+      responded: 'Respondido',
     };
 
     const mensajesFormateados = mensajesRecientes.map((msg, index) => ({
       id: index + 1,
       destinatario: msg.cliente.celular,
-      estado: estadoMapping[msg.message_status] || 'Desconocido',
-      fecha: msg.last_update ? new Date(msg.last_update).toLocaleString('es-PE') : '',
-      respuesta: msg.message_status === 'responded' ? 'Sí respondió' : '',
+      estado: estadoMapping[msg.estado_mensaje] || 'Desconocido',
+      fecha: msg.fecha_ultimo_estado ? new Date(msg.fecha_ultimo_estado).toLocaleString('es-PE') : '',
+      respuesta: msg.respuesta && msg.respuesta.trim() !== '' ? msg.respuesta : '',
     }));
 
     // Datos por día de la semana (simulado para demo)
