@@ -5,15 +5,15 @@ import ActionButton from "@/app/components/ActionButton";
 // 🔹 Mapas de estilos
 const ESTADO_STYLES = {
   "NO INTERESADO": { color: "#fff", backgroundColor: "#e53935", fontWeight: "bold", border: "2px solid #b71c1c" }, // rojo alerta
-  "SEGUIMIENTO - DUDA NO RESUELTA": { color: "#fff", backgroundColor: "#f15252ff", fontWeight: "bold", border: "2px solid #c2185b" }, // rosa/rojo suave
-  "PROMESA DE PAGO": { color: "#388e3c", backgroundColor: "#e8f5e9", fontWeight: "bold", border: "2px solid #c8e6c9" }, // verde suave
+  "SEGUIMIENTO - DUDA NO RESUELTA": { color: "#fff", backgroundColor: "#1565c0", fontWeight: "bold", border: "2px solid #0d47a1" }, // azul alerta
+  "PROMESA DE PAGO": { color: "#2E7D32", backgroundColor: "#C8E6C9" },
   "SEGUIMIENTO - DUDA RESUELTA": { color: "#5E35B1", backgroundColor: "#D1C4E9" },
 };
 
 const MOTIVO_STYLES = {
   "NO INTERESADO": { color: "#fff", backgroundColor: "#e53935", fontWeight: "bold", border: "2px solid #b71c1c" },
-  "SEGUIMIENTO - DUDA NO RESUELTA": { color: "#fff", backgroundColor: "#f15252ff", fontWeight: "bold", border: "2px solid #c2185b" }, // rosa/rojo suave
-  "PROMESA DE PAGO": { color: "#388e3c", backgroundColor: "#e8f5e9", fontWeight: "bold", border: "2px solid #c8e6c9" }, // verde suave
+  "SEGUIMIENTO - DUDA NO RESUELTA": { color: "#fff", backgroundColor: "#1565c0", fontWeight: "bold", border: "2px solid #0d47a1" },
+  "PROMESA DE PAGO": { color: "#2E7D32", backgroundColor: "#C8E6C9" },
   "SEGUIMIENTO - DUDA RESUELTA": { color: "#5E35B1", backgroundColor: "#D1C4E9" },
 };
 
@@ -39,8 +39,8 @@ export const columnsClientes = (edit, conversacion) => [
     flex: 2,
     minWidth: 180,
     renderCell: params => {
-      // Si estado está vacío, muestra 'NINGUNO'
-      const raw = params.value && params.value.trim() !== "" ? params.value : "";
+      // Si estado está vacío, usa estado_asesor
+      const raw = params.value && params.value.trim() !== "" ? params.value : params.row.estado_asesor;
       const key = raw ? raw.toUpperCase() : "";
       const label = ESTADO_STYLES[key] ? raw : "NINGUNO";
       const style = { ...getEstadoStyle(raw), fontWeight: "bold" };
@@ -96,7 +96,7 @@ export const columnsClientes = (edit, conversacion) => [
       return (
         <ActionButton
           options={[
-            { label: "Cambiar estado", action: () => edit(params.row) },
+            { /*label: "Cambiar estado", action: () => edit(params.row) */},
             { label: "Ver Conversación", action: () => conversacion(params.row.id) },
             { label: "Ver Detalle",      action: () => router.push(`/clientes/${params.row.id}`) },
           ]}

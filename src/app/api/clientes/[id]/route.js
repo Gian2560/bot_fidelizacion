@@ -44,7 +44,6 @@ export async function PUT(req, context) {
     const updatedCliente = await prisma.cliente.update({
       where: { cliente_id: parseInt(id) },
       data: {
-        estado,
         estado_asesor: accion, // Asignar el mismo estado al campo `estado_asesor`
         gestor,
         observacion: observaciones,
@@ -52,7 +51,7 @@ export async function PUT(req, context) {
     });
 
     // 📌 Si el estado cambió, registrar en `historico_estado`
-    if (estado) {
+    /*if (estado) {
       await prisma.historico_estado.create({
         data: {
           cliente_id: parseInt(id),
@@ -60,10 +59,10 @@ export async function PUT(req, context) {
           fecha_estado: new Date(),
         },
       });
-    }
+    }*/
 
     // 📌 Si hay una acción comercial, registrar en `accion_comercial`
-    /*if (accion) {
+    if (accion) {
       await prisma.accion_comercial.create({
         data: {
           cliente_id: parseInt(id),
@@ -73,7 +72,7 @@ export async function PUT(req, context) {
           nota: `Cambio de acción a: ${accion}`,
         },
       });
-    }*/
+    }
 
     // 📌 Si el estado es "Promesa de Pago", registrar la fecha en `cita`
     if (fechaPromesaPago) {
