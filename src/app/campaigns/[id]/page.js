@@ -14,6 +14,7 @@ import { ArrowBack, UploadFile, Send, Delete } from "@mui/icons-material";
 import { addClientesACampanha, getClientesPorGestor, getGestores } from "../../../../services/campaignService";
 import axiosInstance from "../../../../services/api";
 import ContactoStats from "@/app/components/ContactoStats";
+import CampaignStatsCard from "@/app/components/CampaignStatsCard";
 const CampaignDetailPage = () => {
   const params = useParams();
   const router = useRouter();
@@ -43,6 +44,8 @@ const CampaignDetailPage = () => {
     handleUploadClients,
     handleSendCampaign,
     snackbar,
+    campaignStats,
+    sendingInProgress,
   } = useCampaignDetail(campaignId);
 
   useEffect(() => {
@@ -152,32 +155,42 @@ const CampaignDetailPage = () => {
             >
               Volver
             </Button>
-            <Button
+            {/*<Button
               variant="contained"
               onClick={() => setOpenModal(true)}
               sx={{ backgroundColor: "#007391", "&:hover": { backgroundColor: "#005c6b" } }}
               startIcon={<UploadFile />}
             >
               Subir Clientes desde Excel
-            </Button>
+            </Button>*/}
             <Button
               variant="contained"
               onClick={handleSendCampaign}
-              sx={{ backgroundColor: "#388e3c", "&:hover": { backgroundColor: "#00600f" } }}
-              startIcon={<Send />}
+              disabled={sendingInProgress}
+              sx={{ 
+                backgroundColor: sendingInProgress ? "#ccc" : "#388e3c", 
+                "&:hover": { backgroundColor: sendingInProgress ? "#ccc" : "#00600f" } 
+              }}
+              startIcon={sendingInProgress ? <CircularProgress size={20} color="inherit" /> : <Send />}
             >
-              Enviar Mensajes
+              {sendingInProgress ? "Enviando..." : "Enviar Mensajes"}
             </Button>
-            <Button
+            {/*<Button
               variant="contained"
               onClick={() => setOpenSelectModal(true)}
               sx={{ backgroundColor: "#ffa000", "&:hover": { backgroundColor: "#ff8f00" } }}
               startIcon={<Send />}
             >
               Seleccionar Clientes por Gestor
-            </Button>
+            </Button>*/}
 
           </Box>
+
+          {/* 🔹 ESTADÍSTICAS DE CAMPAÑA */}
+          <CampaignStatsCard 
+            campaignStats={campaignStats} 
+            sendingInProgress={sendingInProgress} 
+          />
 
           {/* 🔹 TABLA DE CLIENTES */}
           <CustomDataGrid

@@ -113,7 +113,7 @@ export default function Layout({ children }) {
           </ListItemIcon>
           <ListItemText primary="Leads" />
         </ListItem>*/}
-        <ListItem
+        {session?.user?.role === "administrador" && (<ListItem
           button="true"
           onClick={() => router.push("/clientes")}
           sx={{
@@ -126,7 +126,7 @@ export default function Layout({ children }) {
             <PeopleIcon />
           </ListItemIcon>
           <ListItemText primary="Clientes" />
-        </ListItem>
+        </ListItem>)}
         
 
         <ListItem
@@ -146,7 +146,7 @@ export default function Layout({ children }) {
 
 
 
-        <ListItem
+        {session?.user?.role === "administrador" && (<ListItem
           button="true"
           onClick={() => router.push("/dashboard")}
           sx={{
@@ -159,9 +159,9 @@ export default function Layout({ children }) {
             <DashboardIcon />
           </ListItemIcon>
           <ListItemText primary="Dashboard" />
-        </ListItem>
+        </ListItem>)}
 
-        <ListItem
+        {session?.user?.role === "administrador" && (<ListItem
           button="true"
           onClick={() => router.push("/templates")}
           sx={{
@@ -174,7 +174,7 @@ export default function Layout({ children }) {
             <DashboardIcon />
           </ListItemIcon>
           <ListItemText primary="Plantillas" />
-        </ListItem>
+        </ListItem>)}
         {/*
         <ListItem
           button="true"

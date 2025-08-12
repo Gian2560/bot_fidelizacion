@@ -166,7 +166,7 @@ export async function GET(request, context) {
       // Consultar Firestore: Obtener mensajes del cliente con id_bot = codigopago
     
   const mensajesRef = db.collection("fidelizacion")
-  .where("celular", "==", celularFormatted).where("id_bot", "==", "fidelizacion");  
+  .where("celular", "==", celularFormatted).where("id_bot", "==", "fidelizacionbot");  
   
 
 
