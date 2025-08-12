@@ -373,14 +373,14 @@ const DashboardPromesas = () => {
                         </Typography>
                       }
                       secondary={
-                        <Box>
+                        <Typography variant="body2" component="span" color="textSecondary">
                           <Box component="span" sx={{ display: 'block', color: 'primary.main', fontWeight: 600, fontSize: '0.875rem' }}>
                             {formatearMoneda(promesa.monto)}
                           </Box>
                           <Box component="span" sx={{ display: 'block', color: 'text.secondary', fontSize: '0.75rem' }}>
                             Vence: {promesa.fecha}
                           </Box>
-                        </Box>
+                        </Typography>
                       }
                     />
                   </ListItem>
