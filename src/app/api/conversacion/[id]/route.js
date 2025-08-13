@@ -198,6 +198,7 @@ let celularesParaBuscar = [celularFormatted, celularSinMas];
       .sort((a, b) => (a.fecha < b.fecha ? 1 : -1)) // Ordenar los mensajes aquí
       .map(msg => ({
         ...msg,
+        sender: msg.sender === true || msg.sender === "true", // Normaliza a booleano
         fecha: msg.fecha
           ? msg.fecha.toLocaleString("es-ES", {
               weekday: "long",
@@ -249,4 +250,3 @@ let celularesParaBuscar = [celularFormatted, celularSinMas];
 
 
 
-  
