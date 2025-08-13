@@ -181,6 +181,18 @@ export async function POST(request) {
       }
     }
 
+    // Registrar el webhook recibido en la base de datos
+    try {
+      await prisma.webhook_logs.create({
+        data: {
+          event_type: body.entry?.[0]?.changes?.[0]?.field || "unknown",
+          payload: body,
+        }
+      });
+    } catch (logError) {
+      console.error("[WEBHOOK_LOG] Error registrando el webhook en la BD:", logError);
+    }
+
     return NextResponse.json({ received: true, timestamp: new Date().toISOString() });
 
   } catch (error) {
