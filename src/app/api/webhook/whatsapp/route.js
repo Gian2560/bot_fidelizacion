@@ -3,20 +3,23 @@ import prisma from "@/lib/prisma";
 
 // 🔍 Función para buscar cliente por número de teléfono
 async function findClientByPhone(phoneNumber) {
-  // Remover prefijos y caracteres especiales
+  // Normaliza el número recibido
   const cleanPhone = phoneNumber.replace(/^\+?51?/, "").replace(/[^0-9]/g, "");
-  
+  const withPlus = `+51${cleanPhone}`;
+  const withoutPlus = `51${cleanPhone}`;
+  const onlyNumber = cleanPhone;
+
   console.log(`🔍 [SEARCH] Buscando cliente con número: ${phoneNumber} -> limpio: ${cleanPhone}`);
   
-  // Buscar por los últimos 9 dígitos
+  // Busca por los últimos 9 dígitos, con y sin prefijo, y con/sin '+'
   const cliente = await prisma.cliente.findFirst({
     where: {
       OR: [
         { celular: { endsWith: cleanPhone.slice(-9) } },
-        { celular: { endsWith: phoneNumber } },
-        { celular: { equals: cleanPhone } },
-        { celular: { equals: `51${cleanPhone}` } },
-        { celular: { equals: `+51${cleanPhone}` } }
+        { celular: { equals: phoneNumber } },
+        { celular: { equals: onlyNumber } },
+        { celular: { equals: withoutPlus } },
+        { celular: { equals: withPlus } }
       ]
     },
     include: {
