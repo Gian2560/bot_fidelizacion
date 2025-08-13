@@ -169,10 +169,10 @@ class WhatsAppCampaignManager {
       console.log(`📈 [RESPONSE] Status: ${response.status}, OK: ${response.ok}`);
       const responseData = await response.json();
       console.log(`📄 [RESPONSE_DATA]`, responseData);
-      
+      const message = responseData.messages[0];
       // 🔍 VERIFICAR MESSAGE ID Y STATUS ADICIONAL
       if (responseData.messages && responseData.messages.length > 0) {
-        const message = responseData.messages[0];
+        
         console.log(`🆔 [MESSAGE_ID] ID del mensaje: ${message.id}`);
         console.log(`📱 [WHATSAPP_ID] WhatsApp ID del destinatario: ${responseData.contacts?.[0]?.wa_id}`);
         console.log(`📞 [INPUT_NUMBER] Número de entrada: ${responseData.contacts?.[0]?.input}`);
@@ -188,7 +188,7 @@ class WhatsAppCampaignManager {
         return {
           success: true,
           messageId: responseData.messages[0].id,
-          status: "sent"
+          status: message.message_status
         };
       } else {
         const errorMsg = `Meta API Error (${response.status}): ${responseData.error?.message || 'Unknown error'}`;
