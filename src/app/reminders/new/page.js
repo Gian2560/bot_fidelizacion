@@ -291,7 +291,7 @@ const applyFilters = async () => {
     { field: 'telefono', headerName: 'Teléfono', width: 180 },
     { field: 'segmentacion', headerName: 'Segmento', width: 180 },
     { field: 'monto', headerName: 'Monto', width: 150 },
-    { field: 'fecCuota', headerName: 'Fecha Cuota', width: 180 },
+    { field: 'feccuota', headerName: 'Fecha Cuota', width: 180 },
     { field: 'email', headerName: 'Correo', width: 220 },
     { field: 'modelo', headerName: 'Modelo', width: 180 },
     { field: 'codpago', headerName: 'Código Pago', width: 180 },
