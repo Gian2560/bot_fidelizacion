@@ -164,9 +164,11 @@ export async function GET(request, context) {
       })); */
       
       // Consultar Firestore: Obtener mensajes del cliente con id_bot = codigopago
-    
+    let celularSinMas = celularFormatted.startsWith("+") ? celularFormatted.slice(1) : celularFormatted;
+let celularesParaBuscar = [celularFormatted, celularSinMas];
   const mensajesRef = db.collection("fidelizacion")
-  .where("celular", "==", celularFormatted).where("id_bot", "==", "fidelizacionbot");  
+  .where("celular", "in", celularesParaBuscar)
+  .where("id_bot", "in", ["fidelizacionbot", "fidelizacion"]); 
   
 
 
