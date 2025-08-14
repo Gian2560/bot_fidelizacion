@@ -229,7 +229,7 @@ const ActionComercialModal = ({ open, onClose, cliente, gestores, onSave }) => {
                                 </Typography>
                             </MenuItem>
                             {gestores.map((gestor) => (
-                                <MenuItem key={gestor.id} value={gestor.nombre_completo}>
+                                <MenuItem key={gestor.id} value={gestor.username}>
                                     <Typography sx={{ fontSize: '0.9rem' }}>
                                         {gestor.nombre_completo}
                                     </Typography>

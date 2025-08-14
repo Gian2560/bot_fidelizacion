@@ -39,7 +39,7 @@ export function useClientes() {
       const gestoresData = await getGestores();
       setGestores(gestoresData);
       
-      console.log("gestores", session);
+      console.log("gestores", gestoresData);
     };
     loadGestores();
     loadClientes();
