@@ -70,6 +70,7 @@ export async function PUT(req, context) {
           estado,
           fecha_accion: new Date(),
           nota: `Cambio de acción a: ${accion}`,
+          gestor: gestor,
         },
       });
     }
