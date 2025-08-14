@@ -26,16 +26,7 @@ import {
   Tab,
   Fade,
   Zoom,
-  LinearProgress,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  TablePagination,
-  IconButton,
-  Tooltip
+  LinearProgress
 } from '@mui/material';
 import {
   Search as SearchIcon,
@@ -169,15 +160,15 @@ const initialTasks = [
   }
 ];
 
-// Configuración de los 4 estados con diseño profesional (colores del home)
+// Configuración de los 4 estados con diseño profesional
 const estadosConfig = {
   comunicacion_inmediata: {
     titulo: 'Comunicación Inmediata',
     subtitulo: 'Contactos urgentes requeridos',
     icono: <PhoneIcon />,
-    color: '#007391',
-    gradiente: 'linear-gradient(135deg, #007391 0%, #005c6b 100%)',
-    colorBg: '#e0f7fa',
+    color: '#e53935',
+    gradiente: 'linear-gradient(135deg, #ff5722 0%, #e53935 100%)',
+    colorBg: '#ffebee',
     descripcion: 'Clientes que requieren contacto urgente dentro de las próximas 24 horas'
   },
   negociacion_pago: {
@@ -185,7 +176,7 @@ const estadosConfig = {
     subtitulo: 'Procesos de negociación activos',
     icono: <PaymentIcon />,
     color: '#ff9800',
-    gradiente: 'linear-gradient(135deg, #ff9800 0%, #f57c00 100%)',
+    gradiente: 'linear-gradient(135deg, #ffc107 0%, #ff9800 100%)',
     colorBg: '#fff3e0',
     descripcion: 'Clientes en proceso de negociación de condiciones de pago'
   },
@@ -193,8 +184,8 @@ const estadosConfig = {
     titulo: 'Gestión de Contrato',
     subtitulo: 'Trámites contractuales',
     icono: <DescriptionIcon />,
-    color: '#254e59',
-    gradiente: 'linear-gradient(135deg, #254e59 0%, #1a373f 100%)',
+    color: '#2196f3',
+    gradiente: 'linear-gradient(135deg, #42a5f5 0%, #2196f3 100%)',
     colorBg: '#e3f2fd',
     descripcion: 'Gestiones administrativas y contractuales pendientes'
   },
@@ -202,9 +193,9 @@ const estadosConfig = {
     titulo: 'Reclamos',
     subtitulo: 'Atención prioritaria requerida',
     icono: <ReportProblemIcon />,
-    color: '#d32f2f',
-    gradiente: 'linear-gradient(135deg, #d32f2f 0%, #b71c1c 100%)',
-    colorBg: '#ffebee',
+    color: '#9c27b0',
+    gradiente: 'linear-gradient(135deg, #ab47bc 0%, #9c27b0 100%)',
+    colorBg: '#f3e5f5',
     descripcion: 'Reclamos y quejas que requieren resolución inmediata'
   }
 };
@@ -217,14 +208,12 @@ const getGestorColor = (gestor) => {
 };
 
 // Componente de Header Profesional
-function ProfessionalHeader({ stats, onSearch, onFilter, searchTerm, selectedFilter, currentView, selectedEstado }) {
-  const shouldShowSearch = currentView === 'cards' && !selectedEstado;
-  
+function ProfessionalHeader({ stats, onSearch, onFilter, searchTerm, selectedFilter }) {
   return (
     <Paper 
       elevation={0} 
       sx={{ 
-        background: 'linear-gradient(135deg, #007391 0%, #005c6b 100%)',
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
         color: 'white',
         borderRadius: 3,
         overflow: 'hidden',
@@ -254,10 +243,10 @@ function ProfessionalHeader({ stats, onSearch, onFilter, searchTerm, selectedFil
               <AssignmentIcon fontSize="large" />
             </Avatar>
             <Box>
-              <Typography variant="h3" sx={{ fontWeight: 700, mb: 0.5, color: 'white' }}>
+              <Typography variant="h3" sx={{ fontWeight: 700, mb: 0.5 }}>
                 Centro de Tareas
               </Typography>
-              <Typography variant="h6" sx={{ opacity: 0.9, fontWeight: 400, color: 'white' }}>
+              <Typography variant="h6" sx={{ opacity: 0.9, fontWeight: 400 }}>
                 Sistema integral de gestión comercial
               </Typography>
             </Box>
@@ -278,7 +267,7 @@ function ProfessionalHeader({ stats, onSearch, onFilter, searchTerm, selectedFil
                 mb: 1
               }}
             />
-            <Typography variant="caption" display="block" sx={{ opacity: 0.8, color: 'white' }}>
+            <Typography variant="caption" display="block" sx={{ opacity: 0.8 }}>
               Última actualización: {new Date().toLocaleTimeString('es-ES', {
                 hour: '2-digit',
                 minute: '2-digit'
@@ -291,83 +280,81 @@ function ProfessionalHeader({ stats, onSearch, onFilter, searchTerm, selectedFil
         <Grid container spacing={3} sx={{ mb: 3 }}>
           <Grid item xs={6} md={3}>
             <Box textAlign="center">
-              <Typography variant="h4" sx={{ fontWeight: 'bold', mb: 0.5, color: 'white' }}>
+              <Typography variant="h4" sx={{ fontWeight: 'bold', mb: 0.5 }}>
                 {stats.total}
               </Typography>
-              <Typography variant="body2" sx={{ opacity: 0.9, color: 'white' }}>
+              <Typography variant="body2" sx={{ opacity: 0.9 }}>
                 Total Tareas
               </Typography>
             </Box>
           </Grid>
           <Grid item xs={6} md={3}>
             <Box textAlign="center">
-              <Typography variant="h4" sx={{ fontWeight: 'bold', mb: 0.5, color: 'white' }}>
+              <Typography variant="h4" sx={{ fontWeight: 'bold', mb: 0.5 }}>
                 {stats.pendientes}
               </Typography>
-              <Typography variant="body2" sx={{ opacity: 0.9, color: 'white' }}>
+              <Typography variant="body2" sx={{ opacity: 0.9 }}>
                 Pendientes
               </Typography>
             </Box>
           </Grid>
           <Grid item xs={6} md={3}>
             <Box textAlign="center">
-              <Typography variant="h4" sx={{ fontWeight: 'bold', mb: 0.5, color: 'white' }}>
+              <Typography variant="h4" sx={{ fontWeight: 'bold', mb: 0.5 }}>
                 {stats.completadas}
               </Typography>
-              <Typography variant="body2" sx={{ opacity: 0.9, color: 'white' }}>
+              <Typography variant="body2" sx={{ opacity: 0.9 }}>
                 Completadas
               </Typography>
             </Box>
           </Grid>
           <Grid item xs={6} md={3}>
             <Box textAlign="center">
-              <Typography variant="h4" sx={{ fontWeight: 'bold', mb: 0.5, color: 'white' }}>
+              <Typography variant="h4" sx={{ fontWeight: 'bold', mb: 0.5 }}>
                 {Math.round((stats.completadas / stats.total) * 100) || 0}%
               </Typography>
-              <Typography variant="body2" sx={{ opacity: 0.9, color: 'white' }}>
+              <Typography variant="body2" sx={{ opacity: 0.9 }}>
                 Efectividad
               </Typography>
             </Box>
           </Grid>
         </Grid>
 
-        {/* Barra de búsqueda y filtros - solo en vista resumen */}
-        {shouldShowSearch && (
-          <Box display="flex" gap={2} alignItems="center">
-            <TextField
-              placeholder="Buscar por cliente, teléfono o documento..."
-              variant="outlined"
-              size="medium"
-              value={searchTerm}
-              onChange={(e) => onSearch(e.target.value)}
-              InputProps={{
-                startAdornment: <SearchIcon sx={{ color: 'rgba(0,0,0,0.4)', mr: 1 }} />,
-                sx: { bgcolor: 'white', borderRadius: 2 }
+        {/* Barra de búsqueda y filtros */}
+        <Box display="flex" gap={2} alignItems="center">
+          <TextField
+            placeholder="Buscar por cliente, teléfono o documento..."
+            variant="outlined"
+            size="medium"
+            value={searchTerm}
+            onChange={(e) => onSearch(e.target.value)}
+            InputProps={{
+              startAdornment: <SearchIcon sx={{ color: 'rgba(0,0,0,0.4)', mr: 1 }} />,
+              sx: { bgcolor: 'white', borderRadius: 2 }
+            }}
+            sx={{ flex: 1 }}
+          />
+          <FormControl size="medium" sx={{ minWidth: 200 }}>
+            <InputLabel sx={{ color: 'white' }}>Filtrar por estado</InputLabel>
+            <Select
+              value={selectedFilter}
+              onChange={(e) => onFilter(e.target.value)}
+              sx={{ 
+                bgcolor: 'rgba(255,255,255,0.1)', 
+                color: 'white',
+                borderRadius: 2,
+                '& .MuiOutlinedInput-notchedOutline': {
+                  borderColor: 'rgba(255,255,255,0.3)'
+                }
               }}
-              sx={{ flex: 1 }}
-            />
-            <FormControl size="medium" sx={{ minWidth: 200 }}>
-              <InputLabel sx={{ color: 'white' }}>Filtrar por estado</InputLabel>
-              <Select
-                value={selectedFilter}
-                onChange={(e) => onFilter(e.target.value)}
-                sx={{ 
-                  bgcolor: 'rgba(255,255,255,0.1)', 
-                  color: 'white',
-                  borderRadius: 2,
-                  '& .MuiOutlinedInput-notchedOutline': {
-                    borderColor: 'rgba(255,255,255,0.3)'
-                  }
-                }}
-              >
-                <MenuItem value="">Todos los estados</MenuItem>
-                {Object.entries(estadosConfig).map(([key, config]) => (
-                  <MenuItem key={key} value={key}>{config.titulo}</MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Box>
-        )}
+            >
+              <MenuItem value="">Todos los estados</MenuItem>
+              {Object.entries(estadosConfig).map(([key, config]) => (
+                <MenuItem key={key} value={key}>{config.titulo}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Box>
       </Box>
     </Paper>
   );
@@ -394,7 +381,7 @@ function EstadoCard({ estado, tasks, onSelectEstado, selectedEstado }) {
           position: 'relative',
           height: 280,
           background: isSelected ? config.gradiente : 'white',
-          color: isSelected ? 'white' : '#254e59',
+          color: isSelected ? 'white' : 'inherit',
           transform: isSelected ? 'translateY(-8px)' : 'none',
           '&:hover': {
             transform: 'translateY(-4px)',
@@ -428,15 +415,14 @@ function EstadoCard({ estado, tasks, onSelectEstado, selectedEstado }) {
               {config.icono}
             </Avatar>
             <Box flex={1}>
-              <Typography variant="h6" sx={{ fontWeight: 700, mb: 0.5, color: 'inherit' }}>
+              <Typography variant="h6" sx={{ fontWeight: 700, mb: 0.5 }}>
                 {config.titulo}
               </Typography>
               <Typography 
                 variant="body2" 
                 sx={{ 
                   opacity: isSelected ? 0.9 : 0.7,
-                  fontSize: '0.875rem',
-                  color: 'inherit'
+                  fontSize: '0.875rem'
                 }}
               >
                 {config.subtitulo}
@@ -447,18 +433,18 @@ function EstadoCard({ estado, tasks, onSelectEstado, selectedEstado }) {
           {/* Métricas principales */}
           <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
             <Box textAlign="center">
-              <Typography variant="h3" sx={{ fontWeight: 'bold', lineHeight: 1, color: 'inherit' }}>
+              <Typography variant="h3" sx={{ fontWeight: 'bold', lineHeight: 1 }}>
                 {pendientes}
               </Typography>
-              <Typography variant="caption" sx={{ opacity: isSelected ? 0.9 : 0.7, color: 'inherit' }}>
+              <Typography variant="caption" sx={{ opacity: isSelected ? 0.9 : 0.7 }}>
                 Pendientes
               </Typography>
             </Box>
             <Box textAlign="center">
-              <Typography variant="h3" sx={{ fontWeight: 'bold', lineHeight: 1, color: isSelected ? '#81c784' : '#4caf50' }}>
+              <Typography variant="h3" sx={{ fontWeight: 'bold', lineHeight: 1, color: isSelected ? '#4caf50' : 'success.main' }}>
                 {completados}
               </Typography>
-              <Typography variant="caption" sx={{ opacity: isSelected ? 0.9 : 0.7, color: 'inherit' }}>
+              <Typography variant="caption" sx={{ opacity: isSelected ? 0.9 : 0.7 }}>
                 Completados
               </Typography>
             </Box>
@@ -467,10 +453,10 @@ function EstadoCard({ estado, tasks, onSelectEstado, selectedEstado }) {
           {/* Barra de progreso */}
           <Box mb={2}>
             <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
-              <Typography variant="body2" sx={{ fontWeight: 600, color: 'inherit' }}>
+              <Typography variant="body2" sx={{ fontWeight: 600 }}>
                 Progreso
               </Typography>
-              <Typography variant="body2" sx={{ fontWeight: 600, color: 'inherit' }}>
+              <Typography variant="body2" sx={{ fontWeight: 600 }}>
                 {porcentajeCompletado}%
               </Typography>
             </Box>
@@ -482,7 +468,7 @@ function EstadoCard({ estado, tasks, onSelectEstado, selectedEstado }) {
                 borderRadius: 4,
                 bgcolor: isSelected ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)',
                 '& .MuiLinearProgress-bar': {
-                  bgcolor: isSelected ? '#81c784' : config.color,
+                  bgcolor: isSelected ? '#4caf50' : config.color,
                   borderRadius: 4
                 }
               }}
@@ -508,208 +494,6 @@ function EstadoCard({ estado, tasks, onSelectEstado, selectedEstado }) {
   );
 }
 
-// Componente de tabla con paginación
-function TasksTable({ tasks, onAccionComercial, onVerConversacion, page, setPage, rowsPerPage, setRowsPerPage }) {
-  const handleChangePage = (event, newPage) => {
-    setPage(newPage);
-  };
-
-  const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
-  };
-
-  const startIndex = page * rowsPerPage;
-  const endIndex = startIndex + rowsPerPage;
-  const paginatedTasks = tasks.slice(startIndex, endIndex);
-
-  return (
-    <Paper elevation={2} sx={{ borderRadius: 3, overflow: 'hidden' }}>
-      <TableContainer>
-        <Table>
-          <TableHead>
-            <TableRow sx={{ bgcolor: '#007391' }}>
-              <TableCell sx={{ color: 'white', fontWeight: 700 }}>Cliente</TableCell>
-              <TableCell sx={{ color: 'white', fontWeight: 700 }}>Teléfono</TableCell>
-              <TableCell sx={{ color: 'white', fontWeight: 700 }}>Documento</TableCell>
-              <TableCell sx={{ color: 'white', fontWeight: 700 }}>Estado</TableCell>
-              <TableCell sx={{ color: 'white', fontWeight: 700 }}>Gestor Asignado</TableCell>
-              <TableCell sx={{ color: 'white', fontWeight: 700 }}>Fecha Creación</TableCell>
-              <TableCell sx={{ color: 'white', fontWeight: 700 }}>Estado Tarea</TableCell>
-              <TableCell sx={{ color: 'white', fontWeight: 700 }}>Acciones</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {paginatedTasks.map((task) => {
-              const config = estadosConfig[task.estado];
-              return (
-                <TableRow 
-                  key={task.id}
-                  sx={{ 
-                    '&:nth-of-type(odd)': { bgcolor: '#f8f9fa' },
-                    '&:hover': { bgcolor: '#e3f2fd' },
-                    opacity: task.llamado ? 0.7 : 1
-                  }}
-                >
-                  <TableCell>
-                    <Box display="flex" alignItems="center">
-                      <Avatar 
-                        sx={{ 
-                          bgcolor: task.llamado ? '#4caf50' : config.color, 
-                          mr: 2, 
-                          width: 36, 
-                          height: 36 
-                        }}
-                      >
-                        <PersonIcon fontSize="small" />
-                      </Avatar>
-                      <Box>
-                        <Typography variant="subtitle2" sx={{ fontWeight: 600, color: '#254e59' }}>
-                          {task.cliente}
-                        </Typography>
-                        {task.email && (
-                          <Typography variant="caption" color="text.secondary">
-                            {task.email}
-                          </Typography>
-                        )}
-                      </Box>
-                    </Box>
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="body2" sx={{ color: '#254e59', fontWeight: 500 }}>
-                      {task.telefono}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="body2" sx={{ color: '#254e59', fontWeight: 500 }}>
-                      {task.documento}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Chip
-                      icon={config.icono}
-                      label={config.titulo}
-                      size="small"
-                      sx={{
-                        bgcolor: config.colorBg,
-                        color: config.color,
-                        fontWeight: 600,
-                        '& .MuiChip-icon': {
-                          color: config.color
-                        }
-                      }}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <Box display="flex" alignItems="center">
-                      <Avatar 
-                        sx={{ 
-                          bgcolor: getGestorColor(task.gestor), 
-                          width: 32, 
-                          height: 32, 
-                          mr: 1.5,
-                          fontSize: '0.875rem'
-                        }}
-                      >
-                        {task.gestor.split(' ').map(n => n[0]).join('')}
-                      </Avatar>
-                      <Box>
-                        <Typography variant="body2" sx={{ fontWeight: 600, color: '#254e59' }}>
-                          {task.gestor}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          Gestor
-                        </Typography>
-                      </Box>
-                    </Box>
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="body2" sx={{ color: '#254e59' }}>
-                      {task.fechaCreacion}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>
-                    {task.llamado ? (
-                      <Chip
-                        icon={<CheckCircleIcon />}
-                        label="Completado"
-                        size="small"
-                        color="success"
-                        sx={{ fontWeight: 600 }}
-                      />
-                    ) : (
-                      <Chip
-                        icon={<ScheduleIcon />}
-                        label="Pendiente"
-                        size="small"
-                        sx={{ 
-                          bgcolor: '#fff3e0', 
-                          color: '#ff9800', 
-                          fontWeight: 600 
-                        }}
-                      />
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <Box display="flex" gap={1}>
-                      <Tooltip title="Ver conversación">
-                        <IconButton
-                          size="small"
-                          onClick={() => onVerConversacion(task.id)}
-                          sx={{ color: '#007391' }}
-                        >
-                          <ChatIcon fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title={task.llamado ? "Completado" : "Realizar llamada"}>
-                        <span>
-                          <IconButton
-                            size="small"
-                            onClick={() => onAccionComercial(task)}
-                            disabled={task.llamado}
-                            sx={{ 
-                              color: task.llamado ? '#4caf50' : '#007391',
-                              '&.Mui-disabled': {
-                                color: '#4caf50'
-                              }
-                            }}
-                          >
-                            {task.llamado ? <CheckCircleIcon fontSize="small" /> : <CallIcon fontSize="small" />}
-                          </IconButton>
-                        </span>
-                      </Tooltip>
-                    </Box>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
-      </TableContainer>
-      <TablePagination
-        component="div"
-        count={tasks.length}
-        page={page}
-        onPageChange={handleChangePage}
-        rowsPerPage={rowsPerPage}
-        onRowsPerPageChange={handleChangeRowsPerPage}
-        rowsPerPageOptions={[5, 10, 25, 50]}
-        labelRowsPerPage="Filas por página:"
-        labelDisplayedRows={({ from, to, count }) => `${from}-${to} de ${count}`}
-        sx={{
-          bgcolor: '#f8f9fa',
-          borderTop: '1px solid #dee2e6',
-          '& .MuiTablePagination-toolbar': {
-            color: '#254e59'
-          },
-          '& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows': {
-            fontWeight: 600
-          }
-        }}
-      />
-    </Paper>
-  );
-}
 // Componente de tarjeta de tarea individual mejorado
 function TaskCard({ task, onAccionComercial, onVerConversacion, config }) {
   return (
@@ -767,7 +551,7 @@ function TaskCard({ task, onAccionComercial, onVerConversacion, config }) {
               <PersonIcon />
             </Avatar>
             <Box flex={1}>
-              <Typography variant="h6" sx={{ fontWeight: 700, mb: 0.5, color: '#254e59' }}>
+              <Typography variant="h6" sx={{ fontWeight: 700, mb: 0.5 }}>
                 {task.cliente}
               </Typography>
               <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
@@ -776,19 +560,19 @@ function TaskCard({ task, onAccionComercial, onVerConversacion, config }) {
                   label={task.telefono}
                   size="small"
                   variant="outlined"
-                  sx={{ fontSize: '0.75rem', color: '#254e59' }}
+                  sx={{ fontSize: '0.75rem' }}
                 />
                 <Chip
                   icon={<PersonIcon />}
                   label={`Doc: ${task.documento}`}
                   size="small"
                   variant="outlined"
-                  sx={{ fontSize: '0.75rem', color: '#254e59' }}
+                  sx={{ fontSize: '0.75rem' }}
                 />
               </Stack>
             </Box>
             <Chip
-              label={`Gestor: ${task.gestor}`}
+              label={task.gestor}
               size="small"
               sx={{ 
                 bgcolor: getGestorColor(task.gestor),
@@ -810,7 +594,7 @@ function TaskCard({ task, onAccionComercial, onVerConversacion, config }) {
                 borderRadius: 1
               }}
             >
-              <Typography variant="body2" sx={{ fontStyle: 'italic', color: '#254e59' }}>
+              <Typography variant="body2" sx={{ fontStyle: 'italic', color: 'text.secondary' }}>
                 {task.observacion}
               </Typography>
             </Paper>
@@ -842,13 +626,7 @@ function TaskCard({ task, onAccionComercial, onVerConversacion, config }) {
               sx={{ 
                 borderRadius: 2,
                 textTransform: 'none',
-                fontWeight: 600,
-                borderColor: '#007391',
-                color: '#007391',
-                '&:hover': {
-                  borderColor: '#005c6b',
-                  color: '#005c6b'
-                }
+                fontWeight: 600
               }}
             >
               Ver Chat
@@ -864,11 +642,7 @@ function TaskCard({ task, onAccionComercial, onVerConversacion, config }) {
                 borderRadius: 2,
                 textTransform: 'none',
                 fontWeight: 600,
-                minWidth: 140,
-                bgcolor: task.llamado ? undefined : '#007391',
-                '&:hover': {
-                  bgcolor: task.llamado ? undefined : '#005c6b'
-                }
+                minWidth: 140
               }}
             >
               {task.llamado ? 'Completado' : 'Realizar Llamada'}
@@ -1049,47 +823,11 @@ export default function TasksPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterEstado, setFilterEstado] = useState('');
   const [currentView, setCurrentView] = useState('cards');
-  
-  // Estados para paginación
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
-  
   const { data: session } = useSession();
   const { 
     gestores, 
     handleSaveCliente
   } = useClientes();
-
-  // Función para cambiar vista y resetear estados de navegación
-  const handleViewChange = (newView) => {
-    setCurrentView(newView);
-    if (newView === 'cards') {
-      setSelectedEstado('');
-      setSearchTerm('');
-      setFilterEstado('');
-    }
-    setPage(0);
-  };
-
-  // Función para seleccionar estado y cambiar a vista detallada
-  const handleSelectEstado = (estado) => {
-    if (estado === selectedEstado) {
-      setSelectedEstado('');
-    } else {
-      setSelectedEstado(estado);
-      setCurrentView('detailed');
-    }
-    setPage(0);
-  };
-
-  // Función para volver a vista resumen
-  const handleBackToCards = () => {
-    setCurrentView('cards');
-    setSelectedEstado('');
-    setSearchTerm('');
-    setFilterEstado('');
-    setPage(0);
-  };
 
   // Función para abrir modal de acción comercial
   const handleAccionComercial = (task) => {
@@ -1224,15 +962,13 @@ export default function TasksPage() {
         onFilter={setFilterEstado}
         searchTerm={searchTerm}
         selectedFilter={filterEstado}
-        currentView={currentView}
-        selectedEstado={selectedEstado}
       />
 
       {/* Toolbar profesional */}
       <ProfessionalToolbar 
         onExport={handleExport}
         stats={stats}
-        onViewChange={handleViewChange}
+        onViewChange={setCurrentView}
         currentView={currentView}
       />
 
@@ -1244,7 +980,7 @@ export default function TasksPage() {
               <EstadoCard
                 estado={estado}
                 tasks={filteredTasks}
-                onSelectEstado={handleSelectEstado}
+                onSelectEstado={setSelectedEstado}
                 selectedEstado={selectedEstado}
               />
             </Grid>
@@ -1255,75 +991,42 @@ export default function TasksPage() {
       {/* Vista detallada */}
       {(currentView === 'detailed' || selectedEstado) && (
         <Box>
-          {/* Breadcrumb para navegación */}
-          <Box display="flex" alignItems="center" mb={3}>
-            <Button
-              variant="outlined"
-              onClick={handleBackToCards}
-              sx={{ 
-                mr: 2, 
-                borderRadius: 2,
-                borderColor: '#007391',
-                color: '#007391',
-                '&:hover': {
-                  borderColor: '#005c6b',
-                  color: '#005c6b'
-                }
-              }}
-            >
-              ← Volver al Resumen
-            </Button>
-            {selectedEstado && (
-              <Typography variant="h5" sx={{ fontWeight: 600, color: '#254e59' }}>
-                {estadosConfig[selectedEstado].titulo}
-              </Typography>
-            )}
-            {!selectedEstado && (
-              <Typography variant="h5" sx={{ fontWeight: 600, color: '#254e59' }}>
-                Todas las Tareas
-              </Typography>
-            )}
-          </Box>
-
-          {/* Barra de búsqueda para vista detallada */}
-          <Paper elevation={2} sx={{ p: 3, mb: 3, borderRadius: 3 }}>
-            <Box display="flex" gap={2} alignItems="center">
-              <TextField
-                placeholder="Buscar por cliente, teléfono o documento..."
-                variant="outlined"
-                size="medium"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                InputProps={{
-                  startAdornment: <SearchIcon sx={{ color: 'rgba(0,0,0,0.4)', mr: 1 }} />,
-                }}
-                sx={{ flex: 1 }}
-              />
-              <FormControl size="medium" sx={{ minWidth: 200 }}>
-                <InputLabel>Filtrar por estado</InputLabel>
-                <Select
-                  value={filterEstado}
-                  onChange={(e) => setFilterEstado(e.target.value)}
+          {selectedEstado ? (
+            // Vista de estado específico
+            <Box>
+              <Box display="flex" alignItems="center" mb={3}>
+                <Button
+                  variant="outlined"
+                  onClick={() => setSelectedEstado('')}
+                  sx={{ mr: 2, borderRadius: 2 }}
                 >
-                  <MenuItem value="">Todos los estados</MenuItem>
-                  {Object.entries(estadosConfig).map(([key, config]) => (
-                    <MenuItem key={key} value={key}>{config.titulo}</MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+                  ← Volver a todos los estados
+                </Button>
+                <Typography variant="h5" sx={{ fontWeight: 600 }}>
+                  {estadosConfig[selectedEstado].titulo}
+                </Typography>
+              </Box>
+              <EstadoSection
+                estado={selectedEstado}
+                tasks={filteredTasks}
+                onAccionComercial={handleAccionComercial}
+                onVerConversacion={handleVerConversacion}
+              />
             </Box>
-          </Paper>
-
-          {/* Tabla con paginación */}
-          <TasksTable
-            tasks={filteredTasks}
-            onAccionComercial={handleAccionComercial}
-            onVerConversacion={handleVerConversacion}
-            page={page}
-            setPage={setPage}
-            rowsPerPage={rowsPerPage}
-            setRowsPerPage={setRowsPerPage}
-          />
+          ) : (
+            // Vista general de todos los estados
+            <Box>
+              {Object.keys(estadosConfig).map(estado => (
+                <EstadoSection
+                  key={estado}
+                  estado={estado}
+                  tasks={filteredTasks}
+                  onAccionComercial={handleAccionComercial}
+                  onVerConversacion={handleVerConversacion}
+                />
+              ))}
+            </Box>
+          )}
         </Box>
       )}
 
