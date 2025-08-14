@@ -195,7 +195,7 @@ let celularesParaBuscar = [celularFormatted, celularSinMas];
 
   // Mapear a formato final
     const mensajesFormateados = mensajes
-      .sort((a, b) => (a.fecha < b.fecha ? 1 : -1)) // Ordenar los mensajes aquí
+      .sort((a, b) => (a.fecha > b.fecha ? 1 : -1)) // Ordenar los mensajes aquí
       .map(msg => ({
         ...msg,
         sender: msg.sender === true || msg.sender === "true", // Normaliza a booleano
