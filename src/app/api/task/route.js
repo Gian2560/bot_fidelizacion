@@ -8,7 +8,7 @@ const estadosMapping = {
   'Comunicacion inmediata': ['Comunicacion inmediata'],
   'Negociacion de pago': ['Negociacion de pago'],
   'Gestion de contrato': ['Gestion de contrato'],
-  'duda': ['Duda agresiva no resuelta', 'Duda no resuelta']
+  'duda': ['Duda agresiva no resuelta', 'Duda no resuelta','Seguimiento - Duda no resuelta',]
 };
 
 // GET - Obtener clientes filtrados por estado
