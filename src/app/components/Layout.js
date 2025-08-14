@@ -255,9 +255,9 @@ export default function Layout({ children }) {
           </ListItem>
         )}
 
-        {/* <ListItem
+        { <ListItem
           button="true"
-          onClick={() => router.push("/usuarios")}
+          onClick={() => router.push("/clientes_gestion")}
           sx={{
             "&:hover": { bgcolor: "#2D3748" },
             px: 3,
@@ -267,8 +267,8 @@ export default function Layout({ children }) {
           <ListItemIcon sx={{ color: "#fff" }}>
             <PeopleIcon />
           </ListItemIcon>
-          <ListItemText primary="Usuarios" />
-        </ListItem> */}
+          <ListItemText primary="Gestion" />
+        </ListItem> }
 
       </List>
       <Divider sx={{ bgcolor: "#2D3748" }} />
