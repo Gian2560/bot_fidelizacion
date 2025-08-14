@@ -52,7 +52,7 @@ import {
 
 // Configuración de los 4 estados con diseño profesional (colores del home)
 const estadosConfig = {
-  comunicacion_inmediata: {
+  'Comunicacion inmediata': {
     titulo: 'Comunicación Inmediata',
     subtitulo: 'Contactos urgentes requeridos',
     icono: <PhoneIcon />,
@@ -61,7 +61,7 @@ const estadosConfig = {
     colorBg: '#e0f7fa',
     descripcion: 'Clientes que requieren contacto urgente dentro de las próximas 24 horas'
   },
-  negociacion_pago: {
+  'Negociacion de pago': {
     titulo: 'Negociación de Pago',
     subtitulo: 'Procesos de negociación activos',
     icono: <PaymentIcon />,
@@ -70,7 +70,7 @@ const estadosConfig = {
     colorBg: '#fff3e0',
     descripcion: 'Clientes en proceso de negociación de condiciones de pago'
   },
-  gestion_contrato: {
+  'Gestion de contrato': {
     titulo: 'Gestión de Contrato',
     subtitulo: 'Trámites contractuales',
     icono: <DescriptionIcon />,
@@ -79,15 +79,16 @@ const estadosConfig = {
     colorBg: '#e3f2fd',
     descripcion: 'Gestiones administrativas y contractuales pendientes'
   },
-  reclamos: {
-    titulo: 'Reclamos',
+  duda: {
+    titulo: 'Dudas',
     subtitulo: 'Atención prioritaria requerida',
     icono: <ReportProblemIcon />,
     color: '#d32f2f',
     gradiente: 'linear-gradient(135deg, #d32f2f 0%, #b71c1c 100%)',
     colorBg: '#ffebee',
-    descripcion: 'Reclamos y quejas que requieren resolución inmediata'
-  }
+    descripcion: 'Dudas que requieren resolución inmediata'
+  },
+  
 };
 
 // Componente de Header Profesional
@@ -570,10 +571,10 @@ export default function TasksPage() {
   
   // Estados para estadísticas
   const [generalStats, setGeneralStats] = useState({
-    comunicacion_inmediata: { total: 0, pendientes: 0, completados: 0 },
-    negociacion_pago: { total: 0, pendientes: 0, completados: 0 },
-    gestion_contrato: { total: 0, pendientes: 0, completados: 0 },
-    reclamos: { total: 0, pendientes: 0, completados: 0 }
+    'Comunicacion inmediata': { total: 0, pendientes: 0, completados: 0 },
+    'Negociacion de pago': { total: 0, pendientes: 0, completados: 0 },
+    'Gestion de contrato': { total: 0, pendientes: 0, completados: 0 },
+    duda: { total: 0, pendientes: 0, completados: 0 }
   });
   
   const { data: session } = useSession();
@@ -584,17 +585,17 @@ export default function TasksPage() {
     try {
       const response = await fetch('/api/task', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ estados: Object.keys(estadosConfig) })
       });
       
       if (response.ok) {
         const data = await response.json();
         if (data.success) {
-          const statsObj = {};
-          data.estadisticas.forEach(stat => {
-            statsObj[stat.estado] = stat;
-          });
-          setGeneralStats(statsObj);
+          console.log('📊 Estadísticas recibidas:', data);
+          
+          // Actualizar las estadísticas con los datos recibidos del API
+          setGeneralStats(data.metricas || {});
         }
       }
     } catch (error) {
@@ -603,7 +604,7 @@ export default function TasksPage() {
   };
 
   // Función para cargar tareas de un estado específico
-  const loadTasks = async (estado, currentPage = 1, limit = 10, search = '') => {
+  const loadTasks = async (estado, currentPage = 0, limit = 10, search = '') => {
     if (!estado) return;
     
     setLoading(true);
@@ -615,20 +616,25 @@ export default function TasksPage() {
         ...(search && { search })
       });
 
+      console.log('🔍 Cargando tareas con parámetros:', { estado, currentPage, limit, search });
       const response = await fetch(`/api/task?${params}`);
       
       if (response.ok) {
         const data = await response.json();
         if (data.success) {
+          console.log('✅ Tareas cargadas:', data.data.length, 'elementos');
           setTasks(data.data);
           setPagination(data.pagination);
+        } else {
+          console.error('❌ Error en la respuesta:', data.error);
+          setTasks([]);
         }
       } else {
-        console.error('Error cargando tareas:', await response.text());
+        console.error('❌ Error HTTP:', response.status, await response.text());
         setTasks([]);
       }
     } catch (error) {
-      console.error('Error cargando tareas:', error);
+      console.error('❌ Error cargando tareas:', error);
       setTasks([]);
     } finally {
       setLoading(false);
@@ -643,8 +649,7 @@ export default function TasksPage() {
   // Efecto para cargar tareas cuando cambia el estado seleccionado
   useEffect(() => {
     if (selectedEstado && currentView === 'detailed') {
-      const currentPageNum = page + 1; // page es 0-indexed, API espera 1-indexed
-      loadTasks(selectedEstado, currentPageNum, rowsPerPage, searchTerm);
+      loadTasks(selectedEstado, page, rowsPerPage, searchTerm);
     }
   }, [selectedEstado, currentView, page, rowsPerPage, searchTerm]);
 
