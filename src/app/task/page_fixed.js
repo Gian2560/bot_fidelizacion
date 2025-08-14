@@ -866,7 +866,7 @@ export default function TasksPage() {
             >
               Volver a Estados
             </Button>
-            <Typography variant="h5" sx={{ fontWeight: 600, color: '#254e59' }}>
+            <Typography variant="h6" color="text.secondary">
               / {estadosConfig[selectedEstado]?.titulo}
             </Typography>
           </Box>

@@ -96,7 +96,7 @@ export const columnsClientes = (edit, conversacion) => [
       return (
         <ActionButton
           options={[
-            { /*label: "Cambiar estado", action: () => edit(params.row) */},
+            { label: "Cambiar estado", action: () => edit(params.row) },
             { label: "Ver Conversación", action: () => conversacion(params.row.id) },
             { label: "Ver Detalle",      action: () => router.push(`/clientes/${params.row.id}`) },
           ]}
