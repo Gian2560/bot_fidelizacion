@@ -181,7 +181,7 @@ function ProfessionalHeader({ totalClientes, activeFilters, onSearch, searchTerm
             }}
             sx={{ flex: 1 }}
           />
-        </Box>/*}
+        </Box>*/}
       </Box>
     </Paper>
   );
