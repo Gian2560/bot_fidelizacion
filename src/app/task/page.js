@@ -203,7 +203,7 @@ function ProfessionalHeader({ stats, onSearch, onFilter, searchTerm, selectedFil
           </Grid>
         </Grid>
 
-        {shouldShowSearch && (
+        {false && shouldShowSearch && (
           <Box display="flex" gap={2} alignItems="center">
             <TextField
               placeholder="Buscar por cliente, teléfono o documento..."
@@ -296,7 +296,7 @@ function EstadoCard({ estado, generalStats, onSelectEstado, selectedEstado }) {
               {config.icono}
             </Avatar>
             <Box flex={1}>
-              <Typography variant="h6" sx={{ fontWeight: 700, mb: 0.5, color: 'inherit' }}>
+              <Typography variant="h7" sx={{ fontWeight: 700, mb: 0.5, color: 'inherit' }}>
                 {config.titulo}
               </Typography>
               <Typography 
@@ -512,17 +512,18 @@ function ProfessionalToolbar({ onExport, stats, onViewChange, currentView }) {
         boxShadow: '0 2px 8px rgba(0,0,0,0.1)' 
       }}
     >
-      <Box>
+      {/*<Box>
         <Typography variant="h5" sx={{ fontWeight: 700, color: '#254e59', mb: 0.5 }}>
           Gestión de Tareas Comerciales
         </Typography>
         <Typography variant="body2" color="text.secondary">
           Administra y realiza seguimiento a todas las actividades comerciales
         </Typography>
-      </Box>
+      </Box>*/}
       
-      <Box display="flex" gap={2} alignItems="center">
-        <Button
+      {/*
+        <Box display="flex" gap={2} alignItems="center">
+       {<Button
           variant="outlined"
           startIcon={<ExportIcon />}
           onClick={onExport}
@@ -537,8 +538,9 @@ function ProfessionalToolbar({ onExport, stats, onViewChange, currentView }) {
           }}
         >
           Exportar
-        </Button>
+        </Button>}
       </Box>
+      */}
     </Box>
   );
 }
@@ -576,12 +578,14 @@ export default function TasksPage() {
     'Gestion de contrato': { total: 0, pendientes: 0, completados: 0 },
     duda: { total: 0, pendientes: 0, completados: 0 }
   });
+  const [loadingStats, setLoadingStats] = useState(true);
   
   const { data: session } = useSession();
   const { gestores, handleSaveCliente } = useClientes();
 
   // Función para cargar estadísticas generales
   const loadGeneralStats = async () => {
+    setLoadingStats(true);
     try {
       const response = await fetch('/api/task', {
         method: 'POST',
@@ -600,6 +604,8 @@ export default function TasksPage() {
       }
     } catch (error) {
       console.error('Error cargando estadísticas:', error);
+    } finally {
+      setLoadingStats(false);
     }
   };
 
@@ -814,7 +820,100 @@ export default function TasksPage() {
   }, [generalStats]);
 
   return (
-    <Container maxWidth="xl" sx={{ py: 4 }}>
+    <Container maxWidth="xl" sx={{ py: 4, position: 'relative' }}>
+      {/* Loading profesional para estadísticas */}
+      {loadingStats && (
+        <Box
+          sx={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            bgcolor: 'rgba(248, 250, 252, 0.8)',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            backdropFilter: 'blur(2px)',
+            borderRadius: 2
+          }}
+        >
+          <Box
+            sx={{
+              background: 'rgba(255, 255, 255, 0.95)',
+              borderRadius: 3,
+              p: 4,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              boxShadow: '0 8px 32px rgba(0, 115, 145, 0.15)',
+              maxWidth: 350,
+              textAlign: 'center',
+              border: '1px solid rgba(0, 115, 145, 0.1)'
+            }}
+          >
+            <CircularProgress 
+              size={60} 
+              thickness={4}
+              sx={{ 
+                color: '#007391',
+                mb: 2,
+                '& .MuiCircularProgress-circle': {
+                  strokeLinecap: 'round'
+                }
+              }} 
+            />
+            <Typography 
+              variant="h6" 
+              sx={{ 
+                color: '#254e59', 
+                fontWeight: 600,
+                mb: 1
+              }}
+            >
+              Cargando Métricas
+            </Typography>
+            <Typography 
+              variant="body2" 
+              sx={{ 
+                color: '#64748b',
+                fontWeight: 400,
+                lineHeight: 1.5
+              }}
+            >
+              Obteniendo estadísticas actualizadas...
+            </Typography>
+            <Box
+              sx={{
+                width: '80%',
+                height: 3,
+                bgcolor: 'rgba(0, 115, 145, 0.1)',
+                borderRadius: 2,
+                mt: 2,
+                overflow: 'hidden'
+              }}
+            >
+              <Box
+                sx={{
+                  width: '40%',
+                  height: '100%',
+                  bgcolor: '#007391',
+                  borderRadius: 2,
+                  animation: 'loading-slide 1.8s ease-in-out infinite',
+                  '@keyframes loading-slide': {
+                    '0%': { transform: 'translateX(-100%)', width: '40%' },
+                    '50%': { transform: 'translateX(0%)', width: '60%' },
+                    '100%': { transform: 'translateX(150%)', width: '40%' }
+                  }
+                }}
+              />
+            </Box>
+          </Box>
+        </Box>
+      )}
+
       {/* Header profesional */}
       <ProfessionalHeader 
         stats={stats}
@@ -827,12 +926,12 @@ export default function TasksPage() {
       />
 
       {/* Toolbar profesional */}
-      <ProfessionalToolbar 
+      {/*<ProfessionalToolbar 
         onExport={handleExport}
         stats={stats}
         onViewChange={handleViewChange}
         currentView={currentView}
-      />
+      />*/}
 
       {/* Vista de tarjetas de estados */}
       {currentView === 'cards' && !selectedEstado && (
