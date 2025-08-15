@@ -6,8 +6,11 @@ export async function GET(req) {
     const { searchParams } = new URL(req.url);
     const page = parseInt(searchParams.get("page") || "1", 10);
     const pageSize = parseInt(searchParams.get("pageSize") || "10", 10);
-    const orderBy = searchParams.get("orderBy") || "fecha_creacion";
-    const order = searchParams.get("order") || "asc";
+    //const orderBy = searchParams.get("orderBy") || "fecha_ultima_interaccion_bot";
+    const orderBy ="fecha_ultima_interaccion_bot";
+
+    //const order = searchParams.get("order") || "asc";
+    const order = "desc";
     const search = searchParams.get("search") || "";
     const estado = searchParams.get("estado");
     const bound = searchParams.get("bound");
@@ -87,35 +90,39 @@ export async function GET(req) {
     
     console.log("📌 Filtros aplicados:", filtros);
 
+    // 🛠️ Calcular skip y take para paginación correcta
+    const skip = (page - 1) * pageSize;
 
-    // 🛠️ Obtener clientes sin orden especial desde la base de datos
+    // 🛠️ Obtener clientes con paginación correcta
     let clientes = await prisma.cliente.findMany({
       where: filtros,
       orderBy: { [orderBy]: order },
-      take: pageSize * 10, // Trae más para asegurar paginación tras ordenar
-      skip: 0,
+      take: pageSize, // Solo tomar exactamente lo que necesitamos
+      skip: skip, // Saltar los registros correctos según la página
     });
 
-    // Ordenar en JS según prioridad de estados
+    // Opcional: Si quieres mantener el ordenamiento por prioridad, hazlo después
+    // pero esto puede afectar la paginación. Es mejor hacerlo en la query de Prisma
     const prioridad = [
       "No interesado",
-      "Seguimiento - Duda no resuelta",
+      "Seguimiento - Duda no resuelta", 
       "Promesa de Pago",
       "Seguimiento - Duda resuelta"
     ];
-    clientes = clientes.sort((a, b) => {
-      const idxA = prioridad.indexOf(a.estado_asesor || a.categoria_no_interes || "");
-      const idxB = prioridad.indexOf(b.estado_asesor || b.categoria_no_interes || "");
-      if (idxA === -1 && idxB === -1) return 0;
-      if (idxA === -1) return 1;
-      if (idxB === -1) return -1;
-      return idxA - idxB;
-    });
+    
+    // Solo ordenar si no hay un orderBy específico del usuario
+    if (orderBy === "fecha_creacion") {
+      clientes = clientes.sort((a, b) => {
+        const idxA = prioridad.indexOf(a.estado_asesor || a.categoria_no_interes || "");
+        const idxB = prioridad.indexOf(b.estado_asesor || b.categoria_no_interes || "");
+        if (idxA === -1 && idxB === -1) return 0;
+        if (idxA === -1) return 1;
+        if (idxB === -1) return -1;
+        return idxA - idxB;
+      });
+    }
 
-    // Paginación manual después de ordenar
-    clientes = clientes.slice((page - 1) * pageSize, page * pageSize);
-
-    console.log("✅ Clientes obtenidos:", clientes.length);
+    console.log(`✅ Clientes obtenidos para página ${page}:`, clientes.length);
 
     // 🛠️ Obtener total de clientes
     const totalClientes = await prisma.cliente.count({ where: filtros });

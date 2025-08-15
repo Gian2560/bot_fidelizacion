@@ -220,7 +220,7 @@ const ConversationModal = ({
                       }
                       secondary={
                         <Typography variant="caption" sx={{ color: '#007391', display: 'flex', alignItems: 'center', mt: 0.5 }}>
-                          <TimeIcon sx={{ fontSize: 14, mr: 0.5 }} />
+                          
                           Última actividad
                         </Typography>
                       }
@@ -320,7 +320,7 @@ const ConversationModal = ({
                                 {message.mensaje}
                               </Typography>
                               <Box display="flex" alignItems="center" justifyContent="flex-end">
-                                <TimeIcon sx={{ fontSize: 12, mr: 0.5, opacity: 0.8 }} />
+                               
                                 <Typography variant="caption" sx={{ opacity: 0.8 }}>
                                   {formatDate(message.fecha)}
                                 </Typography>
@@ -365,7 +365,7 @@ const ConversationModal = ({
                                 {message.mensaje}
                               </Typography>
                               <Box display="flex" alignItems="center" justifyContent="flex-start">
-                                <TimeIcon sx={{ fontSize: 12, mr: 0.5, color: '#757575' }} />
+                               
                                 <Typography variant="caption" color="text.secondary">
                                   {formatDate(message.fecha)}
                                 </Typography>

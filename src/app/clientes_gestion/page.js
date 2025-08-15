@@ -43,6 +43,8 @@ import AssignmentIndIcon from '@mui/icons-material/AssignmentInd';
 
 import { useClientes } from '@/hooks/useClientes';
 import ClientesFilters from '@/app/components/ClientesFilters';
+import ActionComercialModal from '@/app/components/ActionComercialModal';
+import ConversationModal from '@/app/components/ConversationModal';
 
 // Estados disponibles con sus colores
 const ESTADOS = {
@@ -238,7 +240,7 @@ function ModernClientesTable({
                       <IconButton 
                         size="small"
                         sx={{ color: '#059669' }}
-                        onClick={() => handleAccionComercial(cliente.id)}
+                        onClick={() => handleAccionComercial(cliente)}
                       >
                         <CallIcon fontSize="small" />
                       </IconButton>
@@ -295,13 +297,25 @@ export default function ClientesGestionPage() {
   const { 
     clientes, 
     loading, 
-    totalClientes, 
+    totalClientes,
+    gestores, // Agregar gestores
     filters, 
     setFilters, 
     pagination, 
     setPagination,
     handleAccionComercial,
-    handleVerConversacion 
+    handleVerConversacion,
+    // Estados para modales
+    openModal,
+    openConversationModal,
+    cliente,
+    conversationData,
+    conversationLoading,
+    selectedConversation,
+    setSelectedConversation,
+    handleClose,
+    handleCloseConversation,
+    handleSaveCliente
   } = useClientes();
 
   // Calcular filtros activos
@@ -418,6 +432,26 @@ export default function ClientesGestionPage() {
           </Box>
         </Fade>
       </Box>
+
+      {/* Modales */}
+      {/* Modal de Acción Comercial */}
+      <ActionComercialModal
+        open={openModal}
+        onClose={handleClose}
+        cliente={cliente}
+        gestores={gestores}
+        onSave={handleSaveCliente}
+      />
+
+      {/* Modal de Conversación */}
+      <ConversationModal
+        open={openConversationModal}
+        onClose={handleCloseConversation}
+        conversationData={conversationData}
+        conversationLoading={conversationLoading}
+        selectedConversation={selectedConversation}
+        setSelectedConversation={setSelectedConversation}
+      />
     </Container>
   );
 }

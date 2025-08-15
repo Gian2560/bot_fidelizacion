@@ -228,7 +228,7 @@ const ActionComercialModal = ({ open, onClose, cliente, gestores, onSave }) => {
                                     Seleccionar gestor
                                 </Typography>
                             </MenuItem>
-                            {gestores.map((gestor) => (
+                            {gestores && gestores.map((gestor) => (
                                 <MenuItem key={gestor.id} value={gestor.username}>
                                     <Typography sx={{ fontSize: '0.9rem' }}>
                                         {gestor.nombre_completo}
