@@ -36,7 +36,13 @@ export const sendCampaign = async (campaignId) => {
 };
 
 export const deleteCampaign = async (campaignId) => {
-    return await axiosInstance.delete(`${API_URL}/${campaignId}`);
+    try {
+        const response = await axiosInstance.delete(`${API_URL}/${campaignId}`);
+        return response.data;
+    } catch (error) {
+        console.error("❌ Error al eliminar campaña:", error);
+        throw new Error(error.response?.data?.error || "Error al eliminar la campaña");
+    }
 };
 
 

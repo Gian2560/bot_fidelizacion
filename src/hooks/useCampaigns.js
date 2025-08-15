@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { 
   getCampaigns, 
   getTemplates, 
@@ -17,33 +17,43 @@ const useCampaigns = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    fetchTemplates();
-    fetchCampaigns();
-  }, [pagination.page, pagination.pageSize]);
-
-  const fetchCampaigns = async () => {
+  const fetchCampaigns = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-        const { campaigns, totalCount } = await getCampaigns();
+        // 🔹 Pasar correctamente page y pageSize al service
+        const { campaigns, totalCount } = await getCampaigns(pagination.page, pagination.pageSize);
         const formattedCampaigns = campaigns.map((campaign) => ({
             ...campaign,
             id: campaign.campanha_id, 
             nombre: campaign.nombre_campanha, 
             estado: campaign.estado_campanha,
-            fechaCreacion: campaign.fecha_creacion,
+            fechaCreacion: campaign.fecha_creacion ? 
+                new Date(campaign.fecha_creacion).toLocaleDateString('es-ES') : 'N/A',
+            // 🔹 Agregar información sobre si puede ser eliminada
+            puedeEliminar: !campaign.cliente_campanha?.some(
+                cc => cc.fecha_envio !== null || 
+                cc.estado_mensaje === 'enviado' ||
+                cc.estado_mensaje === 'delivered' ||
+                cc.estado_mensaje === 'read'
+            )
         }));
 
         setCampaigns(formattedCampaigns);
         setPagination((prev) => ({ ...prev, total: totalCount || 0 }));
     } catch (err) {
+        console.error("Error fetching campaigns:", err);
         setError("Error al obtener campañas");
         setCampaigns([]);
     } finally {
         setLoading(false);
     }
-  };
+  }, [pagination.page, pagination.pageSize]);
+
+  useEffect(() => {
+    fetchTemplates();
+    fetchCampaigns();
+  }, [fetchCampaigns]);
 
   const fetchTemplates = async () => {
     try {
@@ -73,10 +83,30 @@ const useCampaigns = () => {
 
   const handleDeleteCampaign = async (campaignId) => {
     try {
+      // 🔹 Confirmación antes de eliminar
+      const campaign = campaigns.find(c => c.id === campaignId);
+      if (!campaign) {
+        setError("Campaña no encontrada");
+        return;
+      }
+
+      if (!confirm(`¿Estás seguro de que deseas eliminar la campaña "${campaign.nombre_campanha}"?`)) {
+        return;
+      }
+
+      setLoading(true);
       await deleteCampaign(campaignId);
-      fetchCampaigns();
+      
+      // 🔹 Refrescar la lista después de eliminar
+      await fetchCampaigns();
+      
+      // 🔹 Mostrar mensaje de éxito (puedes implementar un toast aquí)
+      console.log("Campaña eliminada exitosamente");
+      
     } catch (err) {
       console.error("Error al eliminar campaña:", err);
+      setError(err.message || "Error al eliminar la campaña");
+      setLoading(false);
     }
   };
 

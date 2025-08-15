@@ -1,11 +1,10 @@
 import ActionButton from "@/app/components/ActionButton";
-import { useRouter } from "next/navigation";
 import { Box } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import DeleteIcon from "@mui/icons-material/Delete";
 
-export const CAMPAIGN_COLUMNS = (onEdit, onDelete) => [
+export const CAMPAIGN_COLUMNS = (onEdit, onDelete, router) => [
   {
     field: "id",
     headerName: "ID",
@@ -81,7 +80,7 @@ export const CAMPAIGN_COLUMNS = (onEdit, onDelete) => [
     ),
   },
   {
-    field: "fecha_creacion",
+    field: "fechaCreacion", // 🔹 Cambiar a fechaCreacion que es el campo mapeado
     headerName: "Fecha creación",
     width: 200,
     renderCell: (params) => (
@@ -104,7 +103,6 @@ export const CAMPAIGN_COLUMNS = (onEdit, onDelete) => [
     headerName: "Acciones",
     width: 180,
     renderCell: (params) => {
-      const router = useRouter();
       return (
         <ActionButton
           options={[
@@ -126,7 +124,7 @@ export const CAMPAIGN_COLUMNS = (onEdit, onDelete) => [
             },
             {
               label: "Detalle",
-              action: () => router.push(`/campaigns/${params.row.id}`),
+              action: () => router && router.push(`/campaigns/${params.row.id}`),
               color: "#388e3c", // Verde
               sx: { 
                 backgroundColor: "#388e3c", 
@@ -140,7 +138,7 @@ export const CAMPAIGN_COLUMNS = (onEdit, onDelete) => [
               },
               icon: <VisibilityIcon sx={{ color: "#fff" }} />,
             },
-            {
+            ...(onDelete ? [{
               label: "Eliminar",
               action: () => onDelete(params.row.id),
               color: "#D32F2F", // Rojo
@@ -154,7 +152,8 @@ export const CAMPAIGN_COLUMNS = (onEdit, onDelete) => [
                 transition: "all 0.3s ease-in-out",
               },
               icon: <DeleteIcon sx={{ color: "#fff" }} />,
-            },
+              disabled: !params.row.puedeEliminar
+            }] : [])
           ]}
         />
       );

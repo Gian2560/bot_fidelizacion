@@ -11,14 +11,23 @@ export async function GET(req) {
         const page = parseInt(searchParams.get("page") || "1");
         const pageSize = parseInt(searchParams.get("pageSize") || "10");
 
+        // 🔹 Calcular skip correctamente
+        const skip = (page - 1) * pageSize;
+
         // 🔹 Obtener campañas con paginación
         const campaigns = await prisma.campanha.findMany({
-            skip: (page - 1) * pageSize,
+            skip: skip,
             take: pageSize,
-            include: { template: true },
+            include: { 
+                template: true,
+                cliente_campanha: {
+                    include: {
+                        cliente: true
+                    }
+                }
+            },
             orderBy: { fecha_creacion: "desc" }
         });
-        console.log("ZZXFA",campaigns);
 
         // 🔹 Validar si `campaigns` es `null` o `undefined`
         if (!campaigns) {
