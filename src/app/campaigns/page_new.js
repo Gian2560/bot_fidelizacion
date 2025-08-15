@@ -59,14 +59,7 @@ const CampaignsPage = () => {
   // Función para formatear fecha
   const formatearFecha = (fecha) => {
     if (!fecha) return "No disponible";
-    
-    // Verificar si la fecha es válida
-    const dateObj = new Date(fecha);
-    if (isNaN(dateObj.getTime())) {
-      return "Fecha inválida";
-    }
-    
-    return dateObj.toLocaleDateString('es-ES', {
+    return new Date(fecha).toLocaleDateString('es-ES', {
       year: 'numeric',
       month: 'short',
       day: 'numeric'
@@ -134,7 +127,7 @@ const CampaignsPage = () => {
                 variant="contained"
                 size="large"
                 startIcon={<AddIcon />}
-                onClick={() => router.push('/reminders/new')}
+                onClick={handleCreate}
                 sx={{
                   bgcolor: 'rgba(255,255,255,0.2)',
                   color: 'white',
@@ -160,8 +153,8 @@ const CampaignsPage = () => {
       </Paper>
 
       {/* 🔹 ESTADÍSTICAS RÁPIDAS */}
-      {/*<Grid container spacing={3} sx={{ mb: 3 }}>
-        <Grid item xs={12} sm={6}>
+      <Grid container spacing={3} sx={{ mb: 3 }}>
+        <Grid item xs={12} sm={4}>
           <Card 
             elevation={4} 
             sx={{ 
@@ -186,7 +179,7 @@ const CampaignsPage = () => {
           </Card>
         </Grid>
         
-        <Grid item xs={12} sm={6}>
+        <Grid item xs={12} sm={4}>
           <Card 
             elevation={4} 
             sx={{ 
@@ -211,7 +204,7 @@ const CampaignsPage = () => {
           </Card>
         </Grid>
         
-        <Grid item xs={12} sm={6}>
+        <Grid item xs={12} sm={4}>
           <Card 
             elevation={4} 
             sx={{ 
@@ -225,20 +218,20 @@ const CampaignsPage = () => {
             }}
           >
             <CardContent sx={{ textAlign: 'center', py: 3 }}>
-              <TrendingUpIcon sx={{ fontSize: '3rem', color: '#ff9800', mb: 1 }} />
+              <GroupIcon sx={{ fontSize: '3rem', color: '#ff9800', mb: 1 }} />
               <Typography variant="h4" fontWeight="bold" color="#f57c00">
-                {templates?.length || 0}
+                {campaigns?.reduce((sum, camp) => sum + (camp.num_clientes || 0), 0) || 0}
               </Typography>
               <Typography variant="body1" color="textSecondary" fontWeight="500">
-                Templates Disponibles
+                Total Clientes
               </Typography>
             </CardContent>
           </Card>
         </Grid>
-      </Grid>*/}
+      </Grid>
 
       {/* 🔹 FILTROS Y BÚSQUEDA */}
-      {/*<Paper elevation={4} sx={{ borderRadius: 3, p: 3, mb: 3 }}>
+      <Paper elevation={4} sx={{ borderRadius: 3, p: 3, mb: 3 }}>
         <Grid container spacing={3} alignItems="center">
           <Grid item xs={12} md={8}>
             <TextField
@@ -274,7 +267,7 @@ const CampaignsPage = () => {
             </Typography>
           </Grid>
         </Grid>
-      </Paper>*/}
+      </Paper>
 
       {/* 🔹 ALERTA DE ERROR */}
       {error && (
@@ -318,6 +311,7 @@ const CampaignsPage = () => {
                   <TableCell>Descripción</TableCell>
                   <TableCell>Estado</TableCell>
                   <TableCell>Fecha Creación</TableCell>
+                  <TableCell>Clientes</TableCell>
                   <TableCell align="center">Acciones</TableCell>
                 </TableRow>
               </TableHead>
@@ -385,8 +379,17 @@ const CampaignsPage = () => {
                     
                     <TableCell>
                       <Typography variant="body2" color="textSecondary">
-                        {formatearFecha(campaign.fecha_creacion)}
+                        {formatearFecha(campaign.fechaCreacion)}
                       </Typography>
+                    </TableCell>
+                    
+                    <TableCell>
+                      <Chip 
+                        label={campaign.num_clientes || 0}
+                        variant="outlined"
+                        color="primary"
+                        size="small"
+                      />
                     </TableCell>
                     
                     <TableCell align="center">
@@ -407,7 +410,7 @@ const CampaignsPage = () => {
                           </IconButton>
                         </Tooltip>
                         
-                        {/*<Tooltip title="Editar campaña">
+                        <Tooltip title="Editar campaña">
                           <IconButton 
                             size="small"
                             sx={{ 
@@ -421,7 +424,7 @@ const CampaignsPage = () => {
                           >
                             <EditIcon fontSize="small" />
                           </IconButton>
-                        </Tooltip>*/}
+                        </Tooltip>
                         
                         <Tooltip title={campaign.puedeEliminar ? "Eliminar campaña" : "No se puede eliminar (campaña enviada)"}>
                           <span>
@@ -452,7 +455,7 @@ const CampaignsPage = () => {
                 {/* Mostrar mensaje si no hay campañas */}
                 {!campaigns || campaigns.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} align="center" sx={{ py: 6 }}>
+                    <TableCell colSpan={7} align="center" sx={{ py: 6 }}>
                       <Box textAlign="center">
                         <CampaignIcon sx={{ fontSize: '4rem', color: '#bdbdbd', mb: 2 }} />
                         <Typography variant="h6" color="textSecondary" gutterBottom>
@@ -464,7 +467,7 @@ const CampaignsPage = () => {
                         <Button
                           variant="contained"
                           startIcon={<AddIcon />}
-                          onClick={() => router.push('/reminders/new')}
+                          onClick={handleCreate}
                           sx={{ bgcolor: '#007391' }}
                         >
                           Crear Campaña
