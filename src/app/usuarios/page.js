@@ -556,7 +556,7 @@ function UsuarioModal({ open, onClose, onSave, user }) {
     const errors = {};
     
     if (!formData.nombre.trim()) errors.nombre = "El nombre es requerido";
-    if (!formData.primer_apellido.trim()) errors.primer_apellido = "El primer apellido es requerido";
+    //if (!formData.primer_apellido.trim()) errors.primer_apellido = "El primer apellido es requerido";
     if (!formData.username.trim()) errors.username = "El usuario es requerido";
     if (!user && !formData.password.trim()) errors.password = "La contraseña es requerida";
     if (!formData.rol_id) errors.rol_id = "El rol es requerido";
@@ -642,7 +642,7 @@ function UsuarioModal({ open, onClose, onSave, user }) {
               helperText={formErrors.nombre}
               variant="outlined"
             />
-            <TextField
+            {/*<TextField
               name="primer_apellido"
               label="Primer Apellido"
               value={formData.primer_apellido}
@@ -652,11 +652,11 @@ function UsuarioModal({ open, onClose, onSave, user }) {
               error={!!formErrors.primer_apellido}
               helperText={formErrors.primer_apellido}
               variant="outlined"
-            />
+            />*/}
           </Box>
           
           <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 2, mb: 2 }}>
-            <TextField
+            {/*<TextField
               name="segundo_apellido"
               label="Segundo Apellido"
               value={formData.segundo_apellido}
@@ -665,8 +665,8 @@ function UsuarioModal({ open, onClose, onSave, user }) {
               error={!!formErrors.segundo_apellido}
               helperText={formErrors.segundo_apellido}
               variant="outlined"
-            />
-            <TextField
+            />*/}
+            {/*<TextField
               name="celular"
               label="Celular"
               value={formData.celular}
@@ -676,7 +676,7 @@ function UsuarioModal({ open, onClose, onSave, user }) {
               helperText={formErrors.celular}
               variant="outlined"
               placeholder="Ej: 123456789"
-            />
+            />*/}
           </Box>
 
           {/* Información de Acceso */}

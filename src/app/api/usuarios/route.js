@@ -31,7 +31,7 @@ export async function POST(req) {
 
     const { username, password, rol_id, activo, nombre, primer_apellido, segundo_apellido, celular } = body;
 
-    if (!username || !password || !nombre || !primer_apellido) {
+    if (!username || !password || !nombre) {
       return NextResponse.json({ error: "Faltan datos obligatorios" }, { status: 400 });
     }
 
