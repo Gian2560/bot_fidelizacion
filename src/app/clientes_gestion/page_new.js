@@ -42,30 +42,9 @@ import PhoneIcon from '@mui/icons-material/Phone';
 import AssignmentIndIcon from '@mui/icons-material/AssignmentInd';
 
 import { useClientes } from '@/hooks/useClientes';
-import ClientesFilters from '@/app/components/ClientesFilters';
-
-// Estados disponibles con sus colores
-const ESTADOS = {
-  'Comunicacion inmediata': { color: '#dc2626', bgcolor: '#fef2f2' }, // Rojo urgente
-  'Gestion de contrato': { color: '#2563eb', bgcolor: '#eff6ff' }, // Azul
-  'Negociacion de pago': { color: '#ea580c', bgcolor: '#fff7ed' }, // Naranja
-  'Duda agresiva no resuelta': { color: '#dc2626', bgcolor: '#fef2f2' }, // Rojo fuerte
-  'Duda no resuelta': { color: '#d97706', bgcolor: '#fffbeb' }, // Amarillo oscuro
-  'Enojado': { color: '#991b1b', bgcolor: '#fef2f2' }, // Rojo muy oscuro
-  'No interesado': { color: '#6b7280', bgcolor: '#f9fafb' }, // Gris
-  'Promesa de pago': { color: '#059669', bgcolor: '#f0fdf4' }, // Verde
-  'Duda resuelta': { color: '#16a34a', bgcolor: '#f0fdf4' }, // Verde claro
-};
-
-const ESTADOS_ASESOR = {
-  'Seguimiento - Duda no resuelta': { color: '#d97706', bgcolor: '#fffbeb' },
-  'No interesado': { color: '#6b7280', bgcolor: '#f9fafb' },
-  'Promesa de Pago': { color: '#059669', bgcolor: '#f0fdf4' },
-  'Seguimiento - Duda resuelta': { color: '#16a34a', bgcolor: '#f0fdf4' },
-};
 
 // Header profesional más compacto
-function ProfessionalHeader({ totalClientes, activeFilters }) {
+function ProfessionalHeader({ totalClientes, activeFilters, onSearch, searchTerm }) {
   return (
     <Paper 
       elevation={0} 
@@ -78,7 +57,7 @@ function ProfessionalHeader({ totalClientes, activeFilters }) {
       }}
     >
       <Box sx={{ p: 2 }}>
-        <Box display="flex" alignItems="center" justifyContent="space-between">
+        <Box display="flex" alignItems="center" justifyContent="space-between" mb={1}>
           <Box display="flex" alignItems="center" gap={1}>
             <Avatar sx={{ bgcolor: 'rgba(255,255,255,0.2)', width: 32, height: 32 }}>
               <GroupIcon sx={{ fontSize: 18 }} />
@@ -102,7 +81,7 @@ function ProfessionalHeader({ totalClientes, activeFilters }) {
             {activeFilters > 0 && (
               <Chip 
                 icon={<FilterListIcon sx={{ fontSize: 16 }} />}
-                label={`${activeFilters} filtros activos`}
+                label={`${activeFilters} filtros`}
                 size="small"
                 sx={{ 
                   bgcolor: 'rgba(255,255,255,0.2)', 
@@ -114,6 +93,94 @@ function ProfessionalHeader({ totalClientes, activeFilters }) {
             )}
           </Box>
         </Box>
+
+        <Box>
+          <TextField
+            placeholder="Buscar por nombre, teléfono, documento..."
+            variant="outlined"
+            size="small"
+            value={searchTerm}
+            onChange={(e) => onSearch(e.target.value)}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon sx={{ color: 'rgba(0,0,0,0.4)' }} />
+                </InputAdornment>
+              ),
+              sx: { bgcolor: 'white', borderRadius: 1.5 }
+            }}
+            sx={{ width: '100%', maxWidth: 400 }}
+          />
+        </Box>
+      </Box>
+    </Paper>
+  );
+}
+
+// Filtros profesionales más compactos
+function ProfessionalFilters({ filters, setFilters }) {
+  return (
+    <Paper elevation={1} sx={{ mb: 2, borderRadius: 2 }}>
+      <Box sx={{ p: 2 }}>
+        <Grid container spacing={2} alignItems="center">
+          <Grid item xs={12} sm={6} md={3}>
+            <FormControl fullWidth size="small">
+              <InputLabel>Estado</InputLabel>
+              <Select
+                value={filters.estado}
+                label="Estado"
+                onChange={(e) => setFilters({ ...filters, estado: e.target.value })}
+              >
+                <MenuItem value="">Todos</MenuItem>
+                <MenuItem value="activo">Activo</MenuItem>
+                <MenuItem value="inactivo">Inactivo</MenuItem>
+                <MenuItem value="moroso">Moroso</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
+          
+          <Grid item xs={12} sm={6} md={3}>
+            <FormControl fullWidth size="small">
+              <InputLabel>Gestor</InputLabel>
+              <Select
+                value={filters.gestor}
+                label="Gestor"
+                onChange={(e) => setFilters({ ...filters, gestor: e.target.value })}
+              >
+                <MenuItem value="">Todos</MenuItem>
+                <MenuItem value="gestor1">Gestor 1</MenuItem>
+                <MenuItem value="gestor2">Gestor 2</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
+          
+          <Grid item xs={12} sm={6} md={3}>
+            <FormControl fullWidth size="small">
+              <InputLabel>Segmento</InputLabel>
+              <Select
+                value={filters.segmento}
+                label="Segmento"
+                onChange={(e) => setFilters({ ...filters, segmento: e.target.value })}
+              >
+                <MenuItem value="">Todos</MenuItem>
+                <MenuItem value="premium">Premium</MenuItem>
+                <MenuItem value="regular">Regular</MenuItem>
+                <MenuItem value="basico">Básico</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
+          
+          <Grid item xs={12} sm={6} md={3}>
+            <Button
+              variant="outlined"
+              size="small"
+              onClick={() => setFilters({ estado: '', gestor: '', segmento: '' })}
+              sx={{ height: 40 }}
+            >
+              Limpiar Filtros
+            </Button>
+          </Grid>
+        </Grid>
       </Box>
     </Paper>
   );
@@ -122,31 +189,23 @@ function ProfessionalHeader({ totalClientes, activeFilters }) {
 // Tabla moderna de clientes
 function ModernClientesTable({ 
   clientes, 
-  totalClientes,
   loading, 
   pagination, 
   setPagination,
   handleAccionComercial,
   handleVerConversacion 
 }) {
-  const getEstadoColor = (estado, isAsesor = false) => {
-    const estadosMap = isAsesor ? ESTADOS_ASESOR : ESTADOS;
-    return estadosMap[estado] || { color: '#6b7280', bgcolor: '#f9fafb' };
-  };
-
   return (
     <Paper elevation={1} sx={{ borderRadius: 2 }}>
       <TableContainer>
         <Table>
           <TableHead>
-            <TableRow sx={{ bgcolor: '#007391' }}>
-              <TableCell sx={{ fontWeight: 600, color: '#ffffffff' }}>Cliente</TableCell>
-              <TableCell sx={{ fontWeight: 600, color: '#ffffffff' }}>Contacto</TableCell>
-              <TableCell sx={{ fontWeight: 600, color:  '#ffffffff' }}>Estado</TableCell>
-              <TableCell sx={{ fontWeight: 600, color:  '#ffffffff' }}>Estado Asesor</TableCell>
-              <TableCell sx={{ fontWeight: 600, color:  '#ffffffff' }}>Gestor</TableCell>
-              <TableCell sx={{ fontWeight: 600, color:  '#ffffffff' }}>Pago</TableCell>
-              <TableCell align="center" sx={{ fontWeight: 600, color:  '#ffffffff' }}>Acciones</TableCell>
+            <TableRow sx={{ bgcolor: '#f8fafc' }}>
+              <TableCell sx={{ fontWeight: 600, color: '#475569' }}>Cliente</TableCell>
+              <TableCell sx={{ fontWeight: 600, color: '#475569' }}>Contacto</TableCell>
+              <TableCell sx={{ fontWeight: 600, color: '#475569' }}>Estado</TableCell>
+              <TableCell sx={{ fontWeight: 600, color: '#475569' }}>Gestor</TableCell>
+              <TableCell align="center" sx={{ fontWeight: 600, color: '#475569' }}>Acciones</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -162,7 +221,7 @@ function ModernClientesTable({
                         {cliente.nombre}
                       </Typography>
                       <Typography variant="body2" color="textSecondary">
-                        Doc: {cliente.documento_identidad}
+                        Doc: {cliente.documento}
                       </Typography>
                     </Box>
                   </Box>
@@ -171,7 +230,7 @@ function ModernClientesTable({
                   <Box>
                     <Typography variant="body2" display="flex" alignItems="center" gap={0.5}>
                       <PhoneIcon sx={{ fontSize: 16, color: '#64748b' }} />
-                      {cliente.celular}
+                      {cliente.telefono}
                     </Typography>
                     {cliente.email && (
                       <Typography variant="body2" color="textSecondary" sx={{ mt: 0.5 }}>
@@ -181,34 +240,15 @@ function ModernClientesTable({
                   </Box>
                 </TableCell>
                 <TableCell>
-                  {cliente.estado && (
-                    <Chip
-                      label={cliente.estado}
-                      size="small"
-                      sx={{
-                        fontWeight: 500,
-                        fontSize: '0.75rem',
-                        ...getEstadoColor(cliente.estado),
-                        bgcolor: getEstadoColor(cliente.estado).bgcolor,
-                        color: getEstadoColor(cliente.estado).color,
-                      }}
-                    />
-                  )}
-                </TableCell>
-                <TableCell>
-                  {cliente.estado_asesor && (
-                    <Chip
-                      label={cliente.estado_asesor}
-                      size="small"
-                      sx={{
-                        fontWeight: 500,
-                        fontSize: '0.75rem',
-                        ...getEstadoColor(cliente.estado_asesor, true),
-                        bgcolor: getEstadoColor(cliente.estado_asesor, true).bgcolor,
-                        color: getEstadoColor(cliente.estado_asesor, true).color,
-                      }}
-                    />
-                  )}
+                  <Chip
+                    label={cliente.estado}
+                    size="small"
+                    color={
+                      cliente.estado === 'activo' ? 'success' :
+                      cliente.estado === 'moroso' ? 'error' : 'default'
+                    }
+                    sx={{ fontWeight: 500 }}
+                  />
                 </TableCell>
                 <TableCell>
                   <Box display="flex" alignItems="center" gap={1}>
@@ -219,18 +259,6 @@ function ModernClientesTable({
                       {cliente.gestor || 'Sin asignar'}
                     </Typography>
                   </Box>
-                </TableCell>
-                <TableCell>
-                  <Chip
-                    label="Sin definir"
-                    size="small"
-                    sx={{
-                      fontWeight: 500,
-                      fontSize: '0.75rem',
-                      bgcolor: '#f3f4f6',
-                      color: '#6b7280',
-                    }}
-                  />
                 </TableCell>
                 <TableCell align="center">
                   <Box display="flex" justifyContent="center" gap={0.5}>
@@ -258,7 +286,7 @@ function ModernClientesTable({
             ))}
             {clientes.length === 0 && !loading && (
               <TableRow>
-                <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
+                <TableCell colSpan={5} align="center" sx={{ py: 4 }}>
                   <Typography color="textSecondary">
                     No se encontraron clientes
                   </Typography>
@@ -271,7 +299,7 @@ function ModernClientesTable({
       
       <TablePagination
         component="div"
-        count={totalClientes}
+        count={pagination.total}
         page={pagination.page}
         onPageChange={(event, newPage) => setPagination({ ...pagination, page: newPage })}
         rowsPerPage={pagination.pageSize}
@@ -291,31 +319,43 @@ function ModernClientesTable({
 
 // Componente principal
 export default function ClientesGestionPage() {
-  // Hook para obtener datos - usar sus propios estados
-  const { 
-    clientes, 
-    loading, 
-    totalClientes, 
-    filters, 
-    setFilters, 
-    pagination, 
-    setPagination,
-    handleAccionComercial,
-    handleVerConversacion 
-  } = useClientes();
+  const [filters, setFilters] = useState({
+    estado: '',
+    gestor: '',
+    segmento: ''
+  });
+  const [searchTerm, setSearchTerm] = useState('');
+  const [pagination, setPagination] = useState({
+    page: 0,
+    pageSize: 10,
+    total: 0
+  });
+
+  // Hook para obtener datos
+  const { clientes, loading, totalClientes } = useClientes({
+    filters,
+    searchTerm,
+    pagination
+  });
 
   // Calcular filtros activos
   const activeFilters = useMemo(() => {
-    const filterValues = [
-      filters.search,
-      filters.estado !== "Todos" ? filters.estado : "",
-      filters.bound !== "Todos" ? filters.bound : "",
-      filters.fechaInicio,
-      filters.fechaFin,
-      filters.fechaRegistro
-    ];
-    return filterValues.filter(value => value !== '' && value !== null && value !== undefined).length;
-  }, [filters]);
+    return Object.values(filters).filter(value => value !== '').length + 
+           (searchTerm ? 1 : 0);
+  }, [filters, searchTerm]);
+
+  const handleSearch = (value) => {
+    setSearchTerm(value);
+    setPagination({ ...pagination, page: 0 });
+  };
+
+  const handleAccionComercial = (clienteId) => {
+    console.log('Acción comercial para cliente:', clienteId);
+  };
+
+  const handleVerConversacion = (clienteId) => {
+    console.log('Ver conversación para cliente:', clienteId);
+  };
 
   return (
     <Container maxWidth="xl" sx={{ py: 4, position: 'relative' }}>
@@ -323,6 +363,8 @@ export default function ClientesGestionPage() {
       <ProfessionalHeader 
         totalClientes={totalClientes}
         activeFilters={activeFilters}
+        onSearch={handleSearch}
+        searchTerm={searchTerm}
       />
 
       {/* Área de contenido con loading */}
@@ -398,7 +440,7 @@ export default function ClientesGestionPage() {
         )}
 
         {/* Filtros profesionales */}
-        <ClientesFilters 
+        <ProfessionalFilters 
           filters={filters}
           setFilters={setFilters}
         />
@@ -408,7 +450,6 @@ export default function ClientesGestionPage() {
           <Box>
             <ModernClientesTable
               clientes={clientes}
-              totalClientes={totalClientes}
               loading={false} // Controlamos el loading desde aquí
               pagination={pagination}
               setPagination={setPagination}

@@ -1,11 +1,30 @@
 "use client";
 
 import { useState } from "react";
-import { TextField, MenuItem, Button, Grid, FormControl, InputLabel, Select } from "@mui/material";
+import { 
+  TextField, 
+  MenuItem, 
+  Button, 
+  Grid, 
+  FormControl, 
+  InputLabel, 
+  Select,
+  Box,
+  Paper,
+  Typography,
+  Chip,
+  Divider
+} from "@mui/material";
+import { 
+  Search as SearchIcon,
+  FilterList as FilterIcon,
+  Clear as ClearIcon,
+  CalendarToday as CalendarIcon
+} from "@mui/icons-material";
 import { DatePicker } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
-import { es } from "date-fns/locale"; // 📌 Asegura el idioma correcto para español
+import { es } from "date-fns/locale";
 import { startOfDay, endOfDay, subDays } from "date-fns";
 
 const presets = [
@@ -38,11 +57,10 @@ export default function ClientesFilters({ filters, setFilters }) {
       newStart = startOfDay(firstDay);
       newEnd = endOfDay(new Date());
     } else if (value === "all") {
-      // Si se selecciona "Todos", no se establece ningún filtro de fecha
       newStart = undefined;
       newEnd = undefined;
     } else {
-      return; // Si es "custom", no cambia fechas hasta que el usuario elija
+      return;
     }
 
     setStartDate(newStart);
@@ -54,197 +72,338 @@ export default function ClientesFilters({ filters, setFilters }) {
     }));
   };
 
+  const handleReset = () => {
+    setPreset("all");
+    setStartDate(undefined);
+    setEndDate(undefined);
+    setFilters({
+      search: "",
+      estado: "Todos",
+      accionComercial: "Todos",
+      interaccionBot: "Todos",
+      fechaInicio: "",
+      fechaFin: "",
+      fechaRegistro: null,
+    });
+  };
+
+  const getActiveFiltersCount = () => {
+    let count = 0;
+    if (filters.search) count++;
+    if (filters.estado && filters.estado !== "Todos") count++;
+    if (filters.accionComercial && filters.accionComercial !== "Todos") count++;
+    if (filters.interaccionBot && filters.interaccionBot !== "Todos") count++;
+    if (filters.fechaInicio || filters.fechaFin) count++;
+    if (filters.fechaRegistro) count++;
+    return count;
+  };
+
+  const fieldStyles = {
+    '& .MuiOutlinedInput-root': {
+      backgroundColor: 'white',
+      borderRadius: 2,
+      transition: 'all 0.2s ease-in-out',
+      '&:hover': {
+        '& .MuiOutlinedInput-notchedOutline': {
+          borderColor: '#007391',
+        },
+      },
+      '&.Mui-focused': {
+        backgroundColor: 'white',
+        '& .MuiOutlinedInput-notchedOutline': {
+          borderColor: '#007391',
+          borderWidth: 2,
+        },
+      },
+    },
+  };
+
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
-      <Grid container spacing={2} alignItems="center" sx={{ padding: 3 }}>
-        <Grid item xs={12} sm={4}>
-          <TextField
-            label="Buscar..."
-            size="small"
-            value={filters.search}
-            onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-            fullWidth
-            variant="outlined"
-            sx={{
-              borderRadius: "8px",
-              backgroundColor: "#f9f9f9",
-            }}
-          />
-        </Grid>
-
-        <Grid item xs={12} sm={4}>
-          <TextField
-            select
-            label="Estado"
-            size="small"
-            value={filters.estado}
-            onChange={(e) => setFilters({ ...filters, estado: e.target.value })}
-            fullWidth
-            variant="outlined"
-            sx={{
-              borderRadius: "8px",
-              backgroundColor: "#f9f9f9",
-            }}
-          >
-            <MenuItem value="Todos">Todos</MenuItem>
-            <MenuItem value="">Seleccionar acción</MenuItem>
-            <MenuItem value="Seguimiento - Duda no resuelta">Seguimiento - Duda no resuelta</MenuItem>
-            <MenuItem value="No interesado">No interesado</MenuItem>
-            <MenuItem value="Promesa de Pago">Promesa de Pago</MenuItem>
-            <MenuItem value="Seguimiento - Duda resuelta">Seguimiento - Duda resuelta</MenuItem>
-          </TextField>
-        </Grid>
-
-        <Grid item xs={12} sm={4}>
-          <FormControl fullWidth size="small" variant="outlined">
-            <InputLabel>Rango de Fechas</InputLabel>
-            <Select
-              value={preset}
-              onChange={handlePresetChange}
-              label="Rango de Fechas"
-              sx={{ borderRadius: "8px", backgroundColor: "#f9f9f9" }}
-            >
-              {presets.map((preset) => (
-                <MenuItem key={preset.value} value={preset.value}>
-                  {preset.label}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        </Grid>
-        {/* Filtro de Acción Comercial */}
-        <Grid item xs={12} sm={4}>
-          <TextField
-            select
-            label="Estado Asesor"
-            size="small"
-            value={filters.accionComercial || "Todos"}
-            onChange={(e) => setFilters({ ...filters, accionComercial: e.target.value })}
-            fullWidth
-            variant="outlined"
-            sx={{
-              borderRadius: "8px",
-              backgroundColor: "#f9f9f9",
-            }}
-          >
-            <MenuItem value="Todos">Todos</MenuItem>
-            <MenuItem value="">Seleccionar acción</MenuItem>
-            <MenuItem value="Seguimiento - Duda no resuelta">Seguimiento - Duda no resuelta</MenuItem>
-            <MenuItem value="No interesado">No interesado</MenuItem>
-            <MenuItem value="Promesa de Pago">Promesa de Pago</MenuItem>
-            <MenuItem value="Seguimiento - Duda resuelta">Seguimiento - Duda resuelta</MenuItem>
-          </TextField>
-        </Grid>
-        <Grid item xs={12} sm={4}>
-          <TextField
-            select
-            label="Interacción con Bot"
-            size="small"
-            value={filters.interaccionBot || "Todos"} // Valor por defecto "Todos"
-            onChange={(e) => setFilters({ ...filters, interaccionBot: e.target.value })}
-            fullWidth
-            variant="outlined"
-            sx={{
-              borderRadius: "8px",
-              backgroundColor: "#f9f9f9",
-            }}
-          >
-            <MenuItem value="Todos">Todos</MenuItem>
-            <MenuItem value="Con interacción">Con interacción</MenuItem>
-            <MenuItem value="Sin interacción">Sin interacción</MenuItem>
-          </TextField>
-        </Grid>
-
-        {preset === "custom" && (
-          <>
-            <Grid item xs={12} sm={6}>
-              <DatePicker
-                label="Fecha Inicio"
-                value={startDate}
-                onChange={(newValue) => {
-                  setStartDate(newValue);
-                  setFilters((prev) => ({
-                    ...prev,
-                    fechaInicio: newValue ? newValue.toISOString() : "",
-                  }));
-                }}
-                format="dd/MM/yyyy"
-                renderInput={(params) => <TextField {...params} fullWidth size="small" variant="outlined" />}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <DatePicker
-                label="Fecha Fin"
-                value={endDate}
-                onChange={(newValue) => {
-                  setEndDate(newValue);
-                  setFilters((prev) => ({
-                    ...prev,
-                    fechaFin: newValue ? newValue.toISOString() : "",
-                  }));
-                }}
-                format="dd/MM/yyyy"
-                renderInput={(params) => <TextField {...params} fullWidth size="small" variant="outlined" />}
-              />
-            </Grid>
-          </>
-        )}
-        <Grid item xs={12} sm={4}>
-          <DatePicker
-            label="Fecha de Registro"
-            views={['year', 'month']}
-            value={filters.fechaRegistro || null}
-            onChange={(newValue) => {
-              setFilters((prev) => ({
-                ...prev,
-                fechaRegistro: newValue || null,
-              }));
-            }}
-            format="MMMM yyyy"
-            slotProps={{
-              textField: {
-                fullWidth: true,
-                size: "small",
-                variant: "outlined",
-                sx: {
-                  borderRadius: "8px",
-                  backgroundColor: "#f9f9f9",
+      <Paper 
+        elevation={0} 
+        sx={{ 
+          background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
+          border: '1px solid #e2e8f0',
+          borderRadius: 3,
+          overflow: 'hidden',
+          mb: 3
+        }}
+      >
+        {/* Header */}
+        <Box sx={{ 
+          background: 'linear-gradient(135deg, #007391 0%, #005c6b 100%)',
+          color: 'white',
+          p: 1,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 2
+        }}>
+          <FilterIcon sx={{ fontSize: 24 }} />
+          <Typography variant="h6" sx={{ fontWeight: 600, flexGrow: 1 }}>
+            Filtros de Búsqueda
+          </Typography>
+          {getActiveFiltersCount() > 0 && (
+            <Chip 
+              label={`${getActiveFiltersCount()} activos`}
+              size="small"
+              sx={{ 
+                backgroundColor: 'rgba(255,255,255,0.2)',
+                color: 'white',
+                fontWeight: 500
+              }}
+            />
+          )}
+        <Button
+              variant="outlined"
+              onClick={handleReset}
+              startIcon={<ClearIcon />}
+              sx={{
+                borderColor: '#ffffffff',
+                color: '#ffffffff',
+                borderRadius: 2,
+                px: 3,
+                py: 1,
+                fontWeight: 500,
+                textTransform: 'none',
+                '&:hover': {
+                  borderColor: '#fafcffff',
+                  color: '#000000ff',
+                  backgroundColor: 'rgba(255, 255, 255, 1)',
                 },
-              },
-            }}
-          />
-        </Grid>
+              }}
+            >
+              Limpiar Filtros
+            </Button>
+        </Box>
 
+        {/* Filters Content */}
+        <Box sx={{ p: 3 }}>
+          <Grid container spacing={3}>
+            {/* Búsqueda */}
+            <Grid item xs={12} md={6} lg={4}>
+              <TextField
+                label="Buscar cliente..."
+                size="small"
+                value={filters.search}
+                onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+                fullWidth
+                variant="outlined"
+                InputProps={{
+                  startAdornment: <SearchIcon sx={{ mr: 1, color: 'text.secondary' }} />,
+                }}
+                sx={fieldStyles}
+              />
+            </Grid>
 
-        <Grid item xs={12}>
-          <Button
-            variant="contained"
-            onClick={() => {
-              setPreset("today");
-              setStartDate(startOfDay(new Date()));
-              setEndDate(endOfDay(new Date()));
-              setFilters({
-                search: "",
-                estado: "Todos",
-                accionComercial: "Todos",
-                interaccionBot: "Todos",
-                fechaInicio: "",
-                fechaFin: "",
-                fechaRegistro: "",
-              });
-            }}
-            sx={{
-              backgroundColor: "#007391",
-              "&:hover": { backgroundColor: "#005c6b" },
-              padding: "8px 20px",
-              borderRadius: "2px",
-              fontWeight: "bold",
-            }}
-          >
-            LIMPIAR
-          </Button>
-        </Grid>
-      </Grid>
+            {/* Estado */}
+            <Grid item xs={12} md={6} lg={4}>
+              <TextField
+                select
+                label="Estado del Cliente"
+                size="small"
+                value={filters.estado}
+                onChange={(e) => setFilters({ ...filters, estado: e.target.value })}
+                fullWidth
+                variant="outlined"
+                sx={fieldStyles}
+              >
+                <MenuItem value="Todos">
+                  <Typography sx={{ color: 'text.secondary', fontStyle: 'italic' }}>
+                    Todos los estados
+                  </Typography>
+                </MenuItem>
+                <MenuItem value="Seguimiento - Duda no resuelta">
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Chip label="Duda no resuelta" size="small" color="warning" variant="outlined" />
+                  </Box>
+                </MenuItem>
+                <MenuItem value="No interesado">
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Chip label="No interesado" size="small" color="error" variant="outlined" />
+                  </Box>
+                </MenuItem>
+                <MenuItem value="Promesa de Pago">
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Chip label="Promesa de Pago" size="small" color="success" variant="outlined" />
+                  </Box>
+                </MenuItem>
+                <MenuItem value="Seguimiento - Duda resuelta">
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Chip label="Duda resuelta" size="small" color="info" variant="outlined" />
+                  </Box>
+                </MenuItem>
+              </TextField>
+            </Grid>
+
+            {/* Rango de Fechas */}
+            <Grid item xs={12} md={6} lg={4}>
+              <FormControl fullWidth size="small" variant="outlined">
+                <InputLabel>Rango de Fechas</InputLabel>
+                <Select
+                  value={preset}
+                  onChange={handlePresetChange}
+                  label="Rango de Fechas"
+                  sx={{
+                    backgroundColor: 'white',
+                    borderRadius: 2,
+                    transition: 'all 0.2s ease-in-out',
+                    '&:hover': {
+                      '& .MuiOutlinedInput-notchedOutline': {
+                        borderColor: '#007391',
+                      },
+                    },
+                    '&.Mui-focused': {
+                      '& .MuiOutlinedInput-notchedOutline': {
+                        borderColor: '#007391',
+                        borderWidth: 2,
+                      },
+                    },
+                  }}
+                >
+                  {presets.map((preset) => (
+                    <MenuItem key={preset.value} value={preset.value}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <CalendarIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
+                        {preset.label}
+                      </Box>
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+
+            {/* Estado Asesor */}
+            <Grid item xs={12} md={6} lg={4}>
+              <TextField
+                select
+                label="Estado Asesor"
+                size="small"
+                value={filters.accionComercial || "Todos"}
+                onChange={(e) => setFilters({ ...filters, accionComercial: e.target.value })}
+                fullWidth
+                variant="outlined"
+                sx={fieldStyles}
+              >
+                <MenuItem value="Todos">
+                  <Typography sx={{ color: 'text.secondary', fontStyle: 'italic' }}>
+                    Todos los asesores
+                  </Typography>
+                </MenuItem>
+                <MenuItem value="Seguimiento - Duda no resuelta">Seguimiento - Duda no resuelta</MenuItem>
+                <MenuItem value="No interesado">No interesado</MenuItem>
+                <MenuItem value="Promesa de Pago">Promesa de Pago</MenuItem>
+                <MenuItem value="Seguimiento - Duda resuelta">Seguimiento - Duda resuelta</MenuItem>
+              </TextField>
+            </Grid>
+
+            {/* Interacción con Bot */}
+            <Grid item xs={12} md={6} lg={4}>
+              <TextField
+                select
+                label="Interacción con Bot"
+                size="small"
+                value={filters.interaccionBot || "Todos"}
+                onChange={(e) => setFilters({ ...filters, interaccionBot: e.target.value })}
+                fullWidth
+                variant="outlined"
+                sx={fieldStyles}
+              >
+                <MenuItem value="Todos">
+                  <Typography sx={{ color: 'text.secondary', fontStyle: 'italic' }}>
+                    Todas las interacciones
+                  </Typography>
+                </MenuItem>
+                <MenuItem value="Con interacción">
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Chip label="Con interacción" size="small" color="success" variant="outlined" />
+                  </Box>
+                </MenuItem>
+                <MenuItem value="Sin interacción">
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Chip label="Sin interacción" size="small" color="default" variant="outlined" />
+                  </Box>
+                </MenuItem>
+              </TextField>
+            </Grid>
+
+            {/* Fecha de Registro */}
+            <Grid item xs={12} md={6} lg={4}>
+              <DatePicker
+                label="Fecha de Registro"
+                views={['year', 'month']}
+                value={filters.fechaRegistro || null}
+                onChange={(newValue) => {
+                  setFilters((prev) => ({
+                    ...prev,
+                    fechaRegistro: newValue || null,
+                  }));
+                }}
+                format="MMMM yyyy"
+                slotProps={{
+                  textField: {
+                    fullWidth: true,
+                    size: "small",
+                    variant: "outlined",
+                    sx: fieldStyles,
+                  },
+                }}
+              />
+            </Grid>
+
+            {/* Fechas Personalizadas */}
+            {preset === "custom" && (
+              <>
+                <Grid item xs={12} md={6}>
+                  <DatePicker
+                    label="Fecha Inicio"
+                    value={startDate}
+                    onChange={(newValue) => {
+                      setStartDate(newValue);
+                      setFilters((prev) => ({
+                        ...prev,
+                        fechaInicio: newValue ? newValue.toISOString() : "",
+                      }));
+                    }}
+                    format="dd/MM/yyyy"
+                    slotProps={{
+                      textField: {
+                        fullWidth: true,
+                        size: "small",
+                        variant: "outlined",
+                        sx: fieldStyles,
+                      },
+                    }}
+                  />
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <DatePicker
+                    label="Fecha Fin"
+                    value={endDate}
+                    onChange={(newValue) => {
+                      setEndDate(newValue);
+                      setFilters((prev) => ({
+                        ...prev,
+                        fechaFin: newValue ? newValue.toISOString() : "",
+                      }));
+                    }}
+                    format="dd/MM/yyyy"
+                    slotProps={{
+                      textField: {
+                        fullWidth: true,
+                        size: "small",
+                        variant: "outlined",
+                        sx: fieldStyles,
+                      },
+                    }}
+                  />
+                </Grid>
+              </>
+            )}
+          </Grid>
+
+        </Box>
+      </Paper>
     </LocalizationProvider>
   );
 }

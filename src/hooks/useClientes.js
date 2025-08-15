@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { fetchClientes, fetchConversacion, getGestores ,updateCliente } from "../../services/clientesService";
 import {useSession } from "next-auth/react";
 
@@ -14,6 +14,8 @@ export function useClientes() {
   const [conversationLoading, setConversationLoading] = useState(false);
   const [selectedConversation, setSelectedConversation] = useState(0);
   const [gestores,setGestores] = useState([]);
+  const gestoresLoaded = useRef(false);
+  const initialLoadDone = useRef(false);
   const [filters, setFilters] = useState({
     search: "",
     estado: "Todos",
@@ -23,27 +25,68 @@ export function useClientes() {
     fechaRegistro: "",
   });
 
-  const [pagination, setPagination] = useState({ page: 1, pageSize: 10 });
+  const [pagination, setPagination] = useState({ 
+    page: 0,        // Material-UI usa 0-based indexing
+    pageSize: 10
+  });
   const [sortModel, setSortModel] = useState([]);  
 
+  // Cargar gestores solo una vez
+  useEffect(() => {
+    const loadGestores = async () => {
+      if (gestoresLoaded.current) return;
+      
+      try {
+        const gestoresData = await getGestores();
+        setGestores(gestoresData);
+        console.log("gestores", gestoresData);
+        gestoresLoaded.current = true;
+      } catch (error) {
+        console.error("Error cargando gestores:", error);
+      }
+    };
+    
+    loadGestores();
+  }, []);
+
+  // Cargar clientes cuando cambien filtros, paginación, sortModel o al inicio
   useEffect(() => {
     const loadClientes = async () => {
-      setLoading(true);
-      const data = await fetchClientes({ page: pagination.page, pageSize: pagination.pageSize, filters, sortModel, name: session?.user?.name,role: session?.user?.role});
-      setClientes(data.clientes);
-      console.log("clientes", data.clientes);
-      setTotalClientes(data.total);
-      setLoading(false);
-    };
-    const loadGestores = async () => {
-      const gestoresData = await getGestores();
-      setGestores(gestoresData);
+      // No hacer fetch si la sesión aún está cargando
+      if (status === "loading") return;
       
-      console.log("gestores", gestoresData);
+      // Marcar que la carga inicial ya se hizo
+      if (!initialLoadDone.current) {
+        initialLoadDone.current = true;
+      }
+      
+      setLoading(true);
+      try {
+        // Convertir página de Material-UI (0-based) a API (1-based)
+        const apiPage = pagination.page + 1;
+        const data = await fetchClientes({ 
+          page: apiPage, 
+          pageSize: pagination.pageSize, 
+          filters, 
+          sortModel, 
+          name: session?.user?.name,
+          role: session?.user?.role
+        });
+        setClientes(data.clientes);
+        console.log("clientes", data.clientes);
+        setTotalClientes(data.total);
+      } catch (error) {
+        console.error("Error cargando clientes:", error);
+      } finally {
+        setLoading(false);
+      }
     };
-    loadGestores();
-    loadClientes();
-  }, [filters, pagination, sortModel,session,status]);  
+    
+    // Cargar clientes cuando la sesión esté lista (inicial o cambios)
+    if (status !== "loading") {
+      loadClientes();
+    }
+  }, [filters, pagination.page, pagination.pageSize, sortModel, status, session?.user?.name, session?.user?.role]);  
 
   // 🔹 Función para manejar el modal de acción comercial
   const handleAccionComercial = (cliente) => {
