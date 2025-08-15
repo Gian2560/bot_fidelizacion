@@ -84,7 +84,7 @@ export default function Layout({ children }) {
       </Toolbar>
       <Divider sx={{ bgcolor: "#254e59" }} />
       <List>
-        <ListItem
+        {/*<ListItem
           button="true"
           onClick={() => router.push("/")}
           sx={{
@@ -94,11 +94,11 @@ export default function Layout({ children }) {
           }}
         >
           <ListItemIcon sx={{ color: "#fff" }}>
-            <HomeIcon /> {/* Aquí está el error corregido */}
+            <HomeIcon /> 
           </ListItemIcon>
 
           <ListItemText primary="Home" />
-        </ListItem>
+        </ListItem>*/}
         {/*<ListItem
           button="true"
           onClick={() => router.push("/leads")}

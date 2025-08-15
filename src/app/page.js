@@ -28,7 +28,7 @@ export default async function Home() {
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* Gestión de Clientes */}
-          <Link href="/clientes" className="group bg-white shadow-lg rounded-lg p-6 hover:shadow-xl transition flex flex-col items-center">
+          <Link href="/clientes_gestion" className="group bg-white shadow-lg rounded-lg p-6 hover:shadow-xl transition flex flex-col items-center">
             <img src="/client.jpg" alt="Clientes" className="w-16 mb-4" />
             <h3 className="text-xl font-semibold text-[#007391]">Gestión de Clientes</h3>
             <p className="text-gray-600 mt-2 text-center">
@@ -37,7 +37,7 @@ export default async function Home() {
           </Link>
 
           {/* Promesas de Pago */}
-          <Link href="/promesasPago" className="group bg-white shadow-lg rounded-lg p-6 hover:shadow-xl transition flex flex-col items-center">
+          <Link href="/task" className="group bg-white shadow-lg rounded-lg p-6 hover:shadow-xl transition flex flex-col items-center">
             <img src="/paid.jpg" alt="Promesas de Pago" className="w-16 mb-4" />
             <h3 className="text-xl font-semibold text-[#007391]">Promesas de Pago</h3>
             <p className="text-gray-600 mt-2 text-center">
@@ -46,7 +46,7 @@ export default async function Home() {
           </Link>
 
           {/* Envío de Mensajes */}
-          <Link href="/mensajeria" className="group bg-white shadow-lg rounded-lg p-6 hover:shadow-xl transition flex flex-col items-center">
+          <Link href="/campaigns" className="group bg-white shadow-lg rounded-lg p-6 hover:shadow-xl transition flex flex-col items-center">
             <img src="/mesage.jpg" alt="Mensajería" className="w-16 mb-4" />
             <h3 className="text-xl font-semibold text-[#007391]">Envío de Mensajes</h3>
             <p className="text-gray-600 mt-2 text-center">
