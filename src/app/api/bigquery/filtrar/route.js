@@ -116,7 +116,7 @@ export async function POST(req) {
       envios.TelfSMS AS telefono,
       envios.Primer_Nombre AS nombre,
       envios.Cod_Banco AS codpago,
-      envios.Fec_Venc_Cuota AS fecCuota,
+      envios.Fec_Venc_Cuota AS feccuota,
       envios.Modelo AS modelo,
       FORMAT('%.2f', envios.Monto) AS monto,
       ROW_NUMBER() OVER (PARTITION BY envios.TelfSMS ORDER BY envios.N_Doc) AS row_num  -- Asigna un número a cada fila por TelfSMS
@@ -134,7 +134,7 @@ export async function POST(req) {
     telefono,
     nombre,
     codpago,
-    fecCuota,
+    feccuota,
     modelo,
     monto,
     Linea
