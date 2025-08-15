@@ -195,23 +195,31 @@ export default function ClienteDetallePage() {
           sx={{
             background: 'linear-gradient(90deg, #007391 0%, #005c6b 100%)',
             '& .MuiTab-root': {
-              color: 'rgba(255,255,255,0.7)',
+              color: 'rgba(255,255,255,0.8)',
               fontWeight: 'bold',
               textTransform: 'none',
               fontSize: '1rem',
               minHeight: 60,
+              transition: 'all 0.3s ease',
               '&:hover': {
-                color: 'white',
-                backgroundColor: 'rgba(255,255,255,0.1)'
+                color: '#ffffff',
+                backgroundColor: 'rgba(255,255,255,0.15)',
+                transform: 'translateY(-1px)'
               }
             },
             '& .Mui-selected': {
-              color: '#ffcc00',
-              backgroundColor: 'rgba(236, 236, 236, 0.2)',
+              color: '#ffcc00 !important',
+              backgroundColor: 'rgba(255, 255, 255, 0.15) !important',
+              fontWeight: 'bold',
+              '&:hover': {
+                color: '#ffcc00 !important',
+                backgroundColor: 'rgba(255, 255, 255, 0.2) !important'
+              }
             },
             '& .MuiTabs-indicator': {
               backgroundColor: '#ffcc00',
-              height: 4
+              height: 4,
+              borderRadius: '4px 4px 0 0'
             },
           }}
         >
