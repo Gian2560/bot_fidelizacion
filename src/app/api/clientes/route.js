@@ -79,10 +79,14 @@ export async function GET(req) {
       filtros.estado_asesor = accionComercial; // Filtrar por "Acción Comercial"
     }
     if (interaccionBot === "Con interacción") {
-      filtros.fecha_ultima_interaccion_bot = { not: null }; // Clientes con fecha de interacción
-    } else if (interaccionBot === "Sin interacción") {
-      filtros.fecha_ultima_interaccion_bot = null; // Clientes sin fecha de interacción
-    }
+  filtros.AND = [
+    { estado: { not: null } }, // Clientes con estado
+    { estado: { not: "activo" } },
+    { estado: { not: "no contactado" } }  // Pero que no sea "activo"
+  ];
+} else if (interaccionBot === "Sin interacción") {
+  filtros.estado = null; // Clientes sin fecha de interacción
+}
     if (accionComercial === "Sin accion comercial") {
       filtros.accion = ""; // Filtra por clientes que no tienen acción comercial
     } 

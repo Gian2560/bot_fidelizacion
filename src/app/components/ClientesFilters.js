@@ -1,13 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { 
-  TextField, 
-  MenuItem, 
-  Button, 
-  Grid, 
-  FormControl, 
-  InputLabel, 
+import {
+  TextField,
+  MenuItem,
+  Button,
+  Grid,
+  FormControl,
+  InputLabel,
   Select,
   Box,
   Paper,
@@ -15,7 +15,7 @@ import {
   Chip,
   Divider
 } from "@mui/material";
-import { 
+import {
   Search as SearchIcon,
   FilterList as FilterIcon,
   Clear as ClearIcon,
@@ -120,9 +120,9 @@ export default function ClientesFilters({ filters, setFilters }) {
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
-      <Paper 
-        elevation={0} 
-        sx={{ 
+      <Paper
+        elevation={0}
+        sx={{
           background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
           border: '1px solid #e2e8f0',
           borderRadius: 3,
@@ -131,7 +131,7 @@ export default function ClientesFilters({ filters, setFilters }) {
         }}
       >
         {/* Header */}
-        <Box sx={{ 
+        <Box sx={{
           background: 'linear-gradient(135deg, #007391 0%, #005c6b 100%)',
           color: 'white',
           p: 1,
@@ -144,37 +144,37 @@ export default function ClientesFilters({ filters, setFilters }) {
             Filtros de Búsqueda
           </Typography>
           {getActiveFiltersCount() > 0 && (
-            <Chip 
+            <Chip
               label={`${getActiveFiltersCount()} activos`}
               size="small"
-              sx={{ 
+              sx={{
                 backgroundColor: 'rgba(255,255,255,0.2)',
                 color: 'white',
                 fontWeight: 500
               }}
             />
           )}
-        <Button
-              variant="outlined"
-              onClick={handleReset}
-              startIcon={<ClearIcon />}
-              sx={{
-                borderColor: '#ffffffff',
-                color: '#ffffffff',
-                borderRadius: 2,
-                px: 3,
-                py: 1,
-                fontWeight: 500,
-                textTransform: 'none',
-                '&:hover': {
-                  borderColor: '#fafcffff',
-                  color: '#000000ff',
-                  backgroundColor: 'rgba(255, 255, 255, 1)',
-                },
-              }}
-            >
-              Limpiar Filtros
-            </Button>
+          <Button
+            variant="outlined"
+            onClick={handleReset}
+            startIcon={<ClearIcon />}
+            sx={{
+              borderColor: '#ffffffff',
+              color: '#ffffffff',
+              borderRadius: 2,
+              px: 3,
+              py: 1,
+              fontWeight: 500,
+              textTransform: 'none',
+              '&:hover': {
+                borderColor: '#fafcffff',
+                color: '#000000ff',
+                backgroundColor: 'rgba(255, 255, 255, 1)',
+              },
+            }}
+          >
+            Limpiar Filtros
+          </Button>
         </Box>
 
         {/* Filters Content */}
@@ -198,82 +198,82 @@ export default function ClientesFilters({ filters, setFilters }) {
 
             {/* Estado */}
             <Grid item xs={12} md={6} lg={4}>
-  <TextField
-    select
-    label="Estado del Cliente"
-    size="small"
-    value={filters.estado}
-    onChange={(e) => setFilters({ ...filters, estado: e.target.value })}
-    fullWidth
-    variant="outlined"
-    sx={fieldStyles}
-  >
-    <MenuItem value="Todos">
-      <Typography sx={{ color: 'text.secondary', fontStyle: 'italic' }}>
-        Todos los estados
-      </Typography>
-    </MenuItem>
+              <TextField
+                select
+                label="Estado del Cliente"
+                size="small"
+                value={filters.estado}
+                onChange={(e) => setFilters({ ...filters, estado: e.target.value })}
+                fullWidth
+                variant="outlined"
+                sx={fieldStyles}
+              >
+                <MenuItem value="Todos">
+                  <Typography sx={{ color: 'text.secondary', fontStyle: 'italic' }}>
+                    Todos los estados
+                  </Typography>
+                </MenuItem>
 
-    <MenuItem value="Comunicacion inmediata">
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-        <Chip label="Comunicación inmediata" size="small" color="primary" variant="outlined" />
-      </Box>
-    </MenuItem>
+                <MenuItem value="Comunicacion inmediata">
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Chip label="Comunicación inmediata" size="small" color="primary" variant="outlined" />
+                  </Box>
+                </MenuItem>
 
-    <MenuItem value="Gestion de contrato">
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-        <Chip label="Gestión de contrato" size="small" color="secondary" variant="outlined" />
-      </Box>
-    </MenuItem>
+                <MenuItem value="Gestion de contrato">
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Chip label="Gestión de contrato" size="small" color="secondary" variant="outlined" />
+                  </Box>
+                </MenuItem>
 
-    <MenuItem value="Negociacion de pago">
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-        <Chip label="Negociación de pago" size="small" color="success" variant="outlined" />
-      </Box>
-    </MenuItem>
+                <MenuItem value="Negociacion de pago">
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Chip label="Negociación de pago" size="small" color="success" variant="outlined" />
+                  </Box>
+                </MenuItem>
 
-    <MenuItem value="Duda agresiva no resuelta">
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-        <Chip label="Duda agresiva no resuelta" size="small" color="error" variant="outlined" />
-      </Box>
-    </MenuItem>
+                <MenuItem value="Duda agresiva no resuelta">
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Chip label="Duda agresiva no resuelta" size="small" color="error" variant="outlined" />
+                  </Box>
+                </MenuItem>
 
-    <MenuItem value="Duda no resuelta">
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-        <Chip label="Duda no resuelta" size="small" color="warning" variant="outlined" />
-      </Box>
-    </MenuItem>
+                <MenuItem value="Duda no resuelta">
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Chip label="Duda no resuelta" size="small" color="warning" variant="outlined" />
+                  </Box>
+                </MenuItem>
 
-    <MenuItem value="Enojado">
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-        <Chip label="Enojado" size="small" color="error" variant="outlined" />
-      </Box>
-    </MenuItem>
+                <MenuItem value="Enojado">
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Chip label="Enojado" size="small" color="error" variant="outlined" />
+                  </Box>
+                </MenuItem>
 
-    <MenuItem value="No interesado">
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-        <Chip label="No interesado" size="small" color="error" variant="outlined" />
-      </Box>
-    </MenuItem>
+                <MenuItem value="No interesado">
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Chip label="No interesado" size="small" color="error" variant="outlined" />
+                  </Box>
+                </MenuItem>
 
-    <MenuItem value="Promesa de pago">
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-        <Chip label="Promesa de pago" size="small" color="success" variant="outlined" />
-      </Box>
-    </MenuItem>
+                <MenuItem value="Promesa de pago">
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Chip label="Promesa de pago" size="small" color="success" variant="outlined" />
+                  </Box>
+                </MenuItem>
 
-    <MenuItem value="Duda resuelta">
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-        <Chip label="Duda resuelta" size="small" color="info" variant="outlined" />
-      </Box>
-    </MenuItem>
-  </TextField>
-</Grid>
+                <MenuItem value="Duda resuelta">
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Chip label="Duda resuelta" size="small" color="info" variant="outlined" />
+                  </Box>
+                </MenuItem>
+              </TextField>
+            </Grid>
 
             {/* Rango de Fechas */}
             <Grid item xs={12} md={6} lg={4}>
               <FormControl fullWidth size="small" variant="outlined">
-                <InputLabel>Rango de Fechas</InputLabel>
+                <InputLabel>Rango de Fechas de Interaccion</InputLabel>
                 <Select
                   value={preset}
                   onChange={handlePresetChange}
@@ -321,13 +321,63 @@ export default function ClientesFilters({ filters, setFilters }) {
               >
                 <MenuItem value="Todos">
                   <Typography sx={{ color: 'text.secondary', fontStyle: 'italic' }}>
-                    Todos los asesores
+                    Todos los estados asesores
                   </Typography>
                 </MenuItem>
-                <MenuItem value="Seguimiento - Duda no resuelta">Seguimiento - Duda no resuelta</MenuItem>
-                <MenuItem value="No interesado">No interesado</MenuItem>
-                <MenuItem value="Promesa de Pago">Promesa de Pago</MenuItem>
-                <MenuItem value="Seguimiento - Duda resuelta">Seguimiento - Duda resuelta</MenuItem>
+
+                <MenuItem value="Comunicacion inmediata">
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Chip label="Comunicación inmediata" size="small" color="primary" variant="outlined" />
+                  </Box>
+                </MenuItem>
+
+                <MenuItem value="Gestion de contrato">
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Chip label="Gestión de contrato" size="small" color="secondary" variant="outlined" />
+                  </Box>
+                </MenuItem>
+
+                <MenuItem value="Negociacion de pago">
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Chip label="Negociación de pago" size="small" color="success" variant="outlined" />
+                  </Box>
+                </MenuItem>
+
+                <MenuItem value="Duda agresiva no resuelta">
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Chip label="Duda agresiva no resuelta" size="small" color="error" variant="outlined" />
+                  </Box>
+                </MenuItem>
+
+                <MenuItem value="Duda no resuelta">
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Chip label="Duda no resuelta" size="small" color="warning" variant="outlined" />
+                  </Box>
+                </MenuItem>
+
+                <MenuItem value="Enojado">
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Chip label="Enojado" size="small" color="error" variant="outlined" />
+                  </Box>
+                </MenuItem>
+
+                <MenuItem value="No interesado">
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Chip label="No interesado" size="small" color="error" variant="outlined" />
+                  </Box>
+                </MenuItem>
+
+                <MenuItem value="Promesa de pago">
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Chip label="Promesa de pago" size="small" color="success" variant="outlined" />
+                  </Box>
+                </MenuItem>
+
+                <MenuItem value="Duda resuelta">
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Chip label="Duda resuelta" size="small" color="info" variant="outlined" />
+                  </Box>
+                </MenuItem>
               </TextField>
             </Grid>
 
