@@ -313,6 +313,18 @@ export async function POST(request) {
     
     console.log('📊 Calculando métricas para estados:', estados);
 
+    // Configurar rango de fechas del mes actual (igual que en GET)
+    const ahora = new Date();
+    const inicioMes = new Date(ahora.getFullYear(), ahora.getMonth(), 1);
+    const finMes = new Date(ahora.getFullYear(), ahora.getMonth() + 1, 0, 23, 59, 59, 999);
+    
+    console.log('📅 Filtros de fecha para métricas:', {
+      mesActual: ahora.getMonth() + 1,
+      añoActual: ahora.getFullYear(),
+      inicioMes: inicioMes.toISOString(),
+      finMes: finMes.toISOString()
+    });
+
     // Obtener conteos por estado
     const metricas = {};
     
@@ -322,42 +334,125 @@ export async function POST(request) {
     for (const estadoFrontend of estadosParaCalcular) {
       const estadosDB = estadosMapping[estadoFrontend] || [estadoFrontend];
       
-      // Contar total de clientes en este estado
-      const totalClientes = await prisma.cliente.count({
+      console.log(`\n🎯 Procesando estado: "${estadoFrontend}" -> ${estadosDB}`);
+      
+      // ✅ OBTENER TODOS LOS CANDIDATOS (misma lógica que GET)
+      const clientesCandidatos = await prisma.cliente.findMany({
         where: {
-          estado: { in: estadosDB }
+          estado: { in: estadosDB },
+          contrato: {
+            isNot: null,
+            is: {
+              fecha_pago: {
+                gte: inicioMes,
+                lte: finMes
+              }
+            }
+          }
+        },
+        select: {
+          cliente_id: true,
+          nombre: true,
+          estado: true,
+          contrato: {
+            select: {
+              fecha_pago: true
+            }
+          },
+          accion_comercial: {
+            select: {
+              fecha_accion: true
+            },
+            orderBy: {
+              fecha_accion: 'desc'
+            },
+            take: 1 // Solo la más reciente
+          }
         }
       });
 
-      // Para simplificar inicialmente, consideramos:
-      // - Pendientes: todos los clientes en el estado
-      // - Completados: 0 (se puede implementar lógica más compleja después)
+      console.log(`📋 Candidatos para "${estadoFrontend}": ${clientesCandidatos.length}`);
+
+      // ✅ CLASIFICAR EN PENDIENTES Y COMPLETADAS
+      let pendientes = 0;
+      let completadas = 0;
+
+      clientesCandidatos.forEach(cliente => {
+        if (!cliente.contrato || !cliente.contrato.fecha_pago) {
+          return; // Saltar si no tiene datos válidos
+        }
+
+        const fechaUltimoEstado = new Date(cliente.contrato.fecha_pago);
+        
+        // Si no tiene acciones comerciales -> PENDIENTE
+        if (!cliente.accion_comercial || cliente.accion_comercial.length === 0) {
+          pendientes++;
+          console.log(`   ✅ Cliente ${cliente.cliente_id} (${cliente.nombre}): Sin acciones -> PENDIENTE`);
+          return;
+        }
+
+        const fechaUltimaAccion = new Date(cliente.accion_comercial[0].fecha_accion);
+        
+        // Comparar fechas para clasificar
+        if (fechaUltimoEstado > fechaUltimaAccion) {
+          // Estado más reciente que acción -> PENDIENTE
+          pendientes++;
+          console.log(`   ✅ Cliente ${cliente.cliente_id} (${cliente.nombre}): Estado más reciente -> PENDIENTE`);
+        } else {
+          // Acción más reciente que estado -> COMPLETADA
+          completadas++;
+          console.log(`   ✅ Cliente ${cliente.cliente_id} (${cliente.nombre}): Acción más reciente -> COMPLETADA`);
+        }
+      });
+
+      const total = pendientes + completadas;
+      
       metricas[estadoFrontend] = {
-        total: totalClientes,
-        pendientes: totalClientes,
-        completados: 0
+        total,
+        pendientes,
+        completados: completadas, // Mantener nombre consistente con frontend
+        porcentajeCompletado: total > 0 ? Math.round((completadas / total) * 100) : 0
       };
 
-      console.log(`📈 ${estadoFrontend}: ${totalClientes} clientes`);
+      console.log(`📈 Métricas "${estadoFrontend}":`, {
+        total,
+        pendientes,
+        completadas,
+        porcentaje: metricas[estadoFrontend].porcentajeCompletado + '%'
+      });
     }
 
-    // Calcular estadísticas generales
-    const totalGeneral = await prisma.cliente.count();
+    // ✅ CALCULAR ESTADÍSTICAS GENERALES
+    const allStats = Object.values(metricas);
+    const totalGeneral = allStats.reduce((sum, stat) => sum + stat.total, 0);
+    const pendientesGeneral = allStats.reduce((sum, stat) => sum + stat.pendientes, 0);
+    const completadasGeneral = allStats.reduce((sum, stat) => sum + stat.completados, 0);
+    
     const estadisticasGenerales = {
       total: totalGeneral,
-      pendientes: totalGeneral, // Simplificado por ahora
-      completadas: 0,
-      efectividad: 0
+      pendientes: pendientesGeneral,
+      completadas: completadasGeneral,
+      efectividad: totalGeneral > 0 ? Math.round((completadasGeneral / totalGeneral) * 100) : 0
     };
 
     const response = {
       success: true,
       metricas,
       estadisticasGenerales,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      debug: {
+        rangoFechas: {
+          inicio: inicioMes.toISOString(),
+          fin: finMes.toISOString()
+        },
+        estadosProcesados: estadosParaCalcular
+      }
     };
 
-    console.log('📤 Métricas calculadas:', response);
+    console.log('\n📤 Métricas finales calculadas:');
+    console.log('📊 Por estado:', metricas);
+    console.log('📊 Generales:', estadisticasGenerales);
+    
     return NextResponse.json(response);
 
   } catch (error) {
