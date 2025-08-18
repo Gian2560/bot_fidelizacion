@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
-import { 
-  getCampaignById, 
-  removeClientFromCampaign, 
-  uploadClients, 
-  sendCampaignMessages 
+import {
+  getCampaignById,
+  removeClientFromCampaign,
+  uploadClients,
+  sendCampaignMessages
 } from "../../services/campaignService";
-import { Snackbar, Alert } from "@mui/material"; 
+import { Snackbar, Alert } from "@mui/material";
 
 const useCampaignDetail = (id) => {
   const [campaign, setCampaign] = useState(null);
@@ -22,8 +22,8 @@ const useCampaignDetail = (id) => {
   const fetchCampaignDetail = async () => {
     setLoading(true);
     try {
-      const { campanha_id, nombre_campanha, fecha_creacion, fecha_fin, estado_campanha, 
-              mensaje_cliente, template, clientes, pagination: pagData } = await getCampaignById(id, pagination.page, pagination.pageSize);
+      const { campanha_id, nombre_campanha, fecha_creacion, fecha_fin, estado_campanha,
+        mensaje_cliente, template, clientes, pagination: pagData } = await getCampaignById(id, pagination.page, pagination.pageSize);
 
       // Actualiza la información de la campaña
       setCampaign({
@@ -54,7 +54,7 @@ const useCampaignDetail = (id) => {
 
   useEffect(() => {
     fetchCampaignDetail();
-    console.log("clientes",clients)
+    console.log("clientes", clients)
   }, [id, pagination.page, pagination.pageSize]);
 
   return {
@@ -85,69 +85,60 @@ const useCampaignDetail = (id) => {
         setSnackbarOpen(true);
 
         const response = await sendCampaignMessages(id);
-        
-        // Extraer estadísticas de la respuesta optimizada
-        const { summary } = response;
-        setCampaignStats(summary);
 
-        // Crear mensaje detallado basado en los resultados
-        let detailedMessage = "";
-        let severity = "success";
+        // 🔹 Manejar la nueva respuesta 202 de GCP
+        if (response.success) {
+          const { campaign, status, timing } = response;
+          
+          // Crear mensaje optimista basado en la respuesta
+          const successMessage = `🎉 ${response.message}
 
-        if (summary.sent > 0 && summary.failed === 0) {
-          // Todos exitosos
-          detailedMessage = `🎉 ¡Campaña completada exitosamente!
-✅ ${summary.sent} mensajes enviados
-⚡ Velocidad: ${summary.performance.messagesPerSecond} msg/seg
-⏱️ Tiempo: ${summary.performance.totalTimeMinutes} min`;
-          severity = "success";
-        } else if (summary.sent > 0 && summary.failed > 0) {
-          // Parcialmente exitoso
-          detailedMessage = `⚠️ Campaña completada con algunos errores
-✅ Exitosos: ${summary.sent}/${summary.total}
-❌ Fallidos: ${summary.failed}/${summary.total}
-📊 Tasa de éxito: ${summary.performance.successRate}%
-⚡ Velocidad: ${summary.performance.messagesPerSecond} msg/seg`;
-          severity = "warning";
+📋 Campaña: ${campaign.name}
+👥 Destinatarios: ${campaign.recipients} clientes
+📊 Estado: ${status.current}
+⏱️ Tiempo estimado: ${timing.estimated}
+
+💡 ${status.description}
+🔄 Los mensajes se están enviando automáticamente en segundo plano`;
+
+          setSnackbarMessage(successMessage);
+          setSnackbarSeverity("success");
+          
+          // Guardar información básica en stats
+          setCampaignStats({
+            campaignId: campaign.id,
+            campaignName: campaign.name,
+            totalRecipients: campaign.recipients,
+            status: status.current,
+            estimatedTime: timing.estimated,
+            startedAt: new Date().toISOString()
+          });
+
+          // Actualizar la campaña después de un breve delay
+          setTimeout(() => {
+            fetchCampaignDetail();
+          }, 2000);
+
         } else {
-          // Todos fallaron
-          detailedMessage = `❌ Error crítico en el envío
-💥 ${summary.failed} mensajes fallaron
-🔍 Revisa la configuración API`;
-          severity = "error";
+          throw new Error(response.message || "Error desconocido en el envío");
         }
 
-        // Agregar desglose de errores si existen (solo en mensajes de advertencia/error)
-        if (severity !== "success" && summary.errorBreakdown && Object.keys(summary.errorBreakdown).length > 0) {
-          const errorTypes = Object.entries(summary.errorBreakdown).slice(0, 3); // Máximo 3 tipos
-          if (errorTypes.length > 0) {
-            detailedMessage += `\n\n🔍 Principales errores:`;
-            errorTypes.forEach(([errorType, count]) => {
-              const errorMessages = {
-                'rejected': 'Rechazados',
-                'unauthorized': 'Sin autorización',
-                'rate_limited': 'Rate limit',
-                'server_error': 'Error servidor',
-                'network_failed': 'Error red',
-                'failed': 'Error general'
-              };
-              detailedMessage += `\n• ${errorMessages[errorType] || errorType}: ${count}`;
-            });
-          }
-        }
-
-        setSnackbarMessage(detailedMessage);
-        setSnackbarSeverity(severity);
         setSnackbarOpen(true);
-
-        // Actualizar la campaña después del envío
-        setTimeout(() => {
-          fetchCampaignDetail();
-        }, 1000);
 
       } catch (err) {
         console.error("Error en envío de campaña:", err);
-        setSnackbarMessage(`❌ Error crítico en el envío:\n${err.message}`);
+        
+        let errorMessage = "❌ Error al iniciar el envío de campaña";
+        
+        if (err.message.includes("timeout")) {
+          errorMessage = "⏱️ Timeout al iniciar envío\n💡 La campaña podría haberse iniciado correctamente";
+        } else if (err.message.includes("network")) {
+          errorMessage = "🌐 Error de conexión\n🔄 Verifica tu conexión a internet";
+        } else {
+          errorMessage = `❌ Error al iniciar envío:\n${err.message}`;
+        }
+
+        setSnackbarMessage(errorMessage);
         setSnackbarSeverity("error");
         setSnackbarOpen(true);
       } finally {
@@ -155,17 +146,17 @@ const useCampaignDetail = (id) => {
       }
     },
     snackbar: (
-      <Snackbar 
-        open={snackbarOpen} 
+      <Snackbar
+        open={snackbarOpen}
         autoHideDuration={sendingInProgress ? null : 8000} // No auto-hide mientras está enviando
         onClose={() => !sendingInProgress && setSnackbarOpen(false)}
         anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
         sx={{ maxWidth: '500px' }}
       >
-        <Alert 
-          onClose={() => !sendingInProgress && setSnackbarOpen(false)} 
-          severity={snackbarSeverity} 
-          sx={{ 
+        <Alert
+          onClose={() => !sendingInProgress && setSnackbarOpen(false)}
+          severity={snackbarSeverity}
+          sx={{
             width: "100%",
             '& .MuiAlert-message': {
               whiteSpace: 'pre-line', // Permite saltos de línea

@@ -152,7 +152,7 @@ model conversacion {
 model historico_estado {
   historico_estado_id Int       @id @default(autoincrement())
   contrato_id         Int
-  estado              String    @db.VarChar(25)
+  estado              String    @db.VarChar(100)
   fecha_estado        DateTime? @default(now()) @db.Timestamp(6)
   motivo              String?
   detalle             String?

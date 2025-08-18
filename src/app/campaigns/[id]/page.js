@@ -490,14 +490,14 @@ const CampaignDetailPage = () => {
               </Fade>
 
               {/* 🔹 ESTADÍSTICAS DE CAMPAÑA */}
-              <Fade in timeout={1600}>
+              {/*<Fade in timeout={1600}>
                 <Box mb={4}>
                   <CampaignStatsCard 
                     campaignStats={campaignStats} 
                     sendingInProgress={sendingInProgress} 
                   />
                 </Box>
-              </Fade>
+              </Fade>*/}
 
               {/* 🔹 TABLA DE CLIENTES CON DISEÑO MEJORADO */}
               <Fade in timeout={1800}>

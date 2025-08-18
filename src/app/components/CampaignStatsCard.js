@@ -28,8 +28,18 @@ import {
 const CampaignStatsCard = ({ campaignStats, sendingInProgress }) => {
   if (!campaignStats && !sendingInProgress) return null;
 
+  // 🔹 Nueva estructura de datos para respuesta 202 de GCP
   const {
-    total = 0,
+    // Nuevos campos de la respuesta básica
+    campaignId,
+    campaignName,
+    totalRecipients = 0,
+    status,
+    estimatedTime,
+    startedAt,
+    
+    // Campos legacy (para compatibilidad)
+    total = totalRecipients,
     sent = 0,
     failed = 0,
     performance = {},
@@ -37,6 +47,19 @@ const CampaignStatsCard = ({ campaignStats, sendingInProgress }) => {
     configuration = {}
   } = campaignStats || {};
 
+  // Calcular progreso estimado si está en progreso
+  const getEstimatedProgress = () => {
+    if (!sendingInProgress || !startedAt || !estimatedTime) return 0;
+    
+    const startTime = new Date(startedAt);
+    const currentTime = new Date();
+    const elapsed = (currentTime - startTime) / (1000 * 60); // minutos
+    const estimated = parseInt(estimatedTime.replace(/\D/g, '')) || 5; // extraer número
+    
+    return Math.min((elapsed / estimated) * 100, 95); // máximo 95% mientras esté en progreso
+  };
+
+  const estimatedProgress = getEstimatedProgress();
   const successRate = total > 0 ? ((sent / total) * 100).toFixed(1) : 0;
 
   // Colores basados en el tema de la página de inicio
@@ -86,15 +109,17 @@ const CampaignStatsCard = ({ campaignStats, sendingInProgress }) => {
                 </Avatar>
                 <Box>
                   <Typography variant="h5" fontWeight="bold" sx={{ textShadow: '1px 1px 2px rgba(0,0,0,0.3)' }}>
-                    📡 Enviando Campaña WhatsApp
+                    📡 {campaignName ? `Enviando: ${campaignName}` : 'Enviando Campaña WhatsApp'}
                   </Typography>
                   <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                    Procesamiento optimizado en curso...
+                    {status || 'Procesamiento optimizado en curso...'}
                   </Typography>
                 </Box>
               </Box>
 
               <LinearProgress 
+                variant={estimatedProgress > 0 ? "determinate" : "indeterminate"}
+                value={estimatedProgress}
                 sx={{ 
                   height: 12, 
                   borderRadius: 6,
@@ -112,25 +137,25 @@ const CampaignStatsCard = ({ campaignStats, sendingInProgress }) => {
                 backdropFilter: 'blur(10px)'
               }}>
                 <Typography variant="h6" mb={2} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <Settings /> Configuración Activa
+                  <Settings /> Información del Envío
                 </Typography>
                 <Grid container spacing={2}>
                   <Grid item xs={4}>
-                    <Typography variant="body2" sx={{ opacity: 0.8 }}>Velocidad</Typography>
+                    <Typography variant="body2" sx={{ opacity: 0.8 }}>Destinatarios</Typography>
                     <Typography variant="h6" fontWeight="bold">
-                      {configuration.messagesPerSecond || 50} msg/seg
+                      {totalRecipients || 0}
                     </Typography>
                   </Grid>
                   <Grid item xs={4}>
-                    <Typography variant="body2" sx={{ opacity: 0.8 }}>Lote</Typography>
+                    <Typography variant="body2" sx={{ opacity: 0.8 }}>Tiempo Est.</Typography>
                     <Typography variant="h6" fontWeight="bold">
-                      {configuration.batchSize || 100} msgs
+                      {estimatedTime || "~5 min"}
                     </Typography>
                   </Grid>
                   <Grid item xs={4}>
-                    <Typography variant="body2" sx={{ opacity: 0.8 }}>Paralelos</Typography>
+                    <Typography variant="body2" sx={{ opacity: 0.8 }}>Progreso</Typography>
                     <Typography variant="h6" fontWeight="bold">
-                      {configuration.concurrentBatches || 3} hilos
+                      {estimatedProgress > 0 ? `${Math.round(estimatedProgress)}%` : "Iniciando..."}
                     </Typography>
                   </Grid>
                 </Grid>
