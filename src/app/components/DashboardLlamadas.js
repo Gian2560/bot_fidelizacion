@@ -12,7 +12,16 @@ import {
   Paper,
   Divider,
   IconButton,
-  Tooltip
+  Tooltip,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  TextField,
+  Button,
+  Fade,
+  CircularProgress,
+  Autocomplete
 } from '@mui/material';
 import {
   Phone as PhoneIcon,
@@ -20,7 +29,10 @@ import {
   CheckCircle as CheckCircleIcon,
   Schedule as ScheduleIcon,
   Person as PersonIcon,
-  CalendarToday as CalendarIcon
+  CalendarToday as CalendarIcon,
+  FilterList as FilterIcon,
+  Refresh as RefreshIcon,
+  Search as SearchIcon
 } from '@mui/icons-material';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
 
@@ -35,12 +47,12 @@ const datosSimulados = {
   promedioLlamadasDia: 12,
   tendencia: '+15%',
   
-  // Distribución por resultado
+  // Distribución por estado (basada en los estados reales encontrados en BD)
   resultados: [
-    { name: 'Contacto Exitoso', value: 65, color: '#00C49F' },
-    { name: 'No Contesta', value: 45, color: '#FF8042' },
-    { name: 'Promesa de Pago', value: 28, color: '#0088FE' },
-    { name: 'No Interesado', value: 18, color: '#FFBB28' }
+    { name: 'Promesa de Pago', value: 28, color: '#00C49F' },
+    { name: 'Seguimiento - Duda resuelta', value: 35, color: '#0088FE' },
+    { name: 'No interesado', value: 18, color: '#FF8042' },
+    { name: 'Seguimiento - Duda no resuelta', value: 12, color: '#FFA726' }
   ],
   
   // Llamadas por gestor
@@ -65,7 +77,117 @@ const datosSimulados = {
 };
 
 const DashboardLlamadas = () => {
+  // 📊 Estados principales
   const [datos, setDatos] = useState(datosSimulados);
+  const [gestores, setGestores] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [loadingGestores, setLoadingGestores] = useState(false);
+  
+  // 🎨 Estados para filtros
+  const [filtros, setFiltros] = useState({
+    gestor: '',
+    fechaDesde: '',
+    fechaHasta: ''
+  });
+
+  // 📅 Obtener fechas por defecto (último mes)
+  const obtenerFechasPorDefecto = () => {
+    const hoy = new Date();
+    const hace30Dias = new Date();
+    hace30Dias.setDate(hoy.getDate() - 30);
+    
+    return {
+      fechaDesde: hace30Dias.toISOString().split('T')[0],
+      fechaHasta: hoy.toISOString().split('T')[0]
+    };
+  };
+
+  // 🔄 Cargar gestores al inicializar
+  useEffect(() => {
+    cargarGestores();
+    const fechasDefecto = obtenerFechasPorDefecto();
+    setFiltros(prev => ({
+      ...prev,
+      ...fechasDefecto
+    }));
+  }, []);
+
+  // 🔄 Cargar estadísticas cuando cambien los filtros
+  useEffect(() => {
+    if (filtros.fechaDesde && filtros.fechaHasta) {
+      cargarEstadisticas();
+    }
+  }, [filtros]);
+
+  // 📊 Función para cargar gestores
+  const cargarGestores = async () => {
+    try {
+      setLoadingGestores(true);
+      const response = await fetch('/api/gestores');
+      if (response.ok) {
+        const data = await response.json();
+        setGestores(data);
+      } else {
+        console.error('Error al cargar gestores');
+      }
+    } catch (error) {
+      console.error('Error al cargar gestores:', error);
+    } finally {
+      setLoadingGestores(false);
+    }
+  };
+
+  // 📊 Función para cargar estadísticas (conectada con API real)
+  const cargarEstadisticas = async () => {
+    try {
+      setLoading(true);
+      
+      // 🔗 Preparación de parámetros para la API
+      const params = new URLSearchParams({
+        gestor: filtros.gestor || '',
+        fechaDesde: filtros.fechaDesde,
+        fechaHasta: filtros.fechaHasta
+      });
+
+      console.log('� Llamando a API statsasesor con parámetros:', params.toString());
+      
+      // 🌐 Llamada real a la API
+      const response = await fetch(`/api/statsasesor?${params}`);
+      if (response.ok) {
+        const data = await response.json();
+        console.log('✅ Datos recibidos de la API:', data);
+        setDatos(data);
+      } else {
+        console.error('❌ Error en la respuesta de la API:', response.status);
+        // Fallback a datos simulados si hay error
+        setDatos(datosSimulados);
+      }
+      
+    } catch (error) {
+      console.error('❌ Error al cargar estadísticas:', error);
+      // Fallback a datos simulados si hay error
+      setDatos(datosSimulados);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 🔄 Manejar cambios en filtros
+  const manejarCambioFiltro = (campo, valor) => {
+    setFiltros(prev => ({
+      ...prev,
+      [campo]: valor
+    }));
+  };
+
+  // 🔄 Resetear filtros
+  const resetearFiltros = () => {
+    const fechasDefecto = obtenerFechasPorDefecto();
+    setFiltros({
+      gestor: '',
+      ...fechasDefecto
+    });
+  };
 
   // Calcular porcentaje de cumplimiento promedio
   const cumplimientoPromedio = Math.round(
@@ -91,10 +213,174 @@ const DashboardLlamadas = () => {
         </Box>
       </Paper>
 
+      {/* 🎛️ Panel de Filtros */}
+      <Fade in={true}>
+        <Card elevation={3} sx={{ p: 3, mb: 3, borderRadius: 2 }}>
+          <Box display="flex" alignItems="center" mb={3}>
+            <FilterIcon color="primary" sx={{ mr: 1 }} />
+            <Typography variant="h6" sx={{ fontWeight: 600, color: 'primary.main' }}>
+              Filtros de Búsqueda
+            </Typography>
+          </Box>
+          
+          <Grid container spacing={3} alignItems="center">
+            {/* Filtro por Gestor */}
+            <Grid item xs={12} md={4}>
+              <Autocomplete
+                loading={loadingGestores}
+                options={[{ id: '', nombre_completo: 'Todos los gestores' }, ...gestores]}
+                getOptionLabel={(option) => option.nombre_completo || ''}
+                value={gestores.find(g => g.id === filtros.gestor) || { id: '', nombre_completo: 'Todos los gestores' }}
+                onChange={(event, newValue) => {
+                  manejarCambioFiltro('gestor', newValue?.id || '');
+                }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Gestor"
+                    variant="outlined"
+                    fullWidth
+                    InputProps={{
+                      ...params.InputProps,
+                      startAdornment: <PersonIcon color="action" sx={{ mr: 1 }} />,
+                      endAdornment: (
+                        <>
+                          {loadingGestores ? <CircularProgress color="inherit" size={20} /> : null}
+                          {params.InputProps.endAdornment}
+                        </>
+                      ),
+                    }}
+                  />
+                )}
+                renderOption={(props, option) => (
+                  <Box component="li" {...props}>
+                    <Avatar sx={{ mr: 2, bgcolor: 'primary.main', width: 32, height: 32 }}>
+                      {option.nombre_completo?.charAt(0) || 'T'}
+                    </Avatar>
+                    {option.nombre_completo}
+                  </Box>
+                )}
+              />
+            </Grid>
+
+            {/* Filtro Fecha Desde */}
+            <Grid item xs={12} md={3}>
+              <TextField
+                label="Fecha Desde"
+                type="date"
+                value={filtros.fechaDesde}
+                onChange={(e) => manejarCambioFiltro('fechaDesde', e.target.value)}
+                fullWidth
+                variant="outlined"
+                InputLabelProps={{
+                  shrink: true,
+                }}
+                InputProps={{
+                  startAdornment: <CalendarIcon color="action" sx={{ mr: 1 }} />,
+                }}
+              />
+            </Grid>
+
+            {/* Filtro Fecha Hasta */}
+            <Grid item xs={12} md={3}>
+              <TextField
+                label="Fecha Hasta"
+                type="date"
+                value={filtros.fechaHasta}
+                onChange={(e) => manejarCambioFiltro('fechaHasta', e.target.value)}
+                fullWidth
+                variant="outlined"
+                InputLabelProps={{
+                  shrink: true,
+                }}
+                InputProps={{
+                  startAdornment: <CalendarIcon color="action" sx={{ mr: 1 }} />,
+                }}
+              />
+            </Grid>
+
+            {/* Botones de Acción */}
+            <Grid item xs={12} md={2}>
+              <Box display="flex" gap={1}>
+        
+                
+                <Button
+                  variant="outlined"
+                  onClick={resetearFiltros}
+                  startIcon={<RefreshIcon />}
+                  sx={{
+                    borderColor: 'primary.main',
+                    color: 'primary.main',
+                    '&:hover': {
+                      backgroundColor: 'primary.main',
+                      color: 'white',
+                    },
+                  }}
+                >
+                  Limpiar Filtros
+                </Button>
+              </Box>
+            </Grid>
+          </Grid>
+
+          {/* Información de filtros activos */}
+          {(filtros.gestor || filtros.fechaDesde || filtros.fechaHasta) && (
+            <Box mt={2} p={2} sx={{ backgroundColor: 'grey.50', borderRadius: 1 }}>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                <strong>Filtros activos:</strong>
+              </Typography>
+              <Box display="flex" gap={1} flexWrap="wrap">
+                {filtros.gestor && (
+                  <Chip
+                    label={`Gestor: ${gestores.find(g => g.id === filtros.gestor)?.nombre_completo || 'Seleccionado'}`}
+                    size="small"
+                    color="primary"
+                    variant="outlined"
+                  />
+                )}
+                {filtros.fechaDesde && (
+                  <Chip
+                    label={`Desde: ${filtros.fechaDesde}`}
+                    size="small"
+                    color="primary"
+                    variant="outlined"
+                  />
+                )}
+                {filtros.fechaHasta && (
+                  <Chip
+                    label={`Hasta: ${filtros.fechaHasta}`}
+                    size="small"
+                    color="primary"
+                    variant="outlined"
+                  />
+                )}
+              </Box>
+            </Box>
+          )}
+        </Card>
+      </Fade>
+
       {/* Tarjetas de resumen */}
       <Grid container spacing={3} sx={{ mb: 3 }}>
-        <Grid item xs={12} md={3}>
-          <Card elevation={3} sx={{ height: '100%' }}>
+        <Grid item xs={12} md={4}>
+          <Card elevation={3} sx={{ height: '100%', position: 'relative' }}>
+            {loading && (
+              <Box
+                position="absolute"
+                top={0}
+                left={0}
+                right={0}
+                bottom={0}
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+                bgcolor="rgba(255,255,255,0.8)"
+                zIndex={1}
+                borderRadius={1}
+              >
+                <CircularProgress />
+              </Box>
+            )}
             <CardContent>
               <Box display="flex" alignItems="center" justifyContent="space-between">
                 <Box>
@@ -113,8 +399,25 @@ const DashboardLlamadas = () => {
           </Card>
         </Grid>
 
-        <Grid item xs={12} md={3}>
-          <Card elevation={3} sx={{ height: '100%' }}>
+        <Grid item xs={12} md={4}>
+          <Card elevation={3} sx={{ height: '100%', position: 'relative' }}>
+            {loading && (
+              <Box
+                position="absolute"
+                top={0}
+                left={0}
+                right={0}
+                bottom={0}
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+                bgcolor="rgba(255,255,255,0.8)"
+                zIndex={1}
+                borderRadius={1}
+              >
+                <CircularProgress />
+              </Box>
+            )}
             <CardContent>
               <Box display="flex" alignItems="center" justifyContent="space-between">
                 <Box>
@@ -133,8 +436,25 @@ const DashboardLlamadas = () => {
           </Card>
         </Grid>
 
-        <Grid item xs={12} md={3}>
-          <Card elevation={3} sx={{ height: '100%' }}>
+        <Grid item xs={12} md={4}>
+          <Card elevation={3} sx={{ height: '100%', position: 'relative' }}>
+            {loading && (
+              <Box
+                position="absolute"
+                top={0}
+                left={0}
+                right={0}
+                bottom={0}
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+                bgcolor="rgba(255,255,255,0.8)"
+                zIndex={1}
+                borderRadius={1}
+              >
+                <CircularProgress />
+              </Box>
+            )}
             <CardContent>
               <Box display="flex" alignItems="center" justifyContent="space-between">
                 <Box>
@@ -152,26 +472,6 @@ const DashboardLlamadas = () => {
             </CardContent>
           </Card>
         </Grid>
-
-        <Grid item xs={12} md={3}>
-          <Card elevation={3} sx={{ height: '100%' }}>
-            <CardContent>
-              <Box display="flex" alignItems="center" justifyContent="space-between">
-                <Box>
-                  <Typography color="text.secondary" variant="body2">
-                    Tendencia
-                  </Typography>
-                  <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#00C49F' }}>
-                    {datos.tendencia}
-                  </Typography>
-                </Box>
-                <Avatar sx={{ bgcolor: '#00C49F', width: 48, height: 48 }}>
-                  <TrendingUpIcon />
-                </Avatar>
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
       </Grid>
 
       {/* Gráficos principales */}
@@ -181,7 +481,7 @@ const DashboardLlamadas = () => {
           <Card elevation={3} sx={{ height: 400 }}>
             <CardContent>
               <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
-                Distribución por Resultado
+                Estados de Acciones Comerciales
               </Typography>
               <ResponsiveContainer width="100%" height={300}>
                 <PieChart>
@@ -190,7 +490,9 @@ const DashboardLlamadas = () => {
                     cx="50%"
                     cy="50%"
                     labelLine={false}
-                    label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                    label={({ name, percent, value }) => 
+                      value > 0 ? `${name}: ${value} (${(percent * 100).toFixed(0)}%)` : ''
+                    }
                     outerRadius={80}
                     fill="#8884d8"
                     dataKey="value"
@@ -199,91 +501,68 @@ const DashboardLlamadas = () => {
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
-                  <RechartsTooltip />
+                  <RechartsTooltip 
+                    formatter={(value, name) => [
+                      `${value} acciones`,
+                      name
+                    ]}
+                  />
                 </PieChart>
               </ResponsiveContainer>
             </CardContent>
           </Card>
         </Grid>
 
-        {/* Tendencia semanal */}
+        {/* Gráfico de barras por categorías de estados */}
         <Grid item xs={12} md={6}>
           <Card elevation={3} sx={{ height: 400 }}>
             <CardContent>
               <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
-                Tendencia Semanal
+                Resumen por Categorías
               </Typography>
               <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={datos.tendenciaSemanal}>
+                <BarChart data={[
+                  {
+                    categoria: 'Exitosos',
+                    cantidad: (datos.distribucionEstados?.['Promesa de Pago'] || 0),
+                    color: '#00C49F'
+                  },
+                  {
+                    categoria: 'En Proceso',
+                    cantidad: (datos.distribucionEstados?.['Seguimiento - Duda resuelta'] || 0),
+                    color: '#0088FE'
+                  },
+                  {
+                    categoria: 'Negativos',
+                    cantidad: (datos.distribucionEstados?.['No interesado'] || 0) + 
+                             (datos.distribucionEstados?.['Seguimiento - Duda no resuelta'] || 0),
+                    color: '#FF8042'
+                  }
+                ]}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="dia" />
+                  <XAxis dataKey="categoria" />
                   <YAxis />
-                  <RechartsTooltip />
-                  <Line 
-                    type="monotone" 
-                    dataKey="llamadas" 
-                    stroke="#667eea" 
-                    strokeWidth={3}
-                    dot={{ fill: '#667eea', strokeWidth: 2, r: 6 }}
+                  <RechartsTooltip 
+                    formatter={(value) => [`${value} acciones`, 'Cantidad']}
                   />
-                </LineChart>
+                  <Bar dataKey="cantidad" fill="#8884d8">
+                    {[
+                      { fill: '#00C49F' },
+                      { fill: '#0088FE' },
+                      { fill: '#FF8042' }
+                    ].map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.fill} />
+                    ))}
+                  </Bar>
+                </BarChart>
               </ResponsiveContainer>
             </CardContent>
           </Card>
         </Grid>
       </Grid>
 
-      {/* Performance por Gestor */}
-      <Card elevation={3}>
-        <CardContent>
-          <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
-            Performance por Gestor
-          </Typography>
-          <Grid container spacing={2}>
-            {datos.gestores.map((gestor, index) => {
-              const porcentaje = Math.round((gestor.llamadas / gestor.meta) * 100);
-              const cumpleMeta = porcentaje >= 100;
-              
-              return (
-                <Grid item xs={12} md={6} lg={4} key={index}>
-                  <Paper elevation={1} sx={{ p: 2, borderLeft: `4px solid ${cumpleMeta ? '#00C49F' : '#FF8042'}` }}>
-                    <Box display="flex" alignItems="center" mb={2}>
-                      <Avatar sx={{ bgcolor: cumpleMeta ? '#00C49F' : '#FF8042', mr: 2 }}>
-                        {gestor.avatar}
-                      </Avatar>
-                      <Box flex={1}>
-                        <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                          {gestor.nombre}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          {gestor.llamadas}/{gestor.meta} llamadas
-                        </Typography>
-                      </Box>
-                      <Chip 
-                        label={`${porcentaje}%`}
-                        color={cumpleMeta ? 'success' : 'warning'}
-                        variant="outlined"
-                      />
-                    </Box>
-                    <LinearProgress 
-                      variant="determinate" 
-                      value={Math.min(porcentaje, 100)} 
-                      sx={{ 
-                        height: 8, 
-                        borderRadius: 4,
-                        backgroundColor: '#f5f5f5',
-                        '& .MuiLinearProgress-bar': {
-                          backgroundColor: cumpleMeta ? '#00C49F' : '#FF8042'
-                        }
-                      }}
-                    />
-                  </Paper>
-                </Grid>
-              );
-            })}
-          </Grid>
-        </CardContent>
-      </Card>
+      
+     
     </Box>
   );
 };

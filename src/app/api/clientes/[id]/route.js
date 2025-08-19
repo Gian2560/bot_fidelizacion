@@ -67,7 +67,7 @@ export async function PUT(req, context) {
         data: {
           cliente_id: parseInt(id),
           persona_id: gestor ? await obtenerPersonaIdPorNombre(gestor) : null,
-          estado,
+          estado: accion,
           fecha_accion: new Date(),
           nota: `Cambio de acción a: ${accion}`,
           gestor: gestor,

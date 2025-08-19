@@ -116,10 +116,10 @@ const DashboardPage = () => {
               </Avatar>
               <Box>
                 <Typography variant="h3" sx={{ fontWeight: 700, mb: 1 }}>
-                  Dashboard Ejecutivo
+                  Modulo de Dashboards
                 </Typography>
                 <Typography variant="h6" sx={{ opacity: 0.9 }}>
-                  Panel de control y métricas de gestión
+                  Panel de control y métricas de gestores
                 </Typography>
               </Box>
             </Box>
@@ -135,49 +135,7 @@ const DashboardPage = () => {
             </Box>
           </Box>
 
-          {/* Métricas de resumen */}
-          <Grid container spacing={3}>
-            <Grid item xs={6} md={3}>
-              <Box textAlign="center">
-                <Typography variant="h4" sx={{ fontWeight: 'bold', mb: 1 }}>
-                  {resumenGeneral.totalAcciones}
-                </Typography>
-                <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                  Total Acciones
-                </Typography>
-              </Box>
-            </Grid>
-            <Grid item xs={6} md={3}>
-              <Box textAlign="center">
-                <Typography variant="h4" sx={{ fontWeight: 'bold', mb: 1 }}>
-                  {resumenGeneral.totalPromesas}
-                </Typography>
-                <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                  Promesas Activas
-                </Typography>
-              </Box>
-            </Grid>
-            <Grid item xs={6} md={3}>
-              <Box textAlign="center">
-                <Typography variant="h4" sx={{ fontWeight: 'bold', mb: 1 }}>
-                  {resumenGeneral.tasaEfectividad}%
-                </Typography>
-                <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                  Tasa Efectividad
-                </Typography>
-              </Box>
-            </Grid>
-            <Grid item xs={6} md={3}>
-              <Box textAlign="center">
-                <Typography variant="h4" sx={{ fontWeight: 'bold', mb: 1 }}>
-                  {formatearMoneda(resumenGeneral.ingresosMes)}
-                </Typography>
-                <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                  Ingresos del Mes
-                </Typography>
-              </Box>
-            </Grid>
-          </Grid>
+      
         </Box>
       </Paper>
 
