@@ -52,15 +52,13 @@ export async function obtenerPersonaIdPorNombre(nombreGestor) {
     const persona = await prisma.persona.findFirst({
       where: {
         nombre: { equals: nombre,  },
-        primer_apellido: { equals: primerApellido, },
-        segundo_apellido: { equals: segundoApellido,  },
       },
       select: { persona_id: true },
     });
 
     console.log("🆔 Persona encontrada:", persona?.persona_id || "No encontrada");
 
-    return persona ? persona.persona_id : null;
+    return persona.persona_id;
   } catch (error) {
     console.error("❌ Error al obtener persona_id del gestor:", error);
     return null;

@@ -13,7 +13,7 @@ model accion_comercial {
   cita_id             Int?
   pago_id             Int?
   persona_id          Int?
-  estado              String?   @db.VarChar(25)
+  estado              String?   @db.VarChar(50)
   fecha_accion        DateTime? @default(now()) @db.Timestamp(6)
   nota                String
   gestor              String?   @db.VarChar(255)
@@ -194,9 +194,9 @@ model pago {
   cliente_id       Int
   cita_id          Int?
   fecha_pago       DateTime           @db.Timestamp(6)
-  monto            Decimal            @db.Decimal(10, 2)
-  metodo_pago      String             @db.VarChar(50)
-  estado_pago      String?            @default("pendiente") @db.VarChar(25)
+  monto            Decimal?           @db.Decimal(10, 2)
+  metodo_pago      String?            @db.VarChar(50)
+  estado_pago      String             @default("pendiente") @db.VarChar(25)
   first_name       String?            @db.VarChar(40)
   last_name        String?            @db.VarChar(40)
   num_operacion    String?            @db.VarChar(40)
