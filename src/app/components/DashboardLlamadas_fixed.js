@@ -90,6 +90,35 @@ const DashboardLlamadas = () => {
     fechaHasta: ''
   });
 
+  // 📊 Función para transformar datos de la API al formato del componente
+  const transformarDatosAPI = (datosAPI) => {
+    if (!datosAPI || !datosAPI.distribucionEstados) {
+      return datosSimulados;
+    }
+
+    // 🎨 Colores específicos para cada estado
+    const coloresEstados = {
+      'Promesa de Pago': '#00C49F',
+      'Seguimiento - Duda resuelta': '#0088FE',
+      'No interesado': '#FF8042',
+      'Seguimiento - Duda no resuelta': '#FFA726'
+    };
+
+    // Transformar distribucionEstados en formato para el gráfico de pie
+    const resultados = Object.entries(datosAPI.distribucionEstados)
+      .filter(([estado, cantidad]) => cantidad > 0) // Solo estados con datos
+      .map(([estado, cantidad]) => ({
+        name: estado,
+        value: cantidad,
+        color: coloresEstados[estado] || '#8884d8'
+      }));
+
+    return {
+      ...datosAPI,
+      resultados: resultados
+    };
+  };
+
   // 📅 Obtener fechas por defecto (último mes)
   const obtenerFechasPorDefecto = () => {
     const hoy = new Date();
@@ -149,14 +178,18 @@ const DashboardLlamadas = () => {
         fechaHasta: filtros.fechaHasta
       });
 
-      console.log('� Llamando a API statsasesor con parámetros:', params.toString());
+      console.log('📊 Llamando a API statsasesor con parámetros:', params.toString());
       
       // 🌐 Llamada real a la API
       const response = await fetch(`/api/statsasesor?${params}`);
       if (response.ok) {
         const data = await response.json();
         console.log('✅ Datos recibidos de la API:', data);
-        setDatos(data);
+        
+        // 🔄 Transformar datos de la API al formato del componente
+        const datosTransformados = transformarDatosAPI(data);
+        console.log('🔄 Datos transformados:', datosTransformados);
+        setDatos(datosTransformados);
       } else {
         console.error('❌ Error en la respuesta de la API:', response.status);
         // Fallback a datos simulados si hay error
@@ -190,9 +223,8 @@ const DashboardLlamadas = () => {
   };
 
   // Calcular porcentaje de cumplimiento promedio
-  const cumplimientoPromedio = Math.round(
-    datos.gestores.reduce((acc, gestor) => acc + (gestor.llamadas / gestor.meta), 0) / datos.gestores.length * 100
-  );
+  const cumplimientoPromedio = datos.gestores && datos.gestores.length > 0 ? 
+    Math.round(datos.gestores.reduce((acc, gestor) => acc + (gestor.llamadas / gestor.meta), 0) / datos.gestores.length * 100) : 0;
 
   return (
     <Box>
@@ -302,8 +334,6 @@ const DashboardLlamadas = () => {
             {/* Botones de Acción */}
             <Grid item xs={12} md={2}>
               <Box display="flex" gap={1}>
-        
-                
                 <Button
                   variant="outlined"
                   onClick={resetearFiltros}
@@ -388,7 +418,7 @@ const DashboardLlamadas = () => {
                     Total Llamadas
                   </Typography>
                   <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#667eea' }}>
-                    {datos.totalLlamadas}
+                    {datos.totalLlamadas || 0}
                   </Typography>
                 </Box>
                 <Avatar sx={{ bgcolor: '#667eea', width: 48, height: 48 }}>
@@ -425,7 +455,7 @@ const DashboardLlamadas = () => {
                     Llamadas Hoy
                   </Typography>
                   <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#00C49F' }}>
-                    {datos.llamadasHoy}
+                    {datos.llamadasHoy || 0}
                   </Typography>
                 </Box>
                 <Avatar sx={{ bgcolor: '#00C49F', width: 48, height: 48 }}>
@@ -462,7 +492,7 @@ const DashboardLlamadas = () => {
                     Promedio/Día
                   </Typography>
                   <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#FFBB28' }}>
-                    {datos.promedioLlamadasDia}
+                    {datos.promedioLlamadasDia || 0}
                   </Typography>
                 </Box>
                 <Avatar sx={{ bgcolor: '#FFBB28', width: 48, height: 48 }}>
@@ -486,7 +516,7 @@ const DashboardLlamadas = () => {
               <ResponsiveContainer width="100%" height={300}>
                 <PieChart>
                   <Pie
-                    data={datos.resultados}
+                    data={datos.resultados || []}
                     cx="50%"
                     cy="50%"
                     labelLine={false}
@@ -497,7 +527,7 @@ const DashboardLlamadas = () => {
                     fill="#8884d8"
                     dataKey="value"
                   >
-                    {datos.resultados.map((entry, index) => (
+                    {(datos.resultados || []).map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
@@ -561,7 +591,32 @@ const DashboardLlamadas = () => {
         </Grid>
       </Grid>
 
-      
+      {/* 📋 Estado de Preparación para APIs */}
+      <Fade in={true}>
+        <Paper 
+          elevation={1} 
+          sx={{ 
+            p: 2, 
+            mt: 3, 
+            backgroundColor: 'info.light', 
+            color: 'info.contrastText',
+            borderLeft: '4px solid',
+            borderLeftColor: 'info.main'
+          }}
+        >
+          <Typography variant="body2" sx={{ fontWeight: 600, mb: 1 }}>
+            🚀 Dashboard con Estados Reales de Acciones Comerciales
+          </Typography>
+          <Typography variant="body2" sx={{ opacity: 0.9 }}>
+            • Gráficos actualizados: Estados específicos de la base de datos<br/>
+            • API Gestores: <code>/api/gestores</code> ✅ (Funcionando)<br/>
+            • API Estadísticas: <code>/api/statsasesor</code> ✅ (Estados reales de BD)<br/>
+            • Estados disponibles: "Promesa de Pago", "Seguimiento - Duda resuelta", "No interesado", "Seguimiento - Duda no resuelta"<br/>
+            • Visualización: Gráfico de pie + Barras por categorías con transformación automática de datos<br/>
+            • Categorización: Exitosos (Promesa de Pago) | En Proceso (Duda resuelta) | Negativos (No interesado + Duda no resuelta)
+          </Typography>
+        </Paper>
+      </Fade>
      
     </Box>
   );

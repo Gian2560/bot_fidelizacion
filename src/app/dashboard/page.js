@@ -116,10 +116,10 @@ const DashboardPage = () => {
               </Avatar>
               <Box>
                 <Typography variant="h3" sx={{ fontWeight: 700, mb: 1 }}>
-                  Dashboard Ejecutivo
+                  Modulo de Dashboards
                 </Typography>
                 <Typography variant="h6" sx={{ opacity: 0.9 }}>
-                  Panel de control y métricas de gestión
+                  Panel de control y métricas de gestores
                 </Typography>
               </Box>
             </Box>

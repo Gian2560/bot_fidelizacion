@@ -60,14 +60,14 @@ export async function PUT(req, context) {
         },
       });
     }*/
-
+    console.log("✅ Gestor", gestor);
     // 📌 Si hay una acción comercial, registrar en `accion_comercial`
+    console.log("🔄 Registrando acción comercial:", accion);
     if (accion) {
       await prisma.accion_comercial.create({
         data: {
           cliente_id: parseInt(id),
-          persona_id: gestor ? await obtenerPersonaIdPorNombre(gestor) : null,
-          estado,
+          estado: accion,
           fecha_accion: new Date(),
           nota: `Cambio de acción a: ${accion}`,
           gestor: gestor,
