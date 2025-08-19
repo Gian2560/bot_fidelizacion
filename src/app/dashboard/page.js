@@ -74,16 +74,16 @@ const DashboardPage = () => {
   return (
     <Container maxWidth="xl" sx={{ py: 4 }}>
       {/* Encabezado principal */}
-      <Paper elevation={3} sx={{ 
+      {/* <Paper elevation={3} sx={{ 
         p: 4, 
         mb: 4, 
         background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 
         color: 'white',
         position: 'relative',
         overflow: 'hidden'
-      }}>
+      }}> */}
         {/* Patrón de fondo decorativo */}
-        <Box
+        {/* <Box
           sx={{
             position: 'absolute',
             top: -50,
@@ -106,9 +106,9 @@ const DashboardPage = () => {
             background: 'rgba(255,255,255,0.05)',
             zIndex: 0
           }}
-        />
+        /> */}
         
-        <Box position="relative" zIndex={1}>
+        {/* <Box position="relative" zIndex={1}>
           <Box display="flex" alignItems="center" justifyContent="space-between" mb={3}>
             <Box display="flex" alignItems="center">
               <Avatar sx={{ bgcolor: 'rgba(255,255,255,0.2)', mr: 3, width: 64, height: 64 }}>
@@ -133,10 +133,10 @@ const DashboardPage = () => {
                 Última actualización: {ultimaActualizacion}
               </Typography>
             </Box>
-          </Box>
+          </Box> */}
 
           {/* Métricas de resumen */}
-          <Grid container spacing={3}>
+          {/* <Grid container spacing={3}>
             <Grid item xs={6} md={3}>
               <Box textAlign="center">
                 <Typography variant="h4" sx={{ fontWeight: 'bold', mb: 1 }}>
@@ -178,8 +178,8 @@ const DashboardPage = () => {
               </Box>
             </Grid>
           </Grid>
-        </Box>
-      </Paper>
+        </Box> */}
+      {/* </Paper> */}
 
       {/* Navegación por pestañas */}
       <Paper elevation={2} sx={{ mb: 3 }}>
