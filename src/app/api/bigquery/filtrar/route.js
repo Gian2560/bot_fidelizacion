@@ -121,7 +121,7 @@ export async function POST(req) {
       FORMAT('%.2f', envios.Monto) AS monto,
       ROW_NUMBER() OVER (PARTITION BY envios.TelfSMS ORDER BY envios.N_Doc) AS row_num  -- Asigna un número a cada fila por TelfSMS
     FROM cte_M1 AS M1
-    INNER JOIN peak-emitter-350713.FR_general.envios_cobranzas_m0 AS envios
+    INNER JOIN peak-emitter-350713.FR_general.envios_cobranzas_m1 AS envios
       ON M1.Telf_SMS = envios.TelfSMS
     WHERE   
       ${whereSQL}
