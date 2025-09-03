@@ -18,7 +18,20 @@ function daysDiff(from, to) {
   const ONE = 24 * 60 * 60 * 1000;
   return Math.ceil((to - from) / ONE);
 }
-
+function displayNameFromUsuario(u) {
+  const p = u.persona;
+  const dn = p?.nombre ? `${p.nombre} ${p.primer_apellido || ""}`.trim() : u.username;
+  return dn;
+}
+function norm(s) {
+  return String(s || "")
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // sin tildes
+    .trim().toUpperCase();
+}
+function initials(s) {
+  const parts = String(s || "?").trim().split(/\s+/).slice(0,2);
+  return parts.map(x => x[0]?.toUpperCase() || "").join("") || "?";
+}
 export async function GET(req) {
   try {
     const url = new URL(req.url);
@@ -98,19 +111,82 @@ export async function GET(req) {
       .slice(0, 10);
 
     // Performance por gestor (solo útil si hay citas/asesor)
+    // let gestores = [];
+    // if (includeAsesor) {
+    //   const map = new Map();
+    //   for (const c of citas) {
+    //     const key = c.cliente?.gestor || "Sin asignar";
+    //     const entry = map.get(key) || { 
+    //       nombre: key, promesas: 0, cumplidas: 0, monto: 0, tasa: 0, avatar: key?.[0]?.toUpperCase() || "?" 
+    //     };
+    //     entry.promesas += 1;
+    //     // cumplidas = 0 (placeholder BigQuery)
+    //     map.set(key, entry);
+    //   }
+    //   gestores = Array.from(map.values())
+    //     .map(g => ({ ...g, tasa: g.promesas ? Math.round((g.cumplidas / g.promesas) * 100) : 0 }))
+    //     .sort((a, b) => b.promesas - a.promesas)
+    //     .slice(0, 6);
+    // }
+    // ============================
+    // NUEVO: Performance por gestor usando tabla usuario (rol_id=2)
+    // ============================
     let gestores = [];
     if (includeAsesor) {
-      const map = new Map();
-      for (const c of citas) {
-        const key = c.cliente?.gestor || "Sin asignar";
-        const entry = map.get(key) || { 
-          nombre: key, promesas: 0, cumplidas: 0, monto: 0, tasa: 0, avatar: key?.[0]?.toUpperCase() || "?" 
+      // 1) Traer asesores válidos
+      const asesores = await prisma.usuario.findMany({
+        where: { rol_id: 2, activo: true },
+        select: {
+          usuario_id: true,
+          username: true,
+          persona: { select: { nombre: true, primer_apellido: true } }
+        }
+      });
+
+      // 2) Índices para matchear por username o nombre completo
+      const indexByAlias = new Map(); // alias normalizado -> key (usuario_id)
+      const entries = new Map();      // key -> acumulador
+
+      for (const a of asesores) {
+        const dn = displayNameFromUsuario(a);
+        const key = a.usuario_id; // clave interna
+        const base = {
+          usuarioId: a.usuario_id,
+          usuario: a.username,
+          nombre: dn,
+          promesas: 0,
+          cumplidas: 0,              // (placeholder)
+          monto: 0,
+          tasa: 0,
+          avatar: initials(dn)
         };
-        entry.promesas += 1;
-        // cumplidas = 0 (placeholder BigQuery)
-        map.set(key, entry);
+        entries.set(key, base);
+
+        // Alias posibles para matchear
+        indexByAlias.set(norm(a.username), key);
+        indexByAlias.set(norm(dn), key);
       }
-      gestores = Array.from(map.values())
+
+      // 3) Contabilizar promesas por gestor SOLO si el alias existe en usuarios (rol_id=2)
+      const acumular = (alias, opts={monto:0}) => {
+        const key = indexByAlias.get(norm(alias || ""));
+        if (!key) return; // si no es usuario rol_id=2, no se considera
+        const acc = entries.get(key);
+        acc.promesas += 1;
+        acc.monto += Number(opts.monto || 0);
+      };
+
+      for (const c of citas) {
+        const alias = c.cliente?.gestor || "Sin asignar";
+        acumular(alias);
+      }
+      for (const p of pagos) {
+        const alias = p.cliente?.gestor || "Sin asignar";
+        acumular(alias, { monto: p.monto || 0 });
+      }
+
+      // 4) calcular tasas y ordenar
+      gestores = Array.from(entries.values())
         .map(g => ({ ...g, tasa: g.promesas ? Math.round((g.cumplidas / g.promesas) * 100) : 0 }))
         .sort((a, b) => b.promesas - a.promesas)
         .slice(0, 6);
