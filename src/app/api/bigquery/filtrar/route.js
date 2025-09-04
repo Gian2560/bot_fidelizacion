@@ -37,7 +37,7 @@ async function getSchema(project, dataset, table) {
 /* ── 3. POST /api/filtrar ────────────────────────────────── */
 export async function POST(req) {
   try {
-    const { table, filters } = await req.json();
+    const { table, filters, tipoCampana } = await req.json();
     if (!table || !Array.isArray(filters))
       return new Response('Payload inválido', { status: 400 });
 
@@ -52,7 +52,7 @@ export async function POST(req) {
     const whereParts = [];
 
     filters.forEach((f, idx) => {
-      const p       = `val${idx}`;
+      const p = `val${idx}`;
       const colName = f.column;
       const colType = schema[colName] || 'STRING';
 
@@ -62,6 +62,30 @@ export async function POST(req) {
         whereParts.push(`1=1`);  // Siempre verdadero, se omite este filtro
         return; // No agregamos más lógica para este filtro
       }
+
+      if (
+    (colName === 'feccuota' || colName === 'Fec_Venc_Cuota') &&
+    tipoCampana === "Fidelizacion"
+  ) {
+    // Ejemplo de val: "viernes, 19 de septiembre"
+    // Extrae día y mes en español
+    const partes = val.split(',')[1].trim().split(' de ');
+    const dia = Number(partes[0]); // "19"
+    const mesTexto = partes[1].toLowerCase(); // "septiembre"
+
+    // Mapeo de meses en español a número
+    const meses = {
+      enero: 1, febrero: 2, marzo: 3, abril: 4, mayo: 5, junio: 6,
+      julio: 7, agosto: 8, septiembre: 9, octubre: 10, noviembre: 11, diciembre: 12
+    };
+    const mes = meses[mesTexto];
+
+    params[`${p}_month`] = mes;
+    params[`${p}_day`] = dia;
+    whereParts.push(`EXTRACT(MONTH FROM DATE(\`${colName}\`)) = @${p}_month`);
+    whereParts.push(`EXTRACT(DAY FROM DATE(\`${colName}\`)) = @${p}_day`);
+    return;
+  }
 
       // Si es fecha, castea y filtra solo por la parte de la fecha
       if (colName === 'DATETIME' || colType === 'DATE') {
@@ -75,13 +99,13 @@ export async function POST(req) {
       }
 
       // convierte a número si la columna es numérica
-      if (colType === 'INT64')   val = Number.parseInt(val, 10);
+      if (colType === 'INT64') val = Number.parseInt(val, 10);
       if (colType === 'FLOAT64') val = Number.parseFloat(val);
       console.log(`Columna: ${colName}, Tipo: ${colType}, Valor: ${val}`);
       params[p] = val;                          // se guarda como PRIMITIVO
       whereParts.push(`\`${colName}\` = @${p}`);
     });
-    
+
     const whereSQL = whereParts.join(' AND ') || '1=1';
     console.log('WHERE SQL:', whereSQL);
     /* 3.2 columnas extra con alias legibles */
@@ -89,9 +113,11 @@ export async function POST(req) {
     const selectExtra = filters
       .map(f => `\`${f.column}\` AS ${ALIAS[f.type] || f.column}`)
       .join(', ');
-
+    let QUERY = "";
+    console.log('La timpo de camnañasdma ese askjriaspjrfuosadfhoasdfñ:', tipoCampana);
     /* 3.3 consulta final con JOIN */
-    const QUERY = `
+    if (tipoCampana === "Recordatorio") {
+      QUERY = `
    WITH cte_M1 AS (
     SELECT 
       base.Codigo_Asociado,
@@ -141,6 +167,46 @@ export async function POST(req) {
   FROM ranked
   WHERE row_num = 1;  -- Selecciona solo la primera fila de cada grupo de TelfSMS
 `;
+    } else {
+      QUERY = `
+        WITH ranked AS (
+          SELECT 
+            base.Codigo_Asociado,
+            base.segmentacion,
+            base.gestion,
+            base.Cluster,
+            fondos.Fec_Venc_Cuota AS feccuota,
+            fondos.E_mail AS email,
+            fondos.Telf_SMS AS telefono,
+            fondos.Primer_Nombre AS nombre,
+            fondos.Cta_Act_Pag,
+            fondos.Cod_Bco AS codpago,
+            fondos.Linea,
+            fondos.Modelo AS modelo,
+            (fondos.C_Adm + fondos.C_Cap) AS monto,
+            ROW_NUMBER() OVER (PARTITION BY fondos.Telf_SMS ORDER BY base.Codigo_Asociado) AS row_num
+          FROM \`${project}.${dataset}.${table}\` AS base
+          LEFT JOIN peak-emitter-350713.FR_general.bd_fondos AS fondos 
+            ON base.Codigo_Asociado = fondos.Codigo_Asociado
+          WHERE ${whereSQL}
+        )
+        SELECT 
+         Cta_Act_Pag,
+    Codigo_Asociado,
+    segmentacion,
+    email,
+    telefono,
+    nombre,
+    codpago,
+    feccuota,
+    modelo,
+    monto,
+    Linea
+        FROM ranked
+        WHERE row_num = 1;
+      `;
+    }
+
     console.log('Consulta SQL:', QUERY);
 
     /* 3.4 ejecutar */

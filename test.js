@@ -1,24 +1,28 @@
 require('dotenv').config();
-const twilio = require('twilio');
+const { Storage } = require('@google-cloud/storage');
+const fs = require('fs');
 
-const client = new twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH_TOKEN);
+// Cargar credenciales desde variable de entorno
+const key = JSON.parse(process.env.BIG_QUERY_KEY);
 
-async function enviarMensajeConPlantilla() {
-    try {
-        const mensaje = await client.messages.create({
-            from: 'whatsapp:+14155238886', // Número de Twilio para pruebas en WhatsApp
-            to: process.env.TEST_PHONE_NUMBER, // Número de destino
-            contentSid: process.env.TEMPLATE_SID, // SID de la plantilla aprobada
-            contentVariables: JSON.stringify({
-                1: "12/1",  // Primera variable de la plantilla
-                2: "3pm" // Segunda variable de la plantilla
-            })
-        });
+const storage = new Storage({
+  credentials: key,
+  projectId: key.project_id,
+});
 
-        console.log("✅ Mensaje enviado con éxito. SID:", mensaje.sid);
-    } catch (error) {
-        console.error("❌ Error al enviar el mensaje:", error);
-    }
+async function descargarArchivo() {
+  try {
+    const bucketName = 'frentes_2024';
+    const filePath = '4-Reingresos/base_Asignacion/Filtrada/BD_Conglomerado.csv';
+    const destinoLocal = './BD_Conglomerado.csv';
+
+    console.log(`📥 Descargando ${filePath} desde el bucket ${bucketName}...`);
+    await storage.bucket(bucketName).file(filePath).download({ destination: destinoLocal });
+
+    console.log(`✅ Archivo descargado correctamente en ${destinoLocal}`);
+  } catch (err) {
+    console.error('❌ Error al descargar el archivo:', err.message);
+  }
 }
 
-enviarMensajeConPlantilla();
+descargarArchivo();

@@ -34,25 +34,25 @@ export default function CampaignPage() {
   const [cluster, setCluster] = useState("");
   const [strategy, setStrategy] = useState("");
   const [fecha, setFecha] = useState("");
-  const [linea,setLinea]= useState("");
-  const [variable1, setVariable1] = useState("");
+  const [linea, setLinea] = useState("");
+  const [tipoCampaña, setTipoCampaña] = useState("Fidelizacion");
   const [variable2, setVariable2] = useState("");
   const [sendDate, setSendDate] = useState(null);
   const [sendTime, setSendTime] = useState(null);
   const [templates, setTemplates] = useState([]); // Para almacenar las plantillas obtenidas
   const [loadingColumns, setLoadingColumns] = useState(false);  // Estado para saber si estamos cargando las columnas
-  const [clients, setClients] = useState([]); 
+  const [clients, setClients] = useState([]);
   const [selectedColumns, setSelectedColumns] = useState({
-  segmento: 'segmentacion',  // Fijo con valor 'segmentacion'
-  cluster: 'Cluster',        // Fijo con valor 'cluster'
-  estrategia: 'gestion',     // Fijo con valor 'gestion'
-  fechaCuota: 'Fec_Venc_Cuota', // Fijo con valor 'Fec_Venc_Cuota'
-  linea: 'Linea'
+    segmento: 'segmentacion',  // Fijo con valor 'segmentacion'
+    cluster: 'Cluster',        // Fijo con valor 'cluster'
+    estrategia: 'gestion',     // Fijo con valor 'gestion'
+    fechaCuota: 'Fec_Venc_Cuota', // Fijo con valor 'Fec_Venc_Cuota'
+    linea: 'Linea'
   });
   // Datos simulados
   const [databases, useDatabases] = useState([]);
 
-  const [segments,setSegments] = useState([]);
+  const [segments, setSegments] = useState([]);
   const [clusters, setClusterValues] = useState([]);
   const [strategies, setStrategyValues] = useState([]);
   const [fechaCuotaColumn, setFechaCuotaColumnValues] = useState([]);
@@ -102,68 +102,68 @@ export default function CampaignPage() {
     if (tpl) {
       // extraemos todos los {{n}}
       const matches = [...tpl.mensaje.matchAll(/{{\s*(\d+)\s*}}/g)]
-                        .map(m => m[1])
+        .map(m => m[1])
       const uniq = Array.from(new Set(matches))
       setPlaceholders(uniq)             // e.g. ["1"]
       setVariableMappings({})           // resetea anteriores selecciones
     } else {
       setPlaceholders([])
     }
-}
-
-
-
-
-const handleSubmit = async () => {
-  if (clients.length === 0) {
-    alert("No hay clientes para agregar a la campaña.");
-    return;
   }
 
-  const campaignData = {
-    nombre_campanha: campaignName,
-    descripcion: "Descripción de campaña",
-    template_id: template,
-    fecha_inicio: sendDate,
-    fecha_fin: sendTime,
-    clients: clients,  // Aquí envías toda la información de los clientes
-    variableMappings,
+
+
+
+  const handleSubmit = async () => {
+    if (clients.length === 0) {
+      alert("No hay clientes para agregar a la campaña.");
+      return;
+    }
+
+    const campaignData = {
+      nombre_campanha: campaignName,
+      descripcion: "Descripción de campaña",
+      template_id: template,
+      fecha_inicio: sendDate,
+      fecha_fin: sendTime,
+      clients: clients,  // Aquí envías toda la información de los clientes
+      variableMappings,
+    };
+
+    try {
+      // Enviar solicitud para crear la campaña
+      const response = await axiosInstance.post("/campaings/add-clients", campaignData);
+
+      const campanhaId = response.data.campanha_id;  // Obtener el ID de la campaña creada
+
+      console.log("Campaña creada con ID:", campanhaId);
+
+      // Ahora los clientes serán automáticamente asociados con la campaña
+      alert("Campaña creada y clientes asociados exitosamente.");
+    } catch (error) {
+      console.error("Error al crear campaña o agregar clientes:", error);
+      alert("Hubo un problema al crear la campaña o agregar los clientes.");
+    }
   };
-
-  try {
-    // Enviar solicitud para crear la campaña
-    const response = await axiosInstance.post("/campaings/add-clients", campaignData);
-
-    const campanhaId = response.data.campanha_id;  // Obtener el ID de la campaña creada
-
-    console.log("Campaña creada con ID:", campanhaId);
-
-    // Ahora los clientes serán automáticamente asociados con la campaña
-    alert("Campaña creada y clientes asociados exitosamente.");
-  } catch (error) {
-    console.error("Error al crear campaña o agregar clientes:", error);
-    alert("Hubo un problema al crear la campaña o agregar los clientes.");
-  }
-};
 
 
   const handleDatabaseChange = async (event, value) => {
-     setSelectedDatabase(value);
-     setLoadingColumns(true); 
-    
+    setSelectedDatabase(value);
+    setLoadingColumns(true);
+
     try {
       const response = await axiosInstance.get("/bigquery/columns", {
         params: { database: value } // Enviamos el nombre de la base de datos seleccionada);
       });
       console.log("Columnas obtenidas:", response.data);
-      setColumns(response.data.columns); 
+      setColumns(response.data.columns);
       console.log("Columnas disponibles:", columns);
-            setLoadingColumns(false);  // Detener el indicador de carga
+      setLoadingColumns(false);  // Detener el indicador de carga
 
-       handleColumnChange(value);
-    }catch (error) {
+      handleColumnChange(value);
+    } catch (error) {
       console.error('Error al obtener las columnas:', error);
-            setLoadingColumns(false);  // Detener el indicador de carga
+      setLoadingColumns(false);  // Detener el indicador de carga
 
     }
   };
@@ -172,8 +172,8 @@ const handleSubmit = async () => {
       ...selectedColumns,
       [filterType]: value
     });*/
-    setLoadingColumns(true);  
-     try {
+    setLoadingColumns(true);
+    try {
       const response = await axiosInstance.get("/bigquery/columns/filtros", {
         params: {
           database: value,
@@ -213,79 +213,98 @@ const handleSubmit = async () => {
   };
 
   // --- NUEVO: aplicar filtros y enviar al backend -----------------------------
-// ── NUEVO: arma el payload y envíalo ─────────────────────────────
-const applyFilters = async () => {
-  if (!selectedDatabase) {
-    alert('Selecciona una base de datos antes de filtrar');
-    return;
-  }
- 
-  // Array que contendrá 0-3 filtros, según lo que elija el usuario
-  const filters = [];
+  // ── NUEVO: arma el payload y envíalo ─────────────────────────────
+  const applyFilters = async () => {
+    if (!selectedDatabase) {
+      alert('Selecciona una base de datos antes de filtrar');
+      return;
+    }
 
-  if (selectedColumns.segmento) {
-    filters.push({
-      type: 'segmentacion',
-      column: selectedColumns.segmento, // nombre de la columna
-      value : clientSegment             // valor elegido en el <Select>
-    });
-  }
+    // Array que contendrá 0-3 filtros, según lo que elija el usuario
+    const filters = [];
 
-  if (selectedColumns.cluster) {
-    filters.push({
-      type: 'cluster',
-      column: selectedColumns.cluster,
-      value : cluster
-    });
-  }
+    if (selectedColumns.segmento) {
+      filters.push({
+        type: 'segmentacion',
+        column: selectedColumns.segmento, // nombre de la columna
+        value: clientSegment             // valor elegido en el <Select>
+      });
+    }
 
-  if (selectedColumns.estrategia) {
-    filters.push({
-      type: 'estrategia',
-      column: selectedColumns.estrategia,
-      value : strategy
-    });
-  }
-  if (selectedColumns.fechaCuota) {
-    filters.push({
-      type: 'fechaCuota',
-      column: selectedColumns.fechaCuota,
-      value : fecha
-    });
-  }
+    if (selectedColumns.cluster) {
+      filters.push({
+        type: 'cluster',
+        column: selectedColumns.cluster,
+        value: cluster
+      });
+    }
 
-  if (selectedColumns.linea) {
-    filters.push({
-      type: 'Linea',
-      column: selectedColumns.linea,
-      value : linea
-    });
-  }
+    if (selectedColumns.estrategia) {
+      filters.push({
+        type: 'estrategia',
+        column: selectedColumns.estrategia,
+        value: strategy
+      });
+    }
+    if (selectedColumns.fechaCuota) {
+      filters.push({
+        type: 'fechaCuota',
+        column: selectedColumns.fechaCuota,
+        value: fecha
+      });
+    }
 
-  if (filters.length === 0) {
-    alert('Elige al menos un filtro antes de continuar');
-    return;
-  }
+    if (selectedColumns.linea) {
+      filters.push({
+        type: 'Linea',
+        column: selectedColumns.linea,
+        value: linea
+      });
+    }
 
-  const payload = {
-    table: selectedDatabase, // nombre de la tabla o vista en BigQuery
-    filters                  // array con los filtros
+    if (filters.length === 0) {
+      alert('Elige al menos un filtro antes de continuar');
+      return;
+    }
+
+    const payload = {
+      tipoCampana: tipoCampaña, // "Recordatorio" o "Fidelizacion"
+      table: selectedDatabase, // nombre de la tabla o vista en BigQuery
+      filters                  // array con los filtros
+    };
+
+    try {
+      console.log('Enviando payload de filtros:', payload);
+      const { data } = await axiosInstance.post('/bigquery/filtrar', payload);
+      console.log('Datos filtrados →', data);
+      let clientsProcesados = data.rows;
+      if (tipoCampaña === "Fidelizacion") {
+        const opcionesFecha = { weekday: 'long', day: 'numeric', month: 'long' };
+        clientsProcesados = data.rows.map(row => {
+          let fechaLegible = '';
+          // Verifica si feccuota existe y tiene la propiedad value
+          if (row.feccuota && row.feccuota.value) {
+            const fechaObj = new Date(row.feccuota.value);
+            if (!isNaN(fechaObj.getTime())) {
+              fechaLegible = fechaObj.toLocaleDateString('es-ES', opcionesFecha);
+            }
+          }
+          return {
+            ...row,
+            feccuota: fechaLegible
+          };
+        });
+      }
+      setClients(clientsProcesados);
+      console.log('Datos filtrados:', data);
+      // TODO: guarda "data" en estado o muéstralo en pantalla
+    } catch (error) {
+      console.error('Error al aplicar filtros:', error);
+      alert('Ocurrió un problema al aplicar los filtros');
+    }
   };
-
-  try {
-    console.log('Enviando payload de filtros:', payload);
-    const { data } = await axiosInstance.post('/bigquery/filtrar', payload);
-    console.log('Datos filtrados →', data);
-    setClients(data.rows); // Guarda los datos filtrados en el estado
-    console.log('Datos filtrados:', data);
-    // TODO: guarda "data" en estado o muéstralo en pantalla
-  } catch (error) {
-    console.error('Error al aplicar filtros:', error);
-    alert('Ocurrió un problema al aplicar los filtros');
-  }
-};
-// ─────────────────────────────────────────────────────────────────
- const columnsgrid = [
+  // ─────────────────────────────────────────────────────────────────
+  const columnsgrid = [
     { field: 'Codigo_Asociado', headerName: 'Código Asociado', width: 180 },
     { field: 'nombre', headerName: 'Nombre', width: 180 },
     { field: 'telefono', headerName: 'Teléfono', width: 180 },
@@ -297,7 +316,7 @@ const applyFilters = async () => {
     { field: 'codpago', headerName: 'Código Pago', width: 180 },
     { field: 'Cta_Act_Pag', headerName: 'Cuotas', width: 120 },
   ];
-// ---------------------------------------------------------------------------
+  // ---------------------------------------------------------------------------
 
 
   return (
@@ -372,10 +391,10 @@ const applyFilters = async () => {
                 />
               </FormControl>
             </Grid>
-            
-            
 
-            
+
+
+
           </Grid>
 
           <Divider sx={{ mb: 5 }} />
@@ -437,7 +456,7 @@ const applyFilters = async () => {
                   label="Estrategia"
                   sx={{ bgcolor: colors.white, borderRadius: 2, "& .MuiSelect-select": { fontWeight: 600 } }}
                 >
-                                    <MenuItem value="Todos">Todos</MenuItem>
+                  <MenuItem value="Todos">Todos</MenuItem>
 
                   {strategies.map((str) => (
                     <MenuItem key={str} value={str}>
@@ -457,7 +476,7 @@ const applyFilters = async () => {
                   label="Fecha Cuota"
                   sx={{ bgcolor: colors.white, borderRadius: 2, "& .MuiSelect-select": { fontWeight: 600 } }}
                 >
-                                    <MenuItem value="Todos">Todos</MenuItem>
+                  <MenuItem value="Todos">Todos</MenuItem>
 
                   {fechaCuotaColumn.map((str) => (
                     <MenuItem key={str} value={str}>
@@ -477,13 +496,28 @@ const applyFilters = async () => {
                   label="Fecha Cuota"
                   sx={{ bgcolor: colors.white, borderRadius: 2, "& .MuiSelect-select": { fontWeight: 600 } }}
                 >
-                                    <MenuItem value="Todos">Todos</MenuItem>
+                  <MenuItem value="Todos">Todos</MenuItem>
 
                   {lineaValue.map((str) => (
                     <MenuItem key={str} value={str}>
                       {str}
                     </MenuItem>
                   ))}
+                </Select>
+              </FormControl>
+            </Grid>
+
+            <Grid item xs={12} sm={6} md={4}>
+              <FormControl fullWidth>
+                <InputLabel sx={{ color: colors.darkBlue, fontWeight: 600 }}>Tipo Campaña</InputLabel>
+                <Select
+                  value={tipoCampaña} // Por defecto "Fidelización"
+                  onChange={(e) => setTipoCampaña(e.target.value)}
+                  label="Tipo Campaña"
+                  sx={{ bgcolor: colors.white, borderRadius: 2, "& .MuiSelect-select": { fontWeight: 600 } }}
+                >
+                  <MenuItem value="Recordatorio">Recordatorio</MenuItem>
+                  <MenuItem value="Fidelizacion">Fidelización</MenuItem>
                 </Select>
               </FormControl>
             </Grid>
@@ -497,26 +531,26 @@ const applyFilters = async () => {
           </Grid>
 
           <Divider sx={{ mb: 5 }} />
-                  <Box sx={{ height: 400, width: '100%' }}>
-        {loadingColumns ? (
-          <CircularProgress sx={{ display: "block", margin: "0 auto" }} /> // Mostrar cargando
-        ) : (
-          <DataGrid
-    rows={clients.map((client, index) => ({
-      ...client,
-      id: client.telefono || index,  // Asegúrate de que 'rows' tenga un 'id' único
-    }))} 
-    columns={columnsgrid}  // Utilizando el arreglo columnsgrid para definir las columnas
-    pageSize={5}
-    rowsPerPageOptions={[5, 10, 20]}
-    pagination
-    checkboxSelection
-    disableSelectionOnClick
-    loading={loadingColumns}
-  />
-        )}
-      </Box>
-                <Divider sx={{ mb: 5 }} />
+          <Box sx={{ height: 400, width: '100%' }}>
+            {loadingColumns ? (
+              <CircularProgress sx={{ display: "block", margin: "0 auto" }} /> // Mostrar cargando
+            ) : (
+              <DataGrid
+                rows={clients.map((client, index) => ({
+                  ...client,
+                  id: client.telefono || index,  // Asegúrate de que 'rows' tenga un 'id' único
+                }))}
+                columns={columnsgrid}  // Utilizando el arreglo columnsgrid para definir las columnas
+                pageSize={5}
+                rowsPerPageOptions={[5, 10, 20]}
+                pagination
+                checkboxSelection
+                disableSelectionOnClick
+                loading={loadingColumns}
+              />
+            )}
+          </Box>
+          <Divider sx={{ mb: 5 }} />
 
           {/* VARIABLES */}
           {/*<Typography
