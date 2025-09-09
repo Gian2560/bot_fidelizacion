@@ -88,17 +88,157 @@ const estadosConfig = {
     colorBg: '#ffebee',
     descripcion: 'Dudas que requieren resolución inmediata'
   },
-  
+
 };
 
-// Componente de Header Profesional
-function ProfessionalHeader({ stats, onSearch, onFilter, searchTerm, selectedFilter, currentView, selectedEstado }) {
-  const shouldShowSearch = currentView === 'cards' && !selectedEstado;
-  
+// ✅ Componente de tabla específico para promesas incumplidas
+// ✅ Actualizar el componente PromesasIncumplidasTable para incluir fecha de último pago
+function PromesasIncumplidasTable({ 
+  data, 
+  onAccionComercial, 
+  onVerConversacion, 
+  pagination, 
+  onChangePage, 
+  onChangeRowsPerPage, 
+  page, 
+  rowsPerPage,
+  loading 
+}) {
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" py={8}>
+        <CircularProgress size={60} sx={{ color: '#ff9800' }} />
+      </Box>
+    );
+  }
+
   return (
-    <Paper 
-      elevation={0} 
-      sx={{ 
+    <Paper elevation={2} sx={{ borderRadius: 3, overflow: 'hidden' }}>
+      <Box sx={{ p: 3, bgcolor: '#ff9800', color: 'white' }}>
+        <Typography variant="h6" sx={{ fontWeight: 700, display: 'flex', alignItems: 'center' }}>
+          <ReportProblemIcon sx={{ mr: 1 }} />
+          Promesas de Pago Incumplidas
+        </Typography>
+        <Typography variant="body2" sx={{ opacity: 0.9, mt: 0.5 }}>
+        </Typography>
+      </Box>
+      
+      <TableContainer>
+        <Table>
+          <TableHead>
+            <TableRow sx={{ bgcolor: '#fff3e0' }}>
+              <TableCell sx={{ color: '#e65100', fontWeight: 700 }}>Cliente</TableCell>
+              <TableCell sx={{ color: '#e65100', fontWeight: 700 }}>Teléfono</TableCell>
+              <TableCell sx={{ color: '#e65100', fontWeight: 700 }}>Documento</TableCell>
+              <TableCell sx={{ color: '#e65100', fontWeight: 700 }}>Fecha Promesa</TableCell>
+              <TableCell sx={{ color: '#e65100', fontWeight: 700 }}>Último Pago</TableCell>
+              <TableCell sx={{ color: '#e65100', fontWeight: 700 }}>Días Vencido</TableCell>
+              <TableCell sx={{ color: '#e65100', fontWeight: 700 }}>Monto</TableCell>
+              <TableCell sx={{ color: '#e65100', fontWeight: 700 }}>Gestor</TableCell>
+              <TableCell sx={{ color: '#e65100', fontWeight: 700 }}>Acciones</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {data.map((promesa) => (
+              <TableRow key={promesa.id} hover>
+                <TableCell sx={{ fontWeight: 600 }}>{promesa.cliente}</TableCell>
+                <TableCell>{promesa.telefono}</TableCell>
+                <TableCell>{promesa.documento}</TableCell>
+                <TableCell>
+                  <Typography variant="body2" color="error" sx={{ fontWeight: 600 }}>
+                    {promesa.fechaPromesa}
+                  </Typography>
+                </TableCell>
+                <TableCell>
+                  <Typography 
+                    variant="body2" 
+                    sx={{ 
+                      fontWeight: 600,
+                      color: promesa.fechaUltimoPago === 'Sin pago' ? '#d32f2f' : '#1976d2'
+                    }}
+                  >
+                    {promesa.fechaUltimoPago}
+                  </Typography>
+                </TableCell>
+                <TableCell>
+                  <Chip
+                    label={`${promesa.diasVencido} días`}
+                    size="small"
+                    sx={{
+                      bgcolor: promesa.diasVencido > 7 ? '#ffebee' : '#fff3e0',
+                      color: promesa.diasVencido > 7 ? '#c62828' : '#ef6c00',
+                      fontWeight: 600
+                    }}
+                  />
+                </TableCell>
+                <TableCell sx={{ fontWeight: 600, color: '#2e7d32' }}>
+                  $ {promesa.monto?.toFixed(2) || '0.00'}
+                </TableCell>
+                <TableCell>
+                  <Box display="flex" alignItems="center">
+                    <Avatar sx={{ width: 32, height: 32, mr: 1, fontSize: '0.875rem' }}>
+                      {promesa.gestor?.charAt(0) || 'N'}
+                    </Avatar>
+                    <Typography variant="body2">{promesa.gestor}</Typography>
+                  </Box>
+                </TableCell>
+                <TableCell>
+                  <Box display="flex" gap={1}>
+                    <Tooltip title="Ver conversación">
+                      <IconButton
+                        size="small"
+                        onClick={() => onVerConversacion(promesa.clienteId)}
+                        sx={{ color: '#ff9800' }}
+                      >
+                        <ChatIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Realizar seguimiento">
+                      <IconButton
+                        size="small"
+                        onClick={() => onAccionComercial(promesa)}
+                        sx={{ color: '#ff9800' }}
+                      >
+                        <CallIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  </Box>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+      
+      <TablePagination
+        component="div"
+        count={pagination?.totalItems || 0}
+        page={page}
+        onPageChange={onChangePage}
+        rowsPerPage={rowsPerPage}
+        onRowsPerPageChange={onChangeRowsPerPage}
+        rowsPerPageOptions={[5, 10, 25, 50]}
+        labelRowsPerPage="Filas por página:"
+        labelDisplayedRows={({ from, to, count }) => `${from}-${to} de ${count}`}
+        sx={{
+          bgcolor: '#fff3e0',
+          borderTop: '1px solid #ffcc02',
+          '& .MuiTablePagination-toolbar': {
+            color: '#e65100'
+          }
+        }}
+      />
+    </Paper>
+  );
+}
+// Componente de Header Profesional
+function ProfessionalHeader({ stats, onSearch, onFilter, searchTerm, selectedFilter, currentView, selectedEstado, handlePromesasIncumplidas }) {
+  const shouldShowSearch = currentView === 'cards' && !selectedEstado;
+
+  return (
+    <Paper
+      elevation={0}
+      sx={{
         background: 'linear-gradient(135deg, #007391 0%, #005c6b 100%)',
         color: 'white',
         borderRadius: 3,
@@ -119,7 +259,7 @@ function ProfessionalHeader({ stats, onSearch, onFilter, searchTerm, selectedFil
           zIndex: 0
         }}
       />
-      
+
       <Box sx={{ p: 4, position: 'relative', zIndex: 1 }}>
         <Box display="flex" alignItems="center" justifyContent="space-between" mb={3}>
           <Box display="flex" alignItems="center">
@@ -136,16 +276,16 @@ function ProfessionalHeader({ stats, onSearch, onFilter, searchTerm, selectedFil
             </Box>
           </Box>
           <Box textAlign="right">
-            <Chip 
+            <Chip
               icon={<TodayIcon />}
-              label={new Date().toLocaleDateString('es-ES', { 
-                weekday: 'long', 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
+              label={new Date().toLocaleDateString('es-ES', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
               })}
-              sx={{ 
-                bgcolor: 'rgba(255,255,255,0.2)', 
+              sx={{
+                bgcolor: 'rgba(255,255,255,0.2)',
                 color: 'white',
                 fontWeight: 600,
                 mb: 1
@@ -171,7 +311,7 @@ function ProfessionalHeader({ stats, onSearch, onFilter, searchTerm, selectedFil
               </Typography>
             </Box>
           </Grid>
-          <Grid item xs={6} md={3}>
+          <Grid item xs={6} md={2}>
             <Box textAlign="center">
               <Typography variant="h4" sx={{ fontWeight: 'bold', mb: 0.5, color: 'white' }}>
                 {stats.pendientes}
@@ -181,7 +321,7 @@ function ProfessionalHeader({ stats, onSearch, onFilter, searchTerm, selectedFil
               </Typography>
             </Box>
           </Grid>
-          <Grid item xs={6} md={3}>
+          <Grid item xs={6} md={2}>
             <Box textAlign="center">
               <Typography variant="h4" sx={{ fontWeight: 'bold', mb: 0.5, color: 'white' }}>
                 {stats.completadas}
@@ -191,7 +331,7 @@ function ProfessionalHeader({ stats, onSearch, onFilter, searchTerm, selectedFil
               </Typography>
             </Box>
           </Grid>
-          <Grid item xs={6} md={3}>
+          <Grid item xs={6} md={2}>
             <Box textAlign="center">
               <Typography variant="h4" sx={{ fontWeight: 'bold', mb: 0.5, color: 'white' }}>
                 {Math.round((stats.completadas / stats.total) * 100) || 0}%
@@ -201,6 +341,106 @@ function ProfessionalHeader({ stats, onSearch, onFilter, searchTerm, selectedFil
               </Typography>
             </Box>
           </Grid>
+          <Grid item xs={6} md={2}>
+            <Box
+              textAlign="center"
+              onClick={() => handlePromesasIncumplidas()} // ✅ Agregar función onClick
+              sx={{
+                position: 'relative',
+                cursor: 'pointer', // ✅ Cursor pointer para indicar que es clickeable
+                background: 'linear-gradient(135deg, rgba(255, 193, 7, 0.08) 0%, rgba(255, 152, 0, 0.12) 100%)',
+                borderRadius: 1,
+                border: '1px solid rgba(255, 193, 7, 0.2)',
+                boxShadow: '0 1px 3px rgba(255, 152, 0, 0.1)',
+                transition: 'all 0.3s ease', // ✅ Transición suave
+                // ✅ Efectos hover para mejor UX
+                '&:hover': {
+                  transform: 'translateY(-2px)',
+                  boxShadow: '0 4px 12px rgba(255, 152, 0, 0.2)',
+                  border: '1px solid rgba(255, 193, 7, 0.4)'
+                },
+                '&:active': {
+                  transform: 'translateY(0px)'
+                },
+                '&::after': {
+                  content: '""',
+                  position: 'absolute',
+                  top: -1,
+                  left: -1,
+                  right: -1,
+                  bottom: -1,
+                  background: 'linear-gradient(45deg, transparent, rgba(255, 193, 7, 0.3), transparent)',
+                  borderRadius: 'inherit',
+                  zIndex: -1,
+                  opacity: 0,
+                  animation: 'subtle-alert 4s ease-in-out infinite',
+                  pointerEvents: 'none'
+                },
+                '@keyframes subtle-alert': {
+                  '0%, 80%': { opacity: 0 },
+                  '40%': { opacity: 0.4 }
+                }
+              }}
+            >
+              {/* Resto del contenido igual... */}
+              <Box
+                sx={{
+                  position: 'absolute',
+                  top: 6,
+                  right: 6,
+                  width: 6,
+                  height: 6,
+                  borderRadius: '50%',
+                  bgcolor: '#ffc107',
+                  opacity: 0.7,
+                  animation: 'soft-pulse 2.5s ease-in-out infinite',
+                  '@keyframes soft-pulse': {
+                    '0%, 70%': { opacity: 0.7 },
+                    '35%': { opacity: 0.3 }
+                  }
+                }}
+              />
+
+              <Typography
+                variant="h4"
+                sx={{
+                  fontWeight: 'bold',
+                  mb: 0.5,
+                  color: 'white',
+                  textShadow: '0 1px 2px rgba(0,0,0,0.3), 0 0 4px rgba(255, 193, 7, 0.2)'
+                }}
+              >
+                {stats.promesasIncumplidas || 0}
+              </Typography>
+
+              <Typography
+                variant="body2"
+                sx={{
+                  opacity: 0.9,
+                  color: 'white',
+                  fontSize: '0.8rem',
+                  lineHeight: 1.2
+                }}
+              >
+                Promesas de Pago
+              </Typography>
+              <Typography
+                variant="body2"
+                sx={{
+                  opacity: 0.95,
+                  color: 'white',
+                  fontWeight: 600,
+                  fontSize: '0.8rem',
+                  borderBottom: '1px dotted rgba(255, 193, 7, 0.5)',
+                  display: 'inline-block',
+                  paddingBottom: '1px'
+                }}
+              >
+                Incumplidas
+              </Typography>
+            </Box>
+          </Grid>
+
         </Grid>
 
         {false && shouldShowSearch && (
@@ -222,8 +462,8 @@ function ProfessionalHeader({ stats, onSearch, onFilter, searchTerm, selectedFil
               <Select
                 value={selectedFilter}
                 onChange={(e) => onFilter(e.target.value)}
-                sx={{ 
-                  bgcolor: 'rgba(255,255,255,0.1)', 
+                sx={{
+                  bgcolor: 'rgba(255,255,255,0.1)',
                   color: 'white',
                   borderRadius: 2,
                   '& .MuiOutlinedInput-notchedOutline': {
@@ -239,6 +479,7 @@ function ProfessionalHeader({ stats, onSearch, onFilter, searchTerm, selectedFil
             </FormControl>
           </Box>
         )}
+
       </Box>
     </Paper>
   );
@@ -284,8 +525,8 @@ function EstadoCard({ estado, generalStats, onSelectEstado, selectedEstado }) {
       >
         <CardContent sx={{ p: 3, height: '100%', display: 'flex', flexDirection: 'column' }}>
           <Box display="flex" alignItems="center" mb={2}>
-            <Avatar 
-              sx={{ 
+            <Avatar
+              sx={{
                 bgcolor: isSelected ? 'rgba(255,255,255,0.2)' : config.colorBg,
                 color: isSelected ? 'white' : config.color,
                 mr: 2,
@@ -299,9 +540,9 @@ function EstadoCard({ estado, generalStats, onSelectEstado, selectedEstado }) {
               <Typography variant="h7" sx={{ fontWeight: 700, mb: 0.5, color: 'inherit' }}>
                 {config.titulo}
               </Typography>
-              <Typography 
-                variant="body2" 
-                sx={{ 
+              <Typography
+                variant="body2"
+                sx={{
                   opacity: isSelected ? 0.9 : 0.7,
                   fontSize: '0.875rem',
                   color: 'inherit'
@@ -311,7 +552,7 @@ function EstadoCard({ estado, generalStats, onSelectEstado, selectedEstado }) {
               </Typography>
             </Box>
           </Box>
-          
+
           {/* Métricas principales */}
           <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
             <Box textAlign="center">
@@ -342,11 +583,11 @@ function EstadoCard({ estado, generalStats, onSelectEstado, selectedEstado }) {
                 {porcentajeCompletado}%
               </Typography>
             </Box>
-            <LinearProgress 
-              variant="determinate" 
-              value={porcentajeCompletado} 
-              sx={{ 
-                height: 8, 
+            <LinearProgress
+              variant="determinate"
+              value={porcentajeCompletado}
+              sx={{
+                height: 8,
                 borderRadius: 4,
                 bgcolor: isSelected ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)',
                 '& .MuiLinearProgress-bar': {
@@ -454,7 +695,7 @@ function TasksTable({ tasks, onAccionComercial, onVerConversacion, pagination, o
                           size="small"
                           onClick={() => onAccionComercial(task)}
                           disabled={task.llamado}
-                          sx={{ 
+                          sx={{
                             color: task.llamado ? '#4caf50' : '#007391',
                             '&.Mui-disabled': {
                               color: '#4caf50'
@@ -500,16 +741,16 @@ function TasksTable({ tasks, onAccionComercial, onVerConversacion, pagination, o
 // Toolbar profesional mejorado
 function ProfessionalToolbar({ onExport, stats, onViewChange, currentView }) {
   return (
-    <Box 
-      display="flex" 
-      justifyContent="space-between" 
-      alignItems="center" 
+    <Box
+      display="flex"
+      justifyContent="space-between"
+      alignItems="center"
       mb={4}
-      sx={{ 
-        p: 3, 
-        bgcolor: 'white', 
-        borderRadius: 3, 
-        boxShadow: '0 2px 8px rgba(0,0,0,0.1)' 
+      sx={{
+        p: 3,
+        bgcolor: 'white',
+        borderRadius: 3,
+        boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
       }}
     >
       {/*<Box>
@@ -520,7 +761,7 @@ function ProfessionalToolbar({ onExport, stats, onViewChange, currentView }) {
           Administra y realiza seguimiento a todas las actividades comerciales
         </Typography>
       </Box>*/}
-      
+
       {/*
         <Box display="flex" gap={2} alignItems="center">
        {<Button
@@ -557,7 +798,7 @@ export default function TasksPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterEstado, setFilterEstado] = useState('');
   const [currentView, setCurrentView] = useState('cards');
-  
+
   // Estados para paginación y carga
   const [tasks, setTasks] = useState([]);
   const [page, setPage] = useState(0);
@@ -570,7 +811,20 @@ export default function TasksPage() {
     hasNextPage: false,
     hasPrevPage: false
   });
-  
+
+  // Estados para las promesas de pago incumplidas
+  // ✅ Agregar estos estados al inicio del componente TasksPage
+  const [showPromesasIncumplidas, setShowPromesasIncumplidas] = useState(false);
+  const [promesasIncumplidasData, setPromesasIncumplidasData] = useState([]);
+  const [loadingPromesas, setLoadingPromesas] = useState(false);
+  const [promesasPage, setPromesasPage] = useState(0);
+  const [promesasRowsPerPage, setPromesasRowsPerPage] = useState(10);
+  const [promesasPagination, setPromesasPagination] = useState({
+    currentPage: 1,
+    totalPages: 1,
+    totalItems: 0
+  });
+
   // Estados para estadísticas
   const [generalStats, setGeneralStats] = useState({
     'Comunicacion inmediata': { total: 0, pendientes: 0, completados: 0 },
@@ -579,9 +833,63 @@ export default function TasksPage() {
     duda: { total: 0, pendientes: 0, completados: 0 }
   });
   const [loadingStats, setLoadingStats] = useState(true);
-  
+
   const { data: session } = useSession();
   const { gestores, handleSaveCliente } = useClientes();
+
+  // ✅ Agregar esta función en el componente TasksPage
+  const handlePromesasIncumplidas = async () => {
+    setShowPromesasIncumplidas(true);
+    setLoadingPromesas(true);
+
+    try {
+      console.log('🔍 Cargando promesas de pago incumplidas...');
+
+      const params = new URLSearchParams({
+        page: (promesasPage + 1).toString(),
+        limit: promesasRowsPerPage.toString()
+      });
+
+      const response = await fetch(`/api/promesas-incumplidas?${params}`);
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          console.log('✅ Promesas incumplidas cargadas:', data.data.length);
+          setPromesasIncumplidasData(data.data);
+          setPromesasPagination(data.pagination);
+        } else {
+          console.error('❌ Error en la respuesta:', data.error);
+          setPromesasIncumplidasData([]);
+        }
+      } else {
+        console.error('❌ Error HTTP:', response.status);
+        setPromesasIncumplidasData([]);
+      }
+    } catch (error) {
+      console.error('❌ Error cargando promesas incumplidas:', error);
+      setPromesasIncumplidasData([]);
+    } finally {
+      setLoadingPromesas(false);
+    }
+  };
+
+  // ✅ Función para cerrar la vista de promesas incumplidas
+  const handleClosePromesasIncumplidas = () => {
+    setShowPromesasIncumplidas(false);
+    setPromesasIncumplidasData([]);
+    setPromesasPage(0);
+  };
+
+  // ✅ Funciones de paginación para promesas
+  const handlePromesasChangePage = (event, newPage) => {
+    setPromesasPage(newPage);
+  };
+
+  const handlePromesasChangeRowsPerPage = (event) => {
+    setPromesasRowsPerPage(parseInt(event.target.value, 10));
+    setPromesasPage(0);
+  };
 
   // Función para cargar estadísticas generales
   const loadGeneralStats = async () => {
@@ -592,12 +900,12 @@ export default function TasksPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ estados: Object.keys(estadosConfig) })
       });
-      
+
       if (response.ok) {
         const data = await response.json();
         if (data.success) {
           console.log('📊 Estadísticas recibidas:', data);
-          
+
           // Actualizar las estadísticas con los datos recibidos del API
           setGeneralStats(data.metricas || {});
         }
@@ -612,7 +920,7 @@ export default function TasksPage() {
   // Función para cargar tareas de un estado específico
   const loadTasks = async (estado, currentPage = 0, limit = 10, search = '') => {
     if (!estado) return;
-    
+
     setLoading(true);
     try {
       const params = new URLSearchParams({
@@ -624,7 +932,7 @@ export default function TasksPage() {
 
       console.log('🔍 Cargando tareas con parámetros:', { estado, currentPage, limit, search });
       const response = await fetch(`/api/task?${params}`);
-      
+
       if (response.ok) {
         const data = await response.json();
         if (data.success) {
@@ -742,14 +1050,14 @@ export default function TasksPage() {
     try {
       // Primero guardar en la base de datos usando el hook
       await handleSaveCliente(clienteData);
-      
+
       // Recargar las tareas para reflejar los cambios
       const currentPageNum = page + 1;
       await loadTasks(selectedEstado, currentPageNum, rowsPerPage, searchTerm);
-      
+
       // Recargar estadísticas generales
       await loadGeneralStats();
-      
+
       handleClose();
     } catch (error) {
       console.error("Error al guardar cliente:", error);
@@ -787,20 +1095,20 @@ export default function TasksPage() {
     const csv = [
       ['ID', 'Cliente', 'Teléfono', 'Email', 'Documento', 'Estado', 'Gestor', 'Fecha Creación', 'Llamado', 'Fecha Llamada', 'Observación'],
       ...tasks.map(t => [
-        t.id, 
-        t.cliente, 
+        t.id,
+        t.cliente,
         t.telefono,
         t.email || 'N/A',
         t.documento,
         estadosConfig[t.estado]?.titulo || t.estado,
-        t.gestor, 
-        t.fechaCreacion, 
-        t.llamado ? 'Sí' : 'No', 
+        t.gestor,
+        t.fechaCreacion,
+        t.llamado ? 'Sí' : 'No',
         t.fechaLlamada || 'N/A',
         t.observacion || 'N/A'
       ])
     ].map(row => row.join(',')).join('\n');
-    
+
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -854,30 +1162,30 @@ export default function TasksPage() {
               border: '1px solid rgba(0, 115, 145, 0.1)'
             }}
           >
-            <CircularProgress 
-              size={60} 
+            <CircularProgress
+              size={60}
               thickness={4}
-              sx={{ 
+              sx={{
                 color: '#007391',
                 mb: 2,
                 '& .MuiCircularProgress-circle': {
                   strokeLinecap: 'round'
                 }
-              }} 
+              }}
             />
-            <Typography 
-              variant="h6" 
-              sx={{ 
-                color: '#254e59', 
+            <Typography
+              variant="h6"
+              sx={{
+                color: '#254e59',
                 fontWeight: 600,
                 mb: 1
               }}
             >
               Cargando Métricas
             </Typography>
-            <Typography 
-              variant="body2" 
-              sx={{ 
+            <Typography
+              variant="body2"
+              sx={{
                 color: '#64748b',
                 fontWeight: 400,
                 lineHeight: 1.5
@@ -915,7 +1223,7 @@ export default function TasksPage() {
       )}
 
       {/* Header profesional */}
-      <ProfessionalHeader 
+      <ProfessionalHeader
         stats={stats}
         onSearch={handleSearch}
         onFilter={handleFilter}
@@ -923,6 +1231,7 @@ export default function TasksPage() {
         selectedFilter={filterEstado}
         currentView={currentView}
         selectedEstado={selectedEstado}
+        handlePromesasIncumplidas={handlePromesasIncumplidas}
       />
 
       {/* Toolbar profesional */}
@@ -934,7 +1243,7 @@ export default function TasksPage() {
       />*/}
 
       {/* Vista de tarjetas de estados */}
-      {currentView === 'cards' && !selectedEstado && (
+      {currentView === 'cards' && !selectedEstado && !showPromesasIncumplidas && (
         <Grid container spacing={4} sx={{ mb: 4 }}>
           {Object.keys(estadosConfig).map(estado => (
             <Grid item xs={12} md={6} lg={3} key={estado}>
@@ -958,7 +1267,7 @@ export default function TasksPage() {
               variant="outlined"
               onClick={handleBackToCards}
               startIcon={<ArrowBackIcon />}
-              sx={{ 
+              sx={{
                 mr: 2,
                 borderColor: '#007391',
                 color: '#007391',
@@ -991,6 +1300,46 @@ export default function TasksPage() {
               rowsPerPage={rowsPerPage}
             />
           )}
+        </Box>
+      )}
+
+      {/* Vista de Promesas Incumplidas */}
+      {showPromesasIncumplidas && (
+        <Box>
+          {/* Breadcrumb para navegación */}
+          <Box display="flex" alignItems="center" mb={3}>
+            <Button
+              variant="outlined"
+              onClick={handleClosePromesasIncumplidas}
+              startIcon={<ArrowBackIcon />}
+              sx={{
+                mr: 2,
+                borderColor: '#ff9800',
+                color: '#ff9800',
+                '&:hover': {
+                  borderColor: '#f57c00',
+                  bgcolor: '#fff3e0'
+                }
+              }}
+            >
+              Volver al Dashboard
+            </Button>
+            <Typography variant="h5" sx={{ fontWeight: 600, color: '#e65100' }}>
+              / Promesas de Pago Incumplidas
+            </Typography>
+          </Box>
+
+          <PromesasIncumplidasTable
+            data={promesasIncumplidasData}
+            onAccionComercial={handleAccionComercial}
+            onVerConversacion={handleVerConversacion}
+            pagination={promesasPagination}
+            onChangePage={handlePromesasChangePage}
+            onChangeRowsPerPage={handlePromesasChangeRowsPerPage}
+            page={promesasPage}
+            rowsPerPage={promesasRowsPerPage}
+            loading={loadingPromesas}
+          />
         </Box>
       )}
 
