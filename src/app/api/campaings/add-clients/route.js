@@ -15,7 +15,11 @@ try {
   console.warn("⚠️ Firebase initialization failed:", error.message);
   // Continue without Firebase if credentials are not available
 }
-
+const normalizeAmountAsString = (val) => {
+  if (val === null || val === undefined || val === "") return null;
+  // quita símbolos y deja números, coma o punto
+  return String(val).trim().replace(/[^\d.,-]/g, "");
+};
 function addCorsHeaders(response) {
   response.headers.set('Access-Control-Allow-Origin', '*');
   response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
@@ -107,7 +111,7 @@ export async function POST(req, context) {
           const finalCelular = telefono ? "+51" + telefono.toString().replace(/\s+/g, "") : null;
           console.log("Procesando cliente:", email, finalCelular);
           const finalEmail = email && email.trim() !== "" ? email : null; // Solo usar email válido o null
-          const finalMonto= monto || 0;
+          const finalMonto= normalizeAmountAsString(monto) || 0;
           const finalFechaCuota=feccuota||"";
           const finalModelo= modelo||"";
           const finalCodPago=codpago||"";
