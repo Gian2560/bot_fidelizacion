@@ -106,51 +106,61 @@ export async function POST(req, context) {
         const firestoreOps = [];
 
         for (const clientData of clients) {
-          const { nombre, telefono, email, monto,  feccuota, modelo, codpago, Cta_Act_Pag, Codigo_Asociado} = clientData;
+          const { nombre, telefono, email, monto,  feccuota, modelo, codpago, Cta_Act_Pag, Codigo_Asociado } = clientData;
           const finalNombre = nombre || "Nombre desconocido";
           const finalCelular = telefono ? "+51" + telefono.toString().replace(/\s+/g, "") : null;
           console.log("Procesando cliente:", email, finalCelular);
-          const finalEmail = email && email.trim() !== "" ? email : null; // Solo usar email válido o null
-          const finalMonto= normalizeAmountAsString(monto) || 0;
-          const finalFechaCuota=feccuota||"";
-          const finalModelo= modelo||"";
-          const finalCodPago=codpago||"";
-          const finalCuotas=Cta_Act_Pag||0;
-          const finalCodAsociado=Codigo_Asociado||"";
+          const finalEmail = email && email.trim() !== "" ? email : null;
+          const finalMonto = normalizeAmountAsString(monto) || 0;
+          const finalFechaCuota = feccuota || "";
+          const finalModelo = modelo || "";
+          const finalCodPago = codpago || "";
+          const finalCuotas = Cta_Act_Pag || 0;
+          const finalCodAsociado = Codigo_Asociado || "";
           if (!finalCelular) continue;
 
           let cliente = clientesMap.get(finalCelular);
-          
+
+          // Validar si el cliente existe y su estado es "Enojado"
           if (cliente) {
-            // **Cliente ya existe: actualizamos sus nuevos campos**
+            // Obtener el estado actual del cliente desde la base de datos
+            const clienteActual = await prisma.cliente.findUnique({
+              where: { cliente_id: cliente.cliente_id },
+              select: { estado: true }
+            });
+            if (clienteActual?.estado?.trim() === "Enojado") {
+              // Saltar este cliente, no se actualiza ni se agrega a la campaña
+              continue;
+            }
+            // Cliente ya existe y no está "Enojado": actualizar sus campos
             await prisma.cliente.update({
               where: { cliente_id: cliente.cliente_id },
               data: {
                 feccuota: finalFechaCuota,
-                modelo:      finalModelo,
+                modelo: finalModelo,
                 codpago: finalCodPago,
-                Cta_Act_Pag:      finalCuotas,
+                Cta_Act_Pag: finalCuotas,
                 codigo_asociado: finalCodAsociado,
-                monto:       finalMonto
+                monto: finalMonto
               }
             });
-          }else{
+          } else {
             // Cliente nuevo: lo metemos en el array para createMany
             clientesParaCrear.push({
-              nombre:           finalNombre,
-              celular:          finalCelular,
-              email:            finalEmail,
+              nombre: finalNombre,
+              celular: finalCelular,
+              email: finalEmail,
               categoria_no_interes: " ",
-              bound:            false,
-              estado:           " ",
-              observacion:      "Observación no proporcionada",
-              score:            "no_score",
-              feccuota:      finalFechaCuota,
-              modelo:           finalModelo,
-              codpago:      finalCodPago,
-              Cta_Act_Pag:           finalCuotas,
-              codigo_asociado:  finalCodAsociado,
-              monto:            finalMonto
+              bound: false,
+              estado: " ",
+              observacion: "Observación no proporcionada",
+              score: "no_score",
+              feccuota: finalFechaCuota,
+              modelo: finalModelo,
+              codpago: finalCodPago,
+              Cta_Act_Pag: finalCuotas,
+              codigo_asociado: finalCodAsociado,
+              monto: finalMonto
             });
           }
         }
@@ -174,11 +184,20 @@ export async function POST(req, context) {
         for (const clientData of clients) {
           const { telefono } = clientData;
           const finalCelular = telefono ? "+51" + telefono.toString().replace(/\s+/g, "") : null;
-          
           if (!finalCelular) continue;
 
           const cliente = todosClientes.get(finalCelular);
           if (!cliente) continue;
+
+          // Validar si el cliente tiene estado "Enojado" antes de asociar a la campaña
+          const clienteActual = await prisma.cliente.findUnique({
+            where: { cliente_id: cliente.cliente_id },
+            select: { estado: true }
+          });
+          if (clienteActual?.estado?.trim() === "Enojado") {
+            // Saltar este cliente, no se asocia ni se agrega a Firestore
+            continue;
+          }
 
           // Preparar asociación
           asociacionesParaCrear.push({
