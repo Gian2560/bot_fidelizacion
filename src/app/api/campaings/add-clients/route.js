@@ -87,11 +87,13 @@ export async function POST(req, context) {
         // OPTIMIZACIÓN 2: Obtener todos los clientes existentes de una vez
         const clientesExistentes = await prisma.cliente.findMany({
           where: {
-            celular: { in: telefonos }
+            celular: { in: telefonos },
+            NOT: { estado: { equals: "Enojado", mode: "insensitive" } },
           },
           select: {
             cliente_id: true,
-            celular: true
+            celular: true,
+            estado: true
           }
         });
 
