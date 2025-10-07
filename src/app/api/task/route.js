@@ -82,6 +82,14 @@ export async function GET(request) {
       }
     };
 
+    // FILTRO ADICIONAL: Solo devolver clientes cuya fecha_creacion esté dentro
+    // del mes actual. Esto asegura que en la vista 'task' solo veas items
+    // creados en el mes en curso.
+    whereClause.fecha_creacion = {
+      gte: inicioMes,
+      lte: finMes
+    };
+
     // Filtrar por búsqueda si se especifica
     if (search) {
       whereClause.OR = [
@@ -340,6 +348,10 @@ export async function POST(request) {
       const clientesCandidatos = await prisma.cliente.findMany({
         where: {
           estado: { in: estadosDB },
+          // Restringir a clientes cuyo contrato tenga fecha_pago en el mes
+          // actual y además cuya fecha_creacion también pertenezca al mes
+          // actual. Esto hace que las métricas concuerden con la tabla
+          // que filtra por `fecha_creacion`.
           contrato: {
             isNot: null,
             is: {
@@ -348,6 +360,10 @@ export async function POST(request) {
                 lte: finMes
               }
             }
+          },
+          fecha_creacion: {
+            gte: inicioMes,
+            lte: finMes
           }
         },
         select: {
