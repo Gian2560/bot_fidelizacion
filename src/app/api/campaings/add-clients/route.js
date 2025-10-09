@@ -35,7 +35,7 @@ export async function POST(req, context) {
   try {
     const body = await req.json();
     const { nombre_campanha, descripcion, template_id, fecha_inicio, fecha_fin, clients, variableMappings } = body;
-    
+    const seeds = [];
     // Validaciones básicas
     if (!nombre_campanha) {
       return NextResponse.json({ error: "nombre_campanha es requerido" }, { status: 400 });
@@ -106,7 +106,7 @@ export async function POST(req, context) {
         const clientesParaCrear = [];
         const asociacionesParaCrear = [];
         const firestoreOps = [];
-
+        
         for (const clientData of clients) {
           const { nombre, telefono, email, monto,  feccuota, modelo, codpago, Cta_Act_Pag, Codigo_Asociado } = clientData;
           const finalNombre = nombre || "Nombre desconocido";
@@ -182,6 +182,7 @@ export async function POST(req, context) {
         // OPTIMIZACIÓN 5: Preparar asociaciones y operaciones Firestore
         const fecha = new Date();
         const firestoreBatch = db ? db.batch() : null;
+        
 
         for (const clientData of clients) {
           const { telefono } = clientData;
@@ -216,7 +217,13 @@ export async function POST(req, context) {
               valor
             );
           }
-
+          // --- Agregar seed para el checkpointer del hilo f-{phone} ---
+         // OJO: thread_id en el bot usa número sin '+', por eso lo quitamos aquí
+          seeds.push({
+            phone: (finalCelular || "").replace(/^\+/, ""),   // "519..." (sin '+')
+            text: mensajePersonalizado,
+            role: "ai"
+          });
           // Preparar operación Firestore en batch
           if (firestoreBatch) {
             const docRef = db.collection("fidelizacion").doc(finalCelular);
@@ -255,6 +262,39 @@ export async function POST(req, context) {
     maxWait: 20000
   }
   );
+
+  // --- Llamada única al bot para sembrar memoria en el checkpointer ---
+  // --- Llamada única al bot para sembrar memoria en el checkpointer ---
+try {
+  if (!seeds.length) {
+    console.log("🌱 No hay seeds para enviar.");
+  } else {
+    const BOT_URL = "https://cloudbot-763512810578.us-west4.run.app";
+    const resp = await fetch(`${BOT_URL}/seed-campaign-memory`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ mode: "append", entries: seeds }),
+    });
+
+    let bodyOnce = null; // leemos una sola vez
+    const ct = resp.headers.get("content-type") || "";
+
+    if (ct.includes("application/json")) {
+      bodyOnce = await resp.json().catch(() => null);
+    } else {
+      bodyOnce = await resp.text().catch(() => null);
+    }
+
+    if (!resp.ok) {
+      console.warn("⚠️ Seeding falló:", resp.status, bodyOnce);
+    } else {
+      console.log("🌱 Seeding OK:", bodyOnce);
+    }
+  }
+} catch (e) {
+  console.warn("⚠️ No se pudo sembrar el checkpointer:", e?.message || e);
+}
+
 
     const response = NextResponse.json({
       message: "Campaña y clientes creados con éxito",
