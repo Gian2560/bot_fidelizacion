@@ -36,6 +36,8 @@ model campanha {
   tipo              String             @default("in") @db.VarChar(10)
   template_id       Int?
   variable_mappings Json?              @default("{}")
+  plantilla_id      Int?
+  plantilla         plantilla?         @relation(fields: [plantilla_id], references: [id], map: "fk_campanha_plantilla")
   template          template?          @relation(fields: [template_id], references: [id], map: "fk_campanha_template")
   cliente_campanha  cliente_campanha[]
 }
@@ -286,16 +288,17 @@ model mensaje_status_event {
 }
 
 model plantilla {
-  id              Int       @id @default(autoincrement())
-  nombre          String    @db.VarChar(100)
+  id              Int        @id @default(autoincrement())
+  nombre          String     @db.VarChar(100)
   mensaje_cliente String
-  nombre_meta     String?   @db.VarChar(100)
-  meta_id         String?   @db.VarChar(100)
-  estado_meta     String?   @default("PENDING") @db.VarChar(50)
-  categoria       String?   @default("MARKETING") @db.VarChar(50)
-  idioma          String?   @default("es") @db.VarChar(10)
+  nombre_meta     String?    @db.VarChar(100)
+  meta_id         String?    @db.VarChar(100)
+  estado_meta     String?    @default("PENDING") @db.VarChar(50)
+  categoria       String?    @default("MARKETING") @db.VarChar(50)
+  idioma          String?    @default("es") @db.VarChar(10)
   header          String?
   footer          String?
-  created_at      DateTime? @default(now()) @db.Timestamp(6)
-  updated_at      DateTime? @db.Timestamp(6)
+  created_at      DateTime?  @default(now()) @db.Timestamp(6)
+  updated_at      DateTime?  @db.Timestamp(6)
+  campanha        campanha[]
 }

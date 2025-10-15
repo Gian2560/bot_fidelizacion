@@ -44,7 +44,7 @@ export async function POST(req, context) {
     if (!clients || !Array.isArray(clients)) {
       return NextResponse.json({ error: "clients debe ser un array" }, { status: 400 });
     }
-    
+    console.log(`Datos de mensaje del template_id: ${template_id}`);
     // Cargamos el mensaje base de la plantilla (una sola vez)
     let tplMensaje = ""
     if (template_id) {
@@ -74,7 +74,7 @@ export async function POST(req, context) {
         data: {
           nombre_campanha,
           descripcion: finalDescripcion,
-          template_id: finalTemplateId,
+          plantilla_id: finalTemplateId,
           fecha_inicio: finalFechaInicio,
           fecha_fin: finalFechaFin,
           estado_campanha: finalEstadoCampanha,

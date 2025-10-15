@@ -785,9 +785,7 @@ export default function TemplatesPage() {
             gap: 2
           }}
         >
-          <Typography variant="h6" fontWeight="600">
-            {editTemplate ? 'Editar Plantilla' : 'Nueva Plantilla Meta WhatsApp'}
-          </Typography>
+          {editTemplate ? 'Editar Plantilla' : 'Nueva Plantilla Meta WhatsApp'}
         </DialogTitle>
         <DialogContent sx={{ mt: 2 }}>
           <Grid container spacing={2}>

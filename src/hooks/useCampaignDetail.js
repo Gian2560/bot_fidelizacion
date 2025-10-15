@@ -23,7 +23,7 @@ const useCampaignDetail = (id) => {
     setLoading(true);
     try {
       const { campanha_id, nombre_campanha, fecha_creacion, fecha_fin, estado_campanha,
-        mensaje_cliente, template, clientes, pagination: pagData } = await getCampaignById(id, pagination.page, pagination.pageSize);
+        mensaje_cliente, plantilla, clientes, pagination: pagData } = await getCampaignById(id, pagination.page, pagination.pageSize);
 
       // Actualiza la información de la campaña
       setCampaign({
@@ -33,7 +33,7 @@ const useCampaignDetail = (id) => {
         fecha_fin,
         estado_campanha,
         mensaje_cliente,
-        template
+        plantilla
       });
 
       // Actualiza la lista de clientes y la paginación

@@ -76,7 +76,7 @@ export default function CampaignPage() {
     }
     const fetchTemplates = async () => {
       try {
-        const response = await axiosInstance.get("/plantillas"); // Solicitud GET al endpoint de plantillas
+        const response = await axiosInstance.get("/plantillas_bd"); // Solicitud GET al endpoint de plantillas
         setTemplates(response.data); // Guarda las plantillas en el estado
         console.log("Plantillas obtenidas:", response.data);
       } catch (error) {
@@ -101,7 +101,7 @@ export default function CampaignPage() {
     const tpl = templates.find(t => t.id === tplId)
     if (tpl) {
       // extraemos todos los {{n}}
-      const matches = [...tpl.mensaje.matchAll(/{{\s*(\d+)\s*}}/g)]
+      const matches = [...tpl.mensaje_cliente.matchAll(/{{\s*(\d+)\s*}}/g)]
         .map(m => m[1])
       const uniq = Array.from(new Set(matches))
       setPlaceholders(uniq)             // e.g. ["1"]
@@ -620,7 +620,7 @@ export default function CampaignPage() {
                 >
                   {templates.map((t) => (
                     <MenuItem key={t.id} value={t.id}>
-                      {t.nombre_template} {/* Aquí se muestra el nombre de la plantilla */}
+                      {t.nombre} {/* Aquí se muestra el nombre de la plantilla */}
                     </MenuItem>
                   ))}
                 </Select>
@@ -666,7 +666,7 @@ export default function CampaignPage() {
                   </Typography>
                   <Typography variant="body1" color="#254e59">
                     {/* Aquí buscamos la plantilla seleccionada por id y mostramos su mensaje */}
-                    {templates.find((t) => t.id === template)?.mensaje}
+                    {templates.find((t) => t.id === template)?.mensaje_cliente}
                   </Typography>
                 </Card>
               )}

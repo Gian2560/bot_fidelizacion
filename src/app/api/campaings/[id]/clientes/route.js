@@ -14,9 +14,10 @@ export async function GET(req, context) {
     const campanha = await prisma.campanha.findUnique({
       where: { campanha_id: campanhaId },
       include: {
-        template: { select: { nombre_template: true, mensaje: true } }, // Template
+        plantilla: { select: { nombre_meta: true, mensaje_cliente: true } }, // Template
       },
     });
+    console.log(campanha);
 
     if (!campanha) {
       return new Response(JSON.stringify({ error: "Campaña no encontrada" }), {
@@ -48,12 +49,12 @@ export async function GET(req, context) {
       estado_campanha: campanha.estado_campanha || "Desconocido",
       mensaje_cliente: campanha.mensaje_cliente || "No definido",
       num_clientes: totalClientes, // ✅ Total de clientes
-      template: campanha.template
+      plantilla: campanha.plantilla
         ? {
-            nombre_template: campanha.template.nombre_template,
-            mensaje: campanha.template.mensaje,
+            nombre_meta: campanha.plantilla.nombre_meta,
+            mensaje_cliente: campanha.plantilla.mensaje_cliente,
           }
-        : { nombre_template: "No asignado", mensaje: "No definido" },
+        : { nombre_meta: "No asignado", mensaje: "No definido" },
       clientes: clientes.map((c) => ({
         id: c.cliente.cliente_id, // ✅ ID único del cliente
         nombre: c.cliente.nombre,

@@ -340,7 +340,7 @@ const CampaignDetailPage = () => {
                                 NOMBRE DEL TEMPLATE
                               </Typography>
                               <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                                {campaign?.template?.nombre_template || "No asignado"}
+                                {campaign?.plantilla?.nombre_meta || "No asignado"}
                               </Typography>
                             </Grid>
                             <Grid item xs={12}>
@@ -357,7 +357,7 @@ const CampaignDetailPage = () => {
                                 }}
                               >
                                 <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', fontStyle: 'italic' }}>
-                                  {campaign?.template?.mensaje || "No definido"}
+                                  {campaign?.plantilla?.mensaje_cliente || "No definido"}
                                 </Typography>
                               </Paper>
                             </Grid>
