@@ -1,95 +1,59 @@
-// pages/api/plantillas.js
-
-import { NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
-
-// GET: Obtener todas las plantillas
-export async function GET() {
+﻿import { NextResponse } from 'next/server';
+import prisma from '@/lib/prisma';
+import {createMetaTemplate, getAllMetaTemplates} from '../../../../services/metaTemplateService';
+export async function GET(request) {
   try {
-    const templates = await prisma.template.findMany({
-      select: {
-        id: true,
-        nombre_template: true,
-        mensaje: true,
-        template_content_sid: true,
-        parametro: true,
-        created_at: true,
-      },
-      orderBy: { created_at: "desc" }, // Ordena por la fecha de creación
-    });
-
-    return NextResponse.json(templates);
+    const metaResult = await getAllMetaTemplates();
+    if (!metaResult.success) {
+      return NextResponse.json({ error: metaResult.error }, { status: 500 });
+    }
+    return NextResponse.json(metaResult.plantillas);
   } catch (error) {
-    console.error("❌ Error al obtener plantillas:", error);
-    return NextResponse.json({ error: "Error al obtener plantillas" }, { status: 500 });
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
 
 export async function POST(request) {
   try {
-    // Parsear los datos JSON enviados en el cuerpo de la solicitud
-    const { nombre_template, mensaje, template_content_sid } = await request.json();
+    const { nombre, mensaje, categoria, idioma, header, footer, botones, guardar_en_bd, ejemplos_mensaje, ejemplos_header } = await request.json();
     
+    const metaResult = await createMetaTemplate({
+      nombre, mensaje, categoria: categoria || 'MARKETING', idioma: idioma || 'es_PE',
+      header, footer, botones, ejemplos_mensaje, ejemplos_header
+    });
 
-    if (!nombre_template || !mensaje || !template_content_sid ) {
-      return NextResponse.json({ error: "Faltan datos requeridos" }, { status: 400 });
+    if (!metaResult.success) {
+      return NextResponse.json({ success: false, error: metaResult.error }, { status: 500 });
     }
 
-    const parametro = false
-    console.log('Datos recibidos:', { nombre_template, mensaje, template_content_sid, parametro });
+    let bdResult = null;
+    if (guardar_en_bd) {
+      try {
+        const plantillaDB = await prisma.plantilla.create({
+          data: {
+            nombre, mensaje_cliente: mensaje, nombre_meta: metaResult.nombre_meta,
+            meta_id: metaResult.meta_id, estado_meta: metaResult.estado,
+            categoria: categoria || 'MARKETING', idioma: idioma || 'es_PE',
+            header: header || null, footer: footer || null,
+            created_at: new Date(), updated_at: new Date()
+          }
+        });
+        bdResult = { success: true, id: plantillaDB.id };
+      } catch (dbError) {
+        bdResult = { success: false, error: dbError.message };
+      }
+    }
 
-    // Crear la plantilla en la base de datos
-    const newTemplate = await prisma.template.create({
-      data: {
-        nombre_template,
-        mensaje,
-        template_content_sid,
-        parametro,
+    return NextResponse.json({
+      success: true,
+      plantilla: {
+        id: metaResult.meta_id, nombre, nombre_meta: metaResult.nombre_meta,
+        estado_meta: metaResult.estado, mensaje_cliente: mensaje,
+        categoria: categoria || 'MARKETING', idioma: idioma || 'es_PE'
       },
+      bd: bdResult
     });
-
-    // Retornar la plantilla creada como respuesta
-    return NextResponse.json(newTemplate);
   } catch (error) {
-    console.error("❌ Error al crear plantilla:", error);
-    return NextResponse.json({ error: "Error al crear plantilla" }, { status: 500 });
-  }
-}
-
-// PUT: Actualizar una plantilla existente
-export async function PUT(request) {
-  try {
-    const { id, nombre_template, mensaje, template_content_sid, parametro } = await request.json();
-
-    const updatedTemplate = await prisma.template.update({
-      where: { id },
-      data: {
-        nombre_template,
-        mensaje,
-        template_content_sid,
-        parametro,
-      },
-    });
-
-    return NextResponse.json(updatedTemplate);
-  } catch (error) {
-    console.error("❌ Error al actualizar plantilla:", error);
-    return NextResponse.json({ error: "Error al actualizar plantilla" }, { status: 500 });
-  }
-}
-
-// DELETE: Eliminar una plantilla
-export async function DELETE(request) {
-  try {
-    const { id } = await request.json();
-
-    const deletedTemplate = await prisma.template.delete({
-      where: { id },
-    });
-
-    return NextResponse.json(deletedTemplate);
-  } catch (error) {
-    console.error("❌ Error al eliminar plantilla:", error);
-    return NextResponse.json({ error: "Error al eliminar plantilla" }, { status: 500 });
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }
