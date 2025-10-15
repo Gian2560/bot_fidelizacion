@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import bq from '@/lib/bigquery';
 
 export async function GET(req) {
   try {
@@ -104,6 +105,106 @@ export async function GET(req) {
       take: pageSize, // Solo tomar exactamente lo que necesitamos
       skip: skip, // Saltar los registros correctos según la página
     });
+    // ---------------------------------------------------------
+    // Nueva sección: consultar BigQuery para Fec_Ult_Pag_CCAP y actualizar columna Pago
+    // ---------------------------------------------------------
+    try {
+      const project = 'peak-emitter-350713';
+      const datasetFondos = 'FR_general';
+      const fondosTable = 'bd_fondos';
+
+      // Obtener códigos únicos no nulos
+      const codigos = Array.from(new Set(clientes.map(c => c.codigo_asociado).filter(Boolean)));
+      
+      let pagosMap = {}; // codigo_asociado -> fecha (string) o null
+
+      if (codigos.length > 0) {
+        const BQ_QUERY = `
+          SELECT
+            Codigo_Asociado,
+            MAX(DATE(Fec_Ult_Pag_CCAP)) AS fecha_pago
+          FROM \`${project}.${datasetFondos}.${fondosTable}\`
+          WHERE Codigo_Asociado IN UNNEST(@codigos)
+          GROUP BY Codigo_Asociado
+        `;
+        const [rows] = await bq.query({
+          query: BQ_QUERY,
+          params: { codigos },
+          parameterMode: 'named',
+        });
+
+        rows.forEach(r => {
+          // // r.fecha_pago puede venir como string 'YYYY-MM-DD' o Date-like
+          // pagosMap[r.Codigo_Asociado] = r.fecha_pago ? String(r.fecha_pago) : null;
+          // Normalizar la fecha devuelta por BigQuery a 'YYYY-MM-DD' o null
+          let fechaNormalizada = null;
+          if (r.fecha_pago) {
+            if (r.fecha_pago instanceof Date) {
+              fechaNormalizada = r.fecha_pago.toISOString().slice(0, 10);
+            } else if (typeof r.fecha_pago === 'object' && r.fecha_pago.value) {
+              // Algunos clientes devuelven objetos con .value
+              fechaNormalizada = String(r.fecha_pago.value).slice(0, 10);
+            } else {
+              fechaNormalizada = String(r.fecha_pago).slice(0, 10);
+            }
+          }
+          pagosMap[r.Codigo_Asociado] = fechaNormalizada;
+        });
+      }
+
+      // Calcular fecha de hoy (solo fecha, sin hora)
+      const now = new Date();
+      const todayUTC = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+      //today.setHours(0,0,0,0);
+
+      // Actualizar cada cliente en Prisma según resultado (y preparar valor para respuesta)
+      for (const cliente of clientes) {
+        const codigo = cliente.codigo_asociado;
+        const fecStr = pagosMap[codigo] || null;
+        let pagoValor = "No pagó";
+
+        if (fecStr) {
+          // fecStr esperado: 'YYYY-MM-DD'
+          const [y, m, d] = fecStr.split('-').map(n => parseInt(n, 10));
+          if (!isNaN(y) && !isNaN(m) && !isNaN(d)) {
+            const fecUTCms = Date.UTC(y, m - 1, d);
+            const todayUTCms = todayUTC.getTime();
+            const sameMonth = y === todayUTC.getUTCFullYear() && (m - 1) === todayUTC.getUTCMonth();
+            // Regla: pago "Sí pagó" si la fecha de pago es del mismo mes/año que hoy y anterior a hoy
+            if (sameMonth && fecUTCms < todayUTCms) {
+              pagoValor = "Sí pagó";
+            } else {
+              pagoValor = "No pagó";
+            }
+          } else {
+            pagoValor = "No pagó";
+          }
+        } else {
+          pagoValor = "No pagó";
+        }
+
+        // Solo actualizar si es diferente (evita writes innecesarios)
+        if (cliente.Pago !== pagoValor) {
+          try {
+            await prisma.cliente.update({
+              where: { cliente_id: cliente.cliente_id },
+              data: { Pago: pagoValor },
+            });
+            // también actualizar el objeto en memoria para la respuesta
+            cliente.Pago = pagoValor;
+          } catch (upErr) {
+            console.warn(`No se pudo actualizar Pago para cliente ${cliente.cliente_id}:`, upErr.message);
+          }
+        } else {
+          // asegurar el campo en el objeto
+          cliente.Pago = cliente.Pago ?? pagoValor;
+        }
+      }
+    } catch (bqErr) {
+      console.error("Error consultando BigQuery para pagos:", bqErr);
+      // No abortamos la petición por esto; seguimos devolviendo clientes sin modificar Pago
+    }
+    // ---------------------------------------------------------
 
     // Opcional: Si quieres mantener el ordenamiento por prioridad, hazlo después
     // pero esto puede afectar la paginación. Es mejor hacerlo en la query de Prisma
@@ -142,6 +243,7 @@ export async function GET(req) {
     nombre_completo: `${cliente.nombre} ${cliente.apellido}`, // Concatenar nombre y apellido
     fecha_creacion: cliente.fecha_creacion?.toISOString(),  // Formatear la fecha de creación
     // Agrega cualquier otro campo que sea relevante para tu respuesta
+    Pago: cliente.Pago ?? "No pagó", 
   };
 });
 

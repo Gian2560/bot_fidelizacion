@@ -51,6 +51,7 @@ export const authOptions = {
       if (user) {
         token.role = user.role;
         token.expiresAt = user.tokenExpires;
+        token.protectedRoutes = token.protectedRoutes || ["/dashboard", "/clientes", "/campaigns", "/usuarios", "/promesasPago","/clientes_gestion","/task"];
       }
 
       // 🔹 Si el token expira, forzar cierre de sesión
@@ -68,6 +69,7 @@ export const authOptions = {
       }
 
       session.user.role = token.role;
+      // session.user.token = token;
       return session;
     },
   },

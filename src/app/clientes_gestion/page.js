@@ -224,13 +224,13 @@ function ModernClientesTable({
                 </TableCell>
                 <TableCell>
                   <Chip
-                    label="Sin definir"
+                    label={cliente.Pago ?? "No pagó"}
                     size="small"
                     sx={{
                       fontWeight: 500,
                       fontSize: '0.75rem',
-                      bgcolor: '#f3f4f6',
-                      color: '#6b7280',
+                      bgcolor: cliente.Pago === "Sí pagó" ? '#ffffffff' : '#be4343ff',
+                      color: cliente.Pago === "Sí pagó" ? '#059669' : '#ffffffff',
                     }}
                   />
                 </TableCell>

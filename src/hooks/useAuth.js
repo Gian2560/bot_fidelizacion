@@ -17,6 +17,29 @@ export function useAuth() {
         signOut(); // 🔹 Cierra sesión automáticamente
       }
     }
+    // if (!session?.user?.token) return;
+
+    // const tokenData = session.user.token;
+    // let expiresAtMs = null;
+
+    // // Si token es string (JWT), extraer exp del payload
+    // if (typeof tokenData === "string") {
+    //   try {
+    //     const payload = JSON.parse(atob(tokenData.split(".")[1]));
+    //     if (payload?.exp) expiresAtMs = payload.exp * 1000;
+    //   } catch (err) {
+    //     console.warn("useAuth: token string inválido", err);
+    //   }
+    // } else if (typeof tokenData === "object") {
+    //   // Si token es objeto (lo que devuelve NextAuth en tu callback), usar expiresAt o exp
+    //   if (tokenData.expiresAt) expiresAtMs = Number(tokenData.expiresAt);
+    //   else if (tokenData.exp) expiresAtMs = Number(tokenData.exp) * 1000;
+    // }
+
+    // if (expiresAtMs && Date.now() >= expiresAtMs) {
+    //   console.log("🔄 Token expirado. Cerrando sesión.");
+    //   signOut();
+    // }
   }, [session]);
 
   return {

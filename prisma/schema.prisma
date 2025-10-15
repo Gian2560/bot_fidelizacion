@@ -85,6 +85,7 @@ model cliente {
   codpago                      String?            @db.VarChar(150)
   Cta_Act_Pag                  Int?
   codigo_asociado              String?            @db.VarChar(100)
+  Pago                         String?
   accion_comercial             accion_comercial[]
   cita                         cita[]
   cliente_campanha             cliente_campanha[]
