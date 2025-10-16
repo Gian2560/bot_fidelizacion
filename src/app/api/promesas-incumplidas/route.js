@@ -23,8 +23,12 @@ export async function GET(request) {
           celular: {
             not: null,
             not: ''
+          },
+          cita: {
+            some: {}  // Al menos una cita debe existir
           }
         },
+        
         include: {
           cita: {
             orderBy: {
@@ -83,7 +87,7 @@ export async function GET(request) {
       .filter(cel => cel && cel !== '' && !isNaN(cel)) // Validar que sea número
       .join(','); // Sin comillas porque BigQuery espera INT64
 
-    console.log(`📞 Celulares para consultar: ${celulares.split(',').length}`);
+    console.log(`📞 Celulares para consultar: ${celulares}`);
 
     // 🔍 Paso 3: Consultar BigQuery para fechas de último pago
     let fechasUltimoPago = {};
@@ -109,9 +113,28 @@ export async function GET(request) {
 
         // Crear mapa de fechas de último pago por teléfono
         results.forEach(row => {
+          console.log(`🔍 BigQuery row:`, {
+            telefono: row.telefono,
+            fecha_ultimo_pago: row.fecha_ultimo_pago,
+            tipo_fecha: typeof row.fecha_ultimo_pago
+          });
+          
           if (row.telefono && row.fecha_ultimo_pago) {
-            // Convertir telefono a string para hacer match con JavaScript
-            fechasUltimoPago[row.telefono.toString()] = new Date(row.fecha_ultimo_pago);
+            // Extraer el valor de BigQueryDatetime si es un objeto
+            let fechaValue = row.fecha_ultimo_pago;
+            if (typeof fechaValue === 'object' && fechaValue.value) {
+              fechaValue = fechaValue.value;
+            }
+            
+            const fechaPago = new Date(fechaValue);
+            
+            // Validar que la fecha sea válida
+            if (!isNaN(fechaPago.getTime())) {
+              fechasUltimoPago[row.telefono.toString()] = fechaPago;
+              console.log(`✅ Fecha válida guardada para ${row.telefono}: ${fechaPago.toLocaleDateString('es-ES')}`);
+            } else {
+              console.log(`❌ Fecha inválida para ${row.telefono}:`, fechaValue);
+            }
           }
         });
 
@@ -146,17 +169,49 @@ export async function GET(request) {
 
       // Verificar si está incumplida
       let esIncumplida = false;
-
+      
       if (!fechaUltimoPago) {
-        // Sin registro de pago, verificar si la promesa está vencida
-        esIncumplida = fechaPromesa < ahora;
+        // Sin registro de pago en BigQuery, verificar si la fecha de promesa ya pasó
+        const hoy = new Date();
+        esIncumplida = fechaPromesa < hoy;
+        
+        if (index < 3) {
+          console.log(`- Sin registro de pago en BigQuery`);
+          console.log(`- Fecha promesa: ${fechaPromesa.toLocaleDateString('es-ES')}`);
+          console.log(`- Fecha hoy: ${hoy.toLocaleDateString('es-ES')}`);
+          console.log(`- Promesa ya pasó: ${fechaPromesa < hoy ? 'SÍ' : 'NO'}`);
+          console.log(`- Estado: ${esIncumplida ? 'INCUMPLIDA' : 'AÚN NO VENCIDA'}`);
+        }
       } else {
-        // Con registro de pago, verificar si pagó después de la promesa
-        esIncumplida = fechaPromesa < ahora && fechaUltimoPago < fechaPromesa;
+        // Con registro de pago, verificar si pagó en el mismo mes de la promesa o después
+        const mesPromesa = fechaPromesa.getMonth();
+        const añoPromesa = fechaPromesa.getFullYear();
+        const mesPago = fechaUltimoPago.getMonth();
+        const añoPago = fechaUltimoPago.getFullYear();
+        
+        // Está CUMPLIDA si pagó en el mismo mes/año o después
+        const pagoEnMismoMesOPosterior = (añoPago > añoPromesa) || 
+                                       (añoPago === añoPromesa && mesPago >= mesPromesa);
+        
+        if (pagoEnMismoMesOPosterior) {
+          esIncumplida = false; // CUMPLIDA
+        } else {
+          // Pago anterior al mes de la promesa, verificar si la promesa ya venció
+          const hoy = new Date();
+          esIncumplida = fechaPromesa < hoy;
+        }
+        
+        if (index < 3) {
+          console.log(`- Fecha promesa: ${fechaPromesa.toLocaleDateString('es-ES')} (${mesPromesa + 1}/${añoPromesa})`);
+          console.log(`- Fecha último pago: ${fechaUltimoPago.toLocaleDateString('es-ES')} (${mesPago + 1}/${añoPago})`);
+          console.log(`- Pagó en mismo mes o posterior: ${pagoEnMismoMesOPosterior ? 'SÍ' : 'NO'}`);
+          console.log(`- Estado: ${esIncumplida ? 'INCUMPLIDA' : 'CUMPLIDA'}`);
+        }
       }
 
       if (esIncumplida) {
-        const diasVencido = Math.floor((ahora - fechaPromesa) / (1000 * 60 * 60 * 24));
+        const hoy = new Date();
+        const diasVencido = Math.floor((hoy - fechaPromesa) / (1000 * 60 * 60 * 24));
         
         promesasIncumplidas.push({
           id: cliente.cliente_id,
@@ -164,9 +219,19 @@ export async function GET(request) {
           cliente: cliente.nombre,
           telefono: cliente.celular,
           documento: cliente.documento_identidad,
-          fechaPromesa: fechaPromesa.toLocaleDateString('es-ES'),
-          fechaUltimoPago: fechaUltimoPago?.toLocaleDateString('es-ES') || 'Sin registro',
-          diasVencido: diasVencido,
+          fechaPromesa: fechaPromesa.toLocaleDateString('es-ES', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
+          }),
+          fechaUltimoPago: fechaUltimoPago 
+            ? fechaUltimoPago.toLocaleDateString('es-ES', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit'
+              })
+            : 'Sin pago registrado',
+          diasVencido: Math.max(0, diasVencido),
           monto: parseFloat(cliente.monto) || 0,
           gestor: cliente.gestor || 'Sin asignar',
           motivoCita: ultimaCita.motivo || 'Sin motivo',
@@ -174,7 +239,7 @@ export async function GET(request) {
         });
 
         if (index < 3) {
-          console.log(`- ✅ Promesa incumplida: ${diasVencido} días vencida`);
+          console.log(`- ✅ Promesa incumplida agregada`);
         }
       }
     });
