@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { useClientes } from '@/hooks/useClientes';
 import ActionComercialModal from '@/app/components/ActionComercialModal';
@@ -833,13 +833,13 @@ export default function TasksPage() {
     duda: { total: 0, pendientes: 0, completados: 0 }
   });
   const [loadingStats, setLoadingStats] = useState(true);
+  const [promesasIncumplidasCount, setPromesasIncumplidasCount] = useState(0);
 
   const { data: session } = useSession();
   const { gestores, handleSaveCliente } = useClientes();
 
-  // ✅ Agregar esta función en el componente TasksPage
-  const handlePromesasIncumplidas = async () => {
-    setShowPromesasIncumplidas(true);
+  // ✅ Función separada para cargar datos de promesas (sin cambiar showPromesasIncumplidas)
+  const handlePromesasIncumplidasLoad = useCallback(async () => {
     setLoadingPromesas(true);
 
     try {
@@ -872,6 +872,20 @@ export default function TasksPage() {
     } finally {
       setLoadingPromesas(false);
     }
+  }, [promesasPage, promesasRowsPerPage]);
+
+  // ✅ Efecto para recargar promesas cuando cambia la paginación
+  useEffect(() => {
+    if (showPromesasIncumplidas) {
+      handlePromesasIncumplidasLoad();
+    }
+  }, [showPromesasIncumplidas, handlePromesasIncumplidasLoad]);
+
+  // ✅ Agregar esta función en el componente TasksPage
+  const handlePromesasIncumplidas = async () => {
+    setShowPromesasIncumplidas(true);
+    setPromesasPage(0); // Resetear a la primera página
+    // Los datos se cargarán automáticamente por el useEffect
   };
 
   // ✅ Función para cerrar la vista de promesas incumplidas
@@ -917,6 +931,23 @@ export default function TasksPage() {
     }
   };
 
+  // ✅ Función para obtener el conteo de promesas incumplidas
+  const loadPromesasIncumplidasCount = useCallback(async () => {
+    try {
+      const response = await fetch('/api/promesas-incumplidas?page=1&limit=1');
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.pagination) {
+          return data.pagination.totalItems || 0;
+        }
+      }
+      return 0;
+    } catch (error) {
+      console.error('Error obteniendo conteo de promesas incumplidas:', error);
+      return 0;
+    }
+  }, []);
+
   // Función para cargar tareas de un estado específico
   const loadTasks = async (estado, currentPage = 0, limit = 10, search = '') => {
     if (!estado) return;
@@ -957,8 +988,14 @@ export default function TasksPage() {
 
   // Efecto para cargar estadísticas al montar el componente
   useEffect(() => {
-    loadGeneralStats();
-  }, []);
+    const loadAllStats = async () => {
+      await loadGeneralStats();
+      const promesasCount = await loadPromesasIncumplidasCount();
+      setPromesasIncumplidasCount(promesasCount);
+    };
+    
+    loadAllStats();
+  }, [loadPromesasIncumplidasCount]);
 
   // Efecto para cargar tareas cuando cambia el estado seleccionado
   useEffect(() => {
@@ -1055,8 +1092,10 @@ export default function TasksPage() {
       const currentPageNum = page + 1;
       await loadTasks(selectedEstado, currentPageNum, rowsPerPage, searchTerm);
 
-      // Recargar estadísticas generales
+      // Recargar estadísticas generales y conteo de promesas
       await loadGeneralStats();
+      const promesasCount = await loadPromesasIncumplidasCount();
+      setPromesasIncumplidasCount(promesasCount);
 
       handleClose();
     } catch (error) {
@@ -1124,8 +1163,13 @@ export default function TasksPage() {
     const total = allStats.reduce((sum, stat) => sum + stat.total, 0);
     const completadas = allStats.reduce((sum, stat) => sum + stat.completados, 0);
     const pendientes = total - completadas;
-    return { total, completadas, pendientes };
-  }, [generalStats]);
+    return { 
+      total, 
+      completadas, 
+      pendientes, 
+      promesasIncumplidas: promesasIncumplidasCount 
+    };
+  }, [generalStats, promesasIncumplidasCount]);
 
   return (
     <Container maxWidth="xl" sx={{ py: 4, position: 'relative' }}>
