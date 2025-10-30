@@ -34,7 +34,7 @@ export const authOptions = {
             name: usuario.username,
             email: usuario.email,
             role: usuario.rol.nombre_rol, // 🔹 Se obtiene el rol del backend
-            tokenExpires: Date.now() + 3600 * 1000, // 🔹 Expiración en 1 hora
+            //tokenExpires: Date.now() + 3600 * 1000, // 🔹 Expiración en 1 hora
           };
         } catch (error) {
           console.error("❌ Error en autenticación:", error.message);
@@ -50,15 +50,15 @@ export const authOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.role = user.role;
-        token.expiresAt = user.tokenExpires;
+        //token.expiresAt = user.tokenExpires;
         token.protectedRoutes = token.protectedRoutes || ["/dashboard", "/clientes", "/campaigns", "/usuarios", "/promesasPago","/clientes_gestion","/task"];
       }
 
       // 🔹 Si el token expira, forzar cierre de sesión
-      if (Date.now() > token.expiresAt) {
-        console.warn("🔄 Token expirado. Cerrando sesión automáticamente.");
-        return null;
-      }
+      // if (Date.now() > token.expiresAt) {
+      //   console.warn("🔄 Token expirado. Cerrando sesión automáticamente.");
+      //   return null;
+      // }
 
       return token;
     },
