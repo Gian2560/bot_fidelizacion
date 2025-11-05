@@ -18,6 +18,7 @@ import {
   Divider,
   Box, Autocomplete
 } from "@mui/material";
+import ButtonGroup from "@mui/material/ButtonGroup";
 import axiosInstance from "../../../../services/api";
 import { useEffect } from "react";
 import { LocalizationProvider, DatePicker, TimePicker } from "@mui/x-date-pickers";
@@ -61,8 +62,7 @@ export default function CampaignPage() {
   // al inicio: yomi
   const [placeholders, setPlaceholders] = useState([])            // e.g. [ "1", "2", ... ]
   const [variableMappings, setVariableMappings] = useState({})    // { "1": "nombre", "2": "telefono", … }
-
-
+  const [modoEnvio, setModoEnvio] = useState("M0"); // NEW: M1 | M0, por defecto M0
   useEffect(() => {
     const fetchDatabases = async () => {
       try {
@@ -270,7 +270,8 @@ export default function CampaignPage() {
     const payload = {
       tipoCampana: tipoCampaña, // "Recordatorio" o "Fidelizacion"
       table: selectedDatabase, // nombre de la tabla o vista en BigQuery
-      filters                  // array con los filtros
+      filters,                  // array con los filtros
+      modoEnvio               // NEW: M0 / M1
     };
 
     try {
@@ -391,7 +392,26 @@ export default function CampaignPage() {
                 />
               </FormControl>
             </Grid>
-
+            {/* NEW: Selector M0/M1 */}
+            <Grid item xs={12}>
+              <Typography sx={{ mb: 1, color: colors.darkBlue, fontWeight: 600 }}>
+                Modo de envíos
+              </Typography>
+              <ButtonGroup variant="outlined">
+                <Button
+                  onClick={() => setModoEnvio("M0")}
+                  variant={modoEnvio === "M0" ? "contained" : "outlined"}
+                >
+                  M0
+                </Button>
+                <Button
+                  onClick={() => setModoEnvio("M1")}
+                  variant={modoEnvio === "M1" ? "contained" : "outlined"}
+                >
+                  M1
+                </Button>
+              </ButtonGroup>
+            </Grid>      
 
 
 

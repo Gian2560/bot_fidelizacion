@@ -37,7 +37,7 @@ async function getSchema(project, dataset, table) {
 /* ── 3. POST /api/filtrar ────────────────────────────────── */
 export async function POST(req) {
   try {
-    const { table, filters, tipoCampana } = await req.json();
+    const { table, filters, tipoCampana, modoEnvio } = await req.json();
     if (!table || !Array.isArray(filters))
       return new Response('Payload inválido', { status: 400 });
 
@@ -117,6 +117,12 @@ export async function POST(req) {
     console.log('La timpo de camnañasdma ese askjriaspjrfuosadfhoasdfñ:', tipoCampana);
     /* 3.3 consulta final con JOIN */
     if (tipoCampana === "Recordatorio") {
+      // NEW: elegir envios_cobranzas_m0 o _m1
+      const modo = (modoEnvio || "M1").toString().toUpperCase(); // fallback M1
+      const enviosTable =
+        modo === "M0"
+          ? "peak-emitter-350713.FR_general.envios_cobranzas_m0"
+          : "peak-emitter-350713.FR_general.envios_cobranzas_m1";
       QUERY = `
    WITH cte_M1 AS (
     SELECT 
@@ -147,7 +153,7 @@ export async function POST(req) {
       FORMAT('%.2f', envios.Monto) AS monto,
       ROW_NUMBER() OVER (PARTITION BY envios.TelfSMS ORDER BY envios.N_Doc) AS row_num  -- Asigna un número a cada fila por TelfSMS
     FROM cte_M1 AS M1
-    INNER JOIN peak-emitter-350713.FR_general.envios_cobranzas_m1 AS envios
+    INNER JOIN ${enviosTable} AS envios
       ON M1.Telf_SMS = envios.TelfSMS
     WHERE   
       ${whereSQL}
