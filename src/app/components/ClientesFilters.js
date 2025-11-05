@@ -359,13 +359,13 @@ const [exportLoading, setExportLoading] = useState(false);
 
                 <MenuItem value="Comunicacion inmediata">
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Chip label="Comunicación inmediata" size="small" color="primary" variant="outlined" />
+                    <Chip label="Comunicacion inmediata" size="small" color="primary" variant="outlined" />
                   </Box>
                 </MenuItem>
 
                 <MenuItem value="Seguimiento - Duda no resuelta">
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Chip label="Duda no resuelta" size="small" color="warning" variant="outlined" />
+                    <Chip label="Seguimiento - Duda no resuelta" size="small" color="warning" variant="outlined" />
                   </Box>
                 </MenuItem>
 
