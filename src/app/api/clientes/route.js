@@ -56,8 +56,8 @@ export async function GET(req) {
 
     if (estado && estado !== "Todos") {
       filtros.OR = [
-    { estado: estado },
-    { estado_asesor: estado }
+    { estado: estado }
+    //{ estado_asesor: estado }
   ];
     }
 
@@ -76,8 +76,27 @@ export async function GET(req) {
       // o si utilizas gestor_id, sería:
       // filtros.gestor_id = parseInt(gestor, 10);
     }
+    let clienteIdsPorAccion = null;
     if (accionComercial && accionComercial !== "Todos") {
-      filtros.estado_asesor = accionComercial; // Filtrar por "Acción Comercial"
+      //filtros.estado_asesor = accionComercial; // Filtrar por "Acción Comercial"
+      const rows = await prisma.$queryRawUnsafe/* sql */(`
+        SELECT cliente_id
+        FROM (
+          SELECT DISTINCT ON (cliente_id)
+                cliente_id, estado
+          FROM accion_comercial
+          ORDER BY cliente_id, fecha_accion DESC
+        ) ult
+        WHERE ult.estado = $1
+      `, accionComercial);
+
+      clienteIdsPorAccion = rows.map(r => Number(r.cliente_id));
+      // Si no hay ninguno, fuerza un IN vacío para no traer nada
+      if (clienteIdsPorAccion.length === 0) clienteIdsPorAccion = [-1];
+    }
+    // Si hay filtro por último estado, agrégalo
+    if (clienteIdsPorAccion && accionComercial !== "Sin accion comercial") {
+      filtros.cliente_id = { in: clienteIdsPorAccion };
     }
     if (interaccionBot === "Con interacción") {
   filtros.AND = [
@@ -86,7 +105,7 @@ export async function GET(req) {
     { estado: { not: "no contactado" } }  // Pero que no sea "activo"
   ];
 } else if (interaccionBot === "Sin interacción") {
-  filtros.estado = null; // Clientes sin fecha de interacción
+  filtros.fecha_ultima_interaccion = null; // Clientes sin fecha de interacción
 }
     if (accionComercial === "Sin accion comercial") {
       filtros.accion = ""; // Filtra por clientes que no tienen acción comercial
@@ -104,6 +123,12 @@ export async function GET(req) {
       orderBy: { [orderBy]: order },
       take: pageSize, // Solo tomar exactamente lo que necesitamos
       skip: skip, // Saltar los registros correctos según la página
+      include: {
+        accion_comercial: {
+          take: 1,
+          orderBy: { fecha_accion: "desc" }
+        }
+      }
     });
     // ---------------------------------------------------------
     // Nueva sección: consultar BigQuery para Fec_Ult_Pag_CCAP y actualizar columna Pago
@@ -233,12 +258,13 @@ export async function GET(req) {
     const totalClientes = await prisma.cliente.count({ where: filtros });
     // 🗺️ Mapear la respuesta incluyendo estado/motivo desde contrato[0]
     const payload = clientes.map(cliente => {
+      const ultimoAccion = cliente.accion_comercial?.[0] ?? null;
   // Aquí puedes agregar otros campos que necesites
   return {
     ...cliente,                     // Conserva todos los campos originales de `cliente`
     id: cliente.cliente_id,         // Agrega el `cliente_id` como `id`
     estado: cliente.estado ?? null,  // Agrega `estado` (con valor por defecto si no existe)
-    estado_asesor: cliente.estado_asesor ?? null,  // Agrega `motivo` (con valor por defecto si no existe)
+    estado_asesor: ultimoAccion?.estado ?? cliente.estado_asesor ?? null,  // Agrega `motivo` (con valor por defecto si no existe)
     // Otros campos que necesites agregar, por ejemplo:
     nombre_completo: `${cliente.nombre} ${cliente.apellido}`, // Concatenar nombre y apellido
     fecha_creacion: cliente.fecha_creacion?.toISOString(),  // Formatear la fecha de creación

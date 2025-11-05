@@ -375,9 +375,9 @@ const [exportLoading, setExportLoading] = useState(false);
                   </Box>
                 </MenuItem>
 
-                <MenuItem value="Promesa de pago">
+                <MenuItem value="Promesa de Pago">
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Chip label="Promesa de pago" size="small" color="success" variant="outlined" />
+                    <Chip label="Promesa de Pago" size="small" color="success" variant="outlined" />
                   </Box>
                 </MenuItem>
 
