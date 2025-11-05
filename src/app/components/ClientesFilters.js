@@ -363,33 +363,9 @@ const [exportLoading, setExportLoading] = useState(false);
                   </Box>
                 </MenuItem>
 
-                <MenuItem value="Gestion de contrato">
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Chip label="Gestión de contrato" size="small" color="secondary" variant="outlined" />
-                  </Box>
-                </MenuItem>
-
-                <MenuItem value="Negociacion de pago">
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Chip label="Negociación de pago" size="small" color="success" variant="outlined" />
-                  </Box>
-                </MenuItem>
-
-                <MenuItem value="Duda agresiva no resuelta">
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Chip label="Duda agresiva no resuelta" size="small" color="error" variant="outlined" />
-                  </Box>
-                </MenuItem>
-
-                <MenuItem value="Duda no resuelta">
+                <MenuItem value="Seguimiento - Duda no resuelta">
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <Chip label="Duda no resuelta" size="small" color="warning" variant="outlined" />
-                  </Box>
-                </MenuItem>
-
-                <MenuItem value="Enojado">
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Chip label="Enojado" size="small" color="error" variant="outlined" />
                   </Box>
                 </MenuItem>
 
@@ -405,9 +381,9 @@ const [exportLoading, setExportLoading] = useState(false);
                   </Box>
                 </MenuItem>
 
-                <MenuItem value="Duda resuelta">
+                <MenuItem value="Seguimiento - Duda resuelta">
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Chip label="Duda resuelta" size="small" color="info" variant="outlined" />
+                    <Chip label="Seguimiento - Duda resuelta" size="small" color="info" variant="outlined" />
                   </Box>
                 </MenuItem>
               </TextField>
