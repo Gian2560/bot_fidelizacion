@@ -102,6 +102,7 @@ export async function GET(req) {
   filtros.AND = [
     { estado: { not: null } }, // Clientes con estado
     { estado: { not: "activo" } },
+    { estado: { not: " " } },
     { estado: { not: "no contactado" } }  // Pero que no sea "activo"
   ];
 } else if (interaccionBot === "Sin interacción") {
