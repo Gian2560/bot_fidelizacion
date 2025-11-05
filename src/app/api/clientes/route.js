@@ -106,7 +106,12 @@ export async function GET(req) {
     { estado: { not: "no contactado" } }  // Pero que no sea "activo"
   ];
 } else if (interaccionBot === "Sin interacción") {
-  filtros.fecha_ultima_interaccion = null; // Clientes sin fecha de interacción
+  filtros.OR = [
+    { estado: null }, // Clientes con estado
+    { estado: "activo" },
+    { estado: " "},
+    { estado:"no contactado"}  // Pero que no sea "activo"
+  ];
 }
     if (accionComercial === "Sin accion comercial") {
       filtros.accion = ""; // Filtra por clientes que no tienen acción comercial
