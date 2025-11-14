@@ -154,7 +154,7 @@ export async function POST(req) {
       ROW_NUMBER() OVER (PARTITION BY envios.TelfSMS ORDER BY envios.N_Doc) AS row_num  -- Asigna un número a cada fila por TelfSMS
     FROM cte_M1 AS M1
     INNER JOIN ${enviosTable} AS envios
-      ON M1.Telf_SMS = envios.TelfSMS
+      ON M1.Telf_SMS = CAST(envios.TelfSMS AS STRING)
     WHERE   
       ${whereSQL}
   )
